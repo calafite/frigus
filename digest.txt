@@ -1,0 +1,241 @@
+Directory structure:
+└── frigus/
+    ├── combat.pl
+    ├── config.pl
+    ├── engine.pl
+    ├── entity.pl
+    ├── item.pl
+    └── move.pl
+
+================================================
+FILE: combat.pl
+================================================
+:- module(combat, [step_kill/5, step_cast/6]).
+
+:- use_module(config).
+:- use_module(entity).
+
+hostile_at(A, B) :-
+    alive(A),
+    alive(B),
+    room(A, RId),
+    room(B, RId),
+    hostile(A, B).
+
+step_kill(S, AId, TId, NS, Evts) :-
+    has(S, AId, A),
+    has(S, TId, T),
+    hostile_at(A, T),
+    wpn(A, Wpn),
+    dmg(Wpn, Dmg),
+    apply_dmg(S, A, T, Dmg, NS, Evts, hit(AId, TId, Dmg)).
+
+step_cast(S, AId, Sp, TId, NS, Evts) :-
+    has(S, AId, A),
+    has(S, TId, T),
+    hostile_at(A, T),
+    cost(Sp, Cost),
+    mp(A, Mp),
+    Mp >= Cost,
+    NMp is Mp - Cost,
+    mp(A, NMp, MidA),
+    dmg(Sp, Dmg),
+    apply_dmg(S, MidA, T, Dmg, NS, Evts, cast(AId, Sp, TId, Dmg)).
+
+apply_dmg(S, A, T, Dmg, NS, [HitEvt, dead(TId) | REvts], HitEvt) :-
+    hp(T, THp),
+    NTHp is THp - Dmg,
+    NTHp =< 0, !,
+    hp(T, 0, NT),
+    TId = NT.id,
+    reward(S, A, NT, NS, REvts).
+
+apply_dmg(S, A, T, Dmg, NS, [HitEvt], HitEvt) :-
+    hp(T, THp),
+    NTHp is THp - Dmg,
+    hp(T, NTHp, NT),
+    put(S, A.id, A, TS),
+    put(TS, T.id, NT, NS).
+
+reward(S, A, mob{id: MId}, NS, [lvl_up(A.id, NLvl)]) :-
+    lvl(A, Lvl),
+    NLvl is Lvl + 1,
+    lvl(A, NLvl, NA),
+    del(S, MId, TS),
+    put(TS, A.id, NA, NS).
+
+reward(S, A, plyr{id: PId} = NT, NS, []) :-
+    put(S, A.id, A, TS),
+    put(TS, PId, NT, NS).
+
+
+
+================================================
+FILE: config.pl
+================================================
+:- module(config, [
+    dmg/2,
+    cost/2,
+    slot/2,
+    hostile/2
+]).
+
+dmg(fists, 3).
+dmg(staff, 5).
+dmg(sword, 10).
+
+cost(fireball, 5).
+dmg(fireball, 12).
+
+slot(sword, wpn).
+slot(staff, wpn).
+slot(shield, shield).
+slot(robe, body).
+
+hostile(plyr{id: A}, plyr{id: B}) :- A \= B.
+hostile(plyr{id: _}, mob{id: _}).
+hostile(mob{id: _}, plyr{id: _}).
+
+
+
+================================================
+FILE: engine.pl
+================================================
+:- module(engine, [api_step/2]).
+
+:- use_module(entity).
+:- use_module(move).
+:- use_module(combat).
+:- use_module(item).
+
+step(S, Id, move(Dir), NS, Evts) :- step_move(S, Id, Dir, NS, Evts).
+step(S, Id, kill(TId), NS, Evts) :- step_kill(S, Id, TId, NS, Evts).
+step(S, Id, cast(Sp, TId), NS, Evts) :- step_cast(S, Id, Sp, TId, NS, Evts).
+step(S, Id, loot(IId), NS, Evts) :- step_loot(S, Id, IId, NS, Evts).
+step(S, Id, equip(Tag), NS, Evts) :- step_equip(S, Id, Tag, NS, Evts).
+
+step(S, Id, look, S, [look(RId, Type, Exits, OIds, MIds, IIds)]) :-
+    has(S, Id, A),
+    room(A, RId),
+    node(S, RId, Node),
+    Type = Node.type,
+    dict_keys(Node.exits, Exits),
+    findall(O.id, (member(O, S.plyrs), room(O, RId), O.id \= Id), OIds),
+    findall(M.id, (member(M, S.mobs), room(M, RId), alive(M)), MIds),
+    findall(I.id, (member(I, S.items), room(I, RId)), IIds).
+
+to_act(D, move(Dir)) :- D.type == "move", atom_string(Dir, D.dir).
+to_act(D, look)      :- D.type == "look".
+to_act(D, kill(T))   :- D.type == "kill", atom_string(T, D.target).
+to_act(D, cast(S, T)):- D.type == "cast", atom_string(S, D.spell), atom_string(T, D.target).
+to_act(D, loot(T))   :- D.type == "loot", atom_string(T, D.target).
+to_act(D, equip(I))  :- D.type == "equip", atom_string(I, D.item).
+
+api_step(Req, Res) :-
+    to_act(Req.action, Act),
+    step(Req.state, Req.actor, Act, NS, Evts),
+    Res = json{state: NS, events: Evts}.
+
+
+
+================================================
+FILE: entity.pl
+================================================
+:- module(entity, [
+    hp/2, hp/3, room/2, room/3, mp/2, mp/3,
+    lvl/2, lvl/3, inv/2, inv/3, equip/2, equip/3,
+    wpn/2, alive/1, has/3, node/3, put/4, del/3
+]).
+
+hp(E, E.hp).
+hp(E, V, E.put(hp, V)).
+
+room(E, E.room).
+room(E, V, E.put(room, V)).
+
+mp(E, E.mp).
+mp(E, V, E.put(mp, V)).
+
+lvl(E, E.lvl).
+lvl(E, V, E.put(lvl, V)).
+
+inv(E, E.inv).
+inv(E, V, E.put(inv, V)).
+
+equip(E, E.equip).
+equip(E, V, E.put(equip, V)).
+
+wpn(E, W) :- is_dict(E, plyr), get_dict(wpn, E.equip, W), W \== none, !.
+wpn(_, fists).
+
+alive(E) :- hp(E, Hp), Hp > 0.
+
+find_id(Id, L, E, R) :- select(E, L, R), E.id == Id, !.
+
+has(S, Id, E) :- member(E, S.plyrs), E.id == Id, !.
+has(S, Id, E) :- member(E, S.mobs), E.id == Id, !.
+has(S, Id, E) :- member(E, S.items), E.id == Id, !.
+
+node(S, Id, Node) :- member(Node, S.rooms), Node.id == Id, !.
+
+put(S, Id, E, NS) :- find_id(Id, S.plyrs, _, R), !, NS = S.put(plyrs, [E|R]).
+put(S, Id, E, NS) :- find_id(Id, S.mobs, _, R), !, NS = S.put(mobs, [E|R]).
+put(S, Id, E, NS) :- find_id(Id, S.items, _, R), !, NS = S.put(items, [E|R]).
+
+del(S, Id, NS) :- find_id(Id, S.mobs, _, R), !, NS = S.put(mobs, R).
+del(S, Id, NS) :- find_id(Id, S.items, _, R), !, NS = S.put(items, R).
+
+
+
+================================================
+FILE: item.pl
+================================================
+:- module(item, [step_loot/5, step_equip/5]).
+
+:- use_module(config).
+:- use_module(entity).
+
+step_loot(S, Id, IId, NS, [looted(Id, Tag)]) :-
+    has(S, Id, A),
+    alive(A),
+    room(A, RId),
+    has(S, IId, I),
+    room(I, RId),
+    Tag = I.tag,
+    inv(A, Inv),
+    inv(A, [Tag | Inv], NA),
+    del(S, IId, TS),
+    put(TS, Id, NA, NS).
+
+step_equip(S, Id, Tag, NS, [equipped(Id, Tag, Slot)]) :-
+    has(S, Id, A),
+    alive(A),
+    inv(A, Inv),
+    select(Tag, Inv, TmpInv),
+    slot(Tag, Slot),
+    equip(A, Eq),
+    get_dict(Slot, Eq, Old),
+    NEq = Eq.put(Slot, Tag),
+    equip(A, NEq, TmpA),
+    ( Old == none -> NInv = TmpInv ; NInv = [Old | TmpInv] ),
+    inv(TmpA, NInv, NA),
+    put(S, Id, NA, NS).
+
+
+
+================================================
+FILE: move.pl
+================================================
+:- module(move, [step_move/5]).
+
+:- use_module(entity).
+
+step_move(S, Id, Dir, NS, [moved(Id, Dir, NRId)]) :-
+    has(S, Id, A),
+    room(A, RId),
+    node(S, RId, Node),
+    get_dict(Dir, Node.exits, NRId),
+    room(A, NRId, NA),
+    put(S, Id, NA, NS).
+
+
