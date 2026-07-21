@@ -2,8 +2,30 @@
     theme_data/2, rm_adj/2, rm_noun/2,
     base_wpn/1, base_arm/1, base_acc/1,
     pref/4, suff/4, tier_mult/2,
-    mob_base/2, elite_mod/3, evt_mod/2
+    mob_base/2, elite_mod/3, evt_mod/2,
+    theme_weight/2
 ]).
+
+theme_weight(grove, 100).
+theme_weight(keep, 100).
+theme_weight(cavern, 80).
+theme_weight(mine, 80).
+theme_weight(ruins, 80).
+theme_weight(swamp, 40).
+theme_weight(glacier, 30).
+theme_weight(desert, 30).
+theme_weight(sewer, 25).
+theme_weight(sky, 20).
+theme_weight(temple, 20).
+theme_weight(crypt, 15).
+theme_weight(tomb, 15).
+theme_weight(sanctum, 8).
+theme_weight(volcano, 8).
+theme_weight(prison, 5).
+theme_weight(inferno, 4).
+theme_weight(asylum, 3).
+theme_weight(abyss, 1).
+theme_weight(void, 1).
 
 theme_data(crypt, [undead, dark]).
 theme_data(cavern, [beast, earth]).

@@ -1,6 +1,7 @@
 :- module(proc_dungeon, [gen_dun/5]).
 
 :- use_module(library(random)).
+:- use_module(library(lists)).
 :- use_module(cfg_proc).
 :- use_module(proc_spawn).
 :- use_module(proc_loot).
@@ -25,7 +26,21 @@ add_exit(R, Dir, Tgt, NR) :-
     E = R.exits.put(Dir, Tgt),
     NR = R.put(exits, E).
 
-gen_dun(Theme, Lvl, Size, EntryId, Dun) :-
+weighted_pick(Pairs, Choice) :-
+    findall(W, member(_-W, Pairs), Ws),
+    sum_list(Ws, Total),
+    random_between(1, Total, Roll),
+    pick_accum(Pairs, Roll, Choice).
+
+pick_accum([Val-W|_], Roll, Val) :- Roll =< W, !.
+pick_accum([_-W|T], Roll, Val) :- NRoll is Roll - W, pick_accum(T, NRoll, Val).
+
+pick_theme(Theme) :-
+    findall(T-W, cfg_proc:theme_weight(T, W), Pairs),
+    weighted_pick(Pairs, Theme).
+
+gen_dun(InTheme, Lvl, Size, EntryId, Dun) :-
+    ( var(InTheme) -> pick_theme(Theme) ; Theme = InTheme ),
     id_gen(room, RootId),
     init_room(EntryId, Theme, Lvl, Entry),
     add_exit(Entry, down, RootId, FEntry),

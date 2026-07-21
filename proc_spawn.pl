@@ -14,32 +14,43 @@ roll_elite(T) :-
 pick_mob(Theme, Base) :-
     cfg_proc:theme_data(Theme, Tags),
     random_member(Tag, Tags),
-    findall(B, mob_base(Tag, B), Bs),
+    findall(B, cfg_proc:mob_base(Tag, B), Bs),
     random_member(Base, Bs).
 
 gen_mob(Theme, Lvl, Tier, RId, Mob) :-
     pick_mob(Theme, Base),
     id_gen(mob, Id),
-    BaseHp is 20 + (Lvl * 10),
-    BaseStr is 10 + (Lvl * 2),
-    BaseDex is 10 + (Lvl * 2),
-    BaseInt is 10 + (Lvl * 2),
-    ( Tier == elite ->
-        findall(M, elite_mod(M, _, _), Mods), random_member(Mod, Mods),
+    ( Tier == boss ->
+        BaseHp is (20 + (Lvl * 10)) * 6,
+        BaseStr is (10 + (Lvl * 2)) * 4,
+        BaseDex is (10 + (Lvl * 2)) * 4,
+        BaseInt is (10 + (Lvl * 2)) * 4,
+        findall(M, cfg_proc:elite_mod(M, _, _), Mods),
+        random_permutation(Mods, [M1, M2, M3|_]),
+        atomic_list_concat([M1, M2, M3, Base, boss], ' ', Name),
+        apply_mod(M1, BaseHp, BaseStr, BaseDex, BaseInt, [], H1, S1, D1, I1, P1),
+        apply_mod(M2, H1, S1, D1, I1, P1, H2, S2, D2, I2, P2),
+        apply_mod(M3, H2, S2, D2, I2, P2, Hp, Str, Dex, Int, Props)
+    ; Tier == elite ->
+        BaseHp is (20 + (Lvl * 10)) * 2,
+        BaseStr is (10 + (Lvl * 2)) * 2,
+        BaseDex is (10 + (Lvl * 2)) * 2,
+        BaseInt is (10 + (Lvl * 2)) * 2,
+        findall(M, cfg_proc:elite_mod(M, _, _), Mods),
+        random_member(Mod, Mods),
         atomic_list_concat([Mod, Base], ' ', Name),
         apply_mod(Mod, BaseHp, BaseStr, BaseDex, BaseInt, [], Hp, Str, Dex, Int, Props)
-    ; Tier == boss ->
-        findall(M, elite_mod(M, _, _), Mods), random_permutation(Mods, [M1, M2|_]),
-        atomic_list_concat([M1, M2, Base, boss], ' ', Name),
-        apply_mod(M1, BaseHp, BaseStr, BaseDex, BaseInt, [], H1, S1, D1, I1, P1),
-        apply_mod(M2, H1, S1, D1, I1, P1, Hp, Str, Dex, Int, Props)
     ;
+        BaseHp is 20 + (Lvl * 10),
+        BaseStr is 10 + (Lvl * 2),
+        BaseDex is 10 + (Lvl * 2),
+        BaseInt is 10 + (Lvl * 2),
         Name = Base, Hp = BaseHp, Str = BaseStr, Dex = BaseDex, Int = BaseInt, Props = []
     ),
     Mob = mob{id: Id, tag: Base, name: Name, lvl: Lvl, hp: Hp, max_hp: Hp, str: Str, dex: Dex, int: Int, room: RId, props: Props}.
 
 apply_mod(Mod, H, S, D, I, P, NH, NS, ND, NI, NP) :-
-    elite_mod(Mod, Stat, Mult),
+    cfg_proc:elite_mod(Mod, Stat, Mult),
     ( Stat == max_hp -> NH is floor(H * Mult), NS = S, ND = D, NI = I, NP = P
     ; Stat == str    -> NS is floor(S * Mult), NH = H, ND = D, NI = I, NP = P
     ; Stat == dex    -> ND is floor(D * Mult), NH = H, NS = S, NI = I, NP = P
