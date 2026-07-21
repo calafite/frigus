@@ -12,6 +12,8 @@
 :- use_module(visibility).
 :- use_module(stealth).
 :- use_module(prog).
+:- use_module(interact).
+:- use_module(craft).
 
 step(W, Id, move(Dir), NW, Evts) :- step_move(W, Id, Dir, NW, Evts).
 step(W, Id, kill(TId), NW, Evts) :- step_kill(W, Id, TId, NW, Evts).
@@ -25,13 +27,11 @@ step(W, Id, sell(TId, T, Q), NW, Evts) :- step_sell(W, Id, TId, T, Q, NW, Evts).
 step(W, Id, steal(TId, T, Q), NW, Evts) :- step_steal(W, Id, TId, T, Q, NW, Evts).
 step(W, Id, hide, NW, Evts) :- step_hide(W, Id, NW, Evts).
 step(W, Id, train(S), NW, Evts) :- step_train(W, Id, S, NW, Evts).
+step(W, Id, pull(Sw), NW, Evts) :- step_pull(W, Id, Sw, NW, Evts).
+step(W, Id, disarm, NW, Evts) :- step_disarm(W, Id, NW, Evts).
+step(W, Id, craft(O), NW, Evts) :- step_craft(W, Id, O, NW, Evts).
 step(W, Id, ai_tick, NW, Evts) :- step_ai(W, Id, NW, Evts).
 step(W, Id, tick, NW, Evts) :- step_tick(W, Id, NW, Evts).
-
-step(W, Id, look, W, [look_dark(RId)]) :-
-    world:entity(W, Id, A),
-    room(A, RId),
-    \+ visibility:can_see(W, A, RId), !.
 
 step(W, Id, look, W, [look(RId, Desc, Props, Exits, OIds, MIds, IData)]) :-
     world:entity(W, Id, A),
@@ -59,6 +59,9 @@ to_act(D, sell(T, I, Q)):- D.type == "sell", atom_string(T, D.target), atom_stri
 to_act(D, steal(T, I, Q)):- D.type == "steal", atom_string(T, D.target), atom_string(I, D.item), Q = D.qty.
 to_act(D, hide)      :- D.type == "hide".
 to_act(D, train(S))  :- D.type == "train", atom_string(S, D.stat).
+to_act(D, pull(Sw))  :- D.type == "pull", atom_string(Sw, D.switch).
+to_act(D, disarm)    :- D.type == "disarm".
+to_act(D, craft(I))  :- D.type == "craft", atom_string(I, D.item).
 to_act(D, ai_tick)   :- D.type == "ai_tick".
 to_act(D, tick)      :- D.type == "tick".
 

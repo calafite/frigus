@@ -1,6 +1,7 @@
 :- module(world, [
     entity/3, node/3, add/4,
-    update/3, remove/3, room_entities/3
+    update/3, remove/3, room_entities/3,
+    flags/2, flags/3
 ]).
 
 entity(W, Id, E) :- member(E, W.plyrs), E.id == Id, !.
@@ -26,3 +27,7 @@ room_entities(W, RId, Ents) :-
         (member(E, W.plyrs) ; member(E, W.mobs) ; member(E, W.items)),
         E.room == RId
     ), Ents).
+
+flags(W, F) :- get_dict(flags, W, F), !.
+flags(_, flags{}).
+flags(W, V, W.put(flags, V)).

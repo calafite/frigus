@@ -7,6 +7,7 @@
     reps/2, reps/3, rep_val/3, rep_mod/4,
     cds/2, cds/3, total_armor/2, props/2,
     ceils/2, ceils/3, get_ceil/3, is_special/1,
+    skills/2, skills/3, skill_val/3, skill_mod/4,
     inv_add/4, inv_rem/4, inv_wt/2, max_wt/2,
     allowed_race/2
 ]).
@@ -56,6 +57,21 @@ get_ceil(E, Stat, Val) :-
     ; class(E, Class), config:base_ceiling(Class, Stat, Val) -> true
     ; Val = 50
     ).
+
+skills(E, S) :- get_dict(skills, E, S), !.
+skills(_, skills{}).
+skills(E, V, E.put(skills, V)).
+
+skill_val(E, Skill, Val) :-
+    skills(E, S),
+    get_dict(Skill, S, Val), !.
+skill_val(_, _, 1).
+
+skill_mod(E, Skill, Val, NE) :-
+    skills(E, S),
+    ( get_dict(Skill, S, Cur) -> NVal is Cur + Val ; NVal = Val ),
+    NS = S.put(Skill, NVal),
+    skills(E, NS, NE).
 
 rep_val(E, Fac, Val) :-
     is_dict(E, plyr),
