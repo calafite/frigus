@@ -2,11 +2,14 @@
 
 :- use_module(entity).
 :- use_module(world).
+:- use_module(env).
+:- use_module(survival).
 
 can_act(E) :-
     affs(E, A),
     \+ member(aff{type: stun, dur: _, val: _}, A),
-    \+ member(aff{type: freeze, dur: _, val: _}, A).
+    \+ member(aff{type: freeze, dur: _, val: _}, A),
+    get_dict(state, E, State), State \== sleeping.
 
 apply_aff(E, none, E, []) :- !.
 apply_aff(E, Aff, NE, [inflicted(E.id, Aff.type)]) :-
@@ -16,32 +19,35 @@ apply_aff(E, Aff, NE, [inflicted(E.id, Aff.type)]) :-
     ; NA = [Aff|A] ),
     affs(E, NA, NE).
 
+step_tick(W, system, NW, Evts) :- !,
+    env:tick_env(W, NW, Evts).
+
 step_tick(W, Id, NW, Evts) :-
     world:entity(W, Id, E),
-    affs(E, A),
-    tick_affs(E, A, NA, Dmg, TEvts),
-    hp(E, Hp),
-    props(E, P),
+    ( is_dict(E, plyr) ->
+        survival:tick_srv(W, Id, E, E1, SEvts)
+    ; E1 = E, SEvts = [] ),
+    affs(E1, A),
+    tick_affs(E1, A, NA, Dmg, TEvts),
+    hp(E1, Hp),
+    props(E1, P),
     ( member(regen, P) ->
-        get_dict(max_hp, E, MaxHp),
+        get_dict(max_hp, E1, MaxHp),
         Regen is floor(MaxHp * 0.1),
         TmpHp is min(MaxHp, Hp + Regen)
-    ;
-        TmpHp = Hp
-    ),
+    ; TmpHp = Hp ),
     NHp is max(0, TmpHp - Dmg),
-    hp(E, NHp, E1),
-    affs(E1, NA, E2),
-    cds(E2, Cds),
+    hp(E1, NHp, E2),
+    affs(E2, NA, E3),
+    cds(E3, Cds),
     dec_cds(Cds, NCds),
-    cds(E2, NCds, NE),
+    cds(E3, NCds, NE),
     ( NHp =:= 0 ->
-        Evts = [dead(Id)|TEvts],
+        append([dead(Id)|TEvts], SEvts, AllEvts),
+        Evts = AllEvts,
         world:remove(W, Id, NW)
-    ;
-        Evts = TEvts,
-        world:update(W, NE, NW)
-    ).
+    ; append(TEvts, SEvts, Evts),
+      world:update(W, NE, NW) ).
 
 dec_cds(Cds, NCds) :-
     dict_pairs(Cds, cds, Pairs),

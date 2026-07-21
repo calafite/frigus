@@ -9,6 +9,10 @@
 cannot_enter(_W, A, N) :- get_dict(req_lvl, N, Lvl), lvl(A, ALvl), ALvl < Lvl.
 cannot_enter(_W, A, N) :- get_dict(req_key, N, Key), inv(A, Inv), \+ member(stack{tag: Key, qty: _}, Inv).
 cannot_enter(W, _A, N) :- get_dict(req_switch, N, Sw), world:flags(W, Fs), \+ get_dict(Sw, Fs, true).
+cannot_enter(_W, A, N) :-
+    member(deep_water, N.props),
+    \+ (props(A, P), member(swimming, P)),
+    \+ (inv(A, Inv), member(stack{tag: boat, qty: _}, Inv)).
 
 can_enter(W, A, N) :- \+ cannot_enter(W, A, N).
 

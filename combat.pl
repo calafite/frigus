@@ -1,6 +1,6 @@
 :- module(combat, [
     step_kill/5, valid_target/3, dynamic_enemy/2,
-    calc_dmg/3, get_aff/2, roll_hit/2, roll_crit/2, apply_dmg/8
+    calc_dmg/4, get_aff/2, roll_hit/2, roll_crit/2, apply_dmg/8
 ]).
 
 :- use_module(library(lists)).
@@ -36,9 +36,19 @@ valid_target(W, A, T) :-
     alive(A), alive(T), visibility:can_see_target(W, A, T),
     room(T, RId), world:node(W, RId, N), \+ member(safe, N.props).
 
-calc_dmg(A, Tag, Final) :-
+calc_dmg(W, A, Tag, Final) :-
     config:dmg(Tag, Base), config:scale(Tag, Stat, Mult),
-    stat(A, Stat, Val), Final is Base + floor(Val * Mult).
+    stat(A, Stat, Val), Tmp is Base + floor(Val * Mult),
+    ( get_dict(env, W, Env) -> apply_env_dmg(Env, Tag, Tmp, Final) ; Final = Tmp ).
+
+apply_env_dmg(Env, Sp, Base, Final) :-
+    config:spell_nature(Sp, Nature), !,
+    ( Env.moon == full_moon, Nature == magic -> Mult1 = 1.3 ; Mult1 = 1.0 ),
+    ( Env.weath == rain, Sp == chain_lightning -> Mult2 = 1.5 ; Mult2 = 1.0 ),
+    ( Env.weath == heatwave, Nature == fire -> Mult3 = 1.3 ; Mult3 = 1.0 ),
+    ( Env.weath == blizzard, Nature == ice -> Mult3 = 1.3 ; Mult3 = 1.0 ),
+    Final is floor(Base * Mult1 * Mult2 * Mult3).
+apply_env_dmg(_, _, Base, Base).
 
 get_aff(Tag, aff{type: Type, val: Val, dur: Dur}) :- config:inflicts(Tag, Type, Dur, Val), !.
 get_aff(_, none).
@@ -65,7 +75,7 @@ step_kill(W, AId, TId, NW, Evts) :-
     world:entity(W, AId, A), status:can_act(A), world:entity(W, TId, T),
     valid_target(W, A, T), crime_check(A, T, MidA), stealth:strip_stealth(MidA, CleanA),
     ( roll_hit(CleanA, T) ->
-        wpn(CleanA, Wpn), calc_dmg(CleanA, Wpn, BaseDmg),
+        wpn(CleanA, Wpn), calc_dmg(W, CleanA, Wpn, BaseDmg),
         ( get_dict(tag, CleanA, wolf) ->
             room(CleanA, RId), world:room_entities(W, RId, Ents),
             include(is_wolf, Ents, Wolves), length(Wolves, Count),
@@ -88,7 +98,7 @@ step_cast(W, AId, Sp, TId, NW, Evts) :-
     NMp is Mp - Cost, mp(CleanA, NMp, CastA),
     ( config:cooldown(Sp, CD) -> cds(CastA, Cds.put(Sp, CD), FinalA) ; FinalA = CastA ),
     ( roll_hit(FinalA, T) ->
-        calc_dmg(FinalA, Sp, BaseDmg), total_armor(T, Arm), NetDmg is max(1, BaseDmg - Arm),
+        calc_dmg(W, FinalA, Sp, BaseDmg), total_armor(T, Arm), NetDmg is max(1, BaseDmg - Arm),
         roll_crit(FinalA, IsCrit),
         ( IsCrit == true -> Dmg is NetDmg * 2, Evt = cast_crit(AId, Sp, TId, Dmg) ; Dmg = NetDmg, Evt = cast(AId, Sp, TId, Dmg) ),
         get_aff(Sp, Aff), apply_dmg(W, FinalA, T, Dmg, Aff, NW, Evts, Evt)
