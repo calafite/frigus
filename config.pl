@@ -1,8 +1,8 @@
 :- module(config, [
     dmg/2, cost/2, slot/2,
     weight/2, desc/2,
-    consumable/2,
-    hostile/2
+    consumable/2, val/2,
+    enemy/2
 ]).
 
 dmg(fists, 3).
@@ -17,6 +17,7 @@ slot(staff, wpn).
 slot(shield, shield).
 slot(robe, body).
 
+weight(gold, 0).
 weight(fists, 0).
 weight(sword, 4).
 weight(staff, 2).
@@ -29,6 +30,12 @@ desc(sword, "A standard iron blade.").
 
 consumable(potion, heal(15)).
 
-hostile(plyr{id: A}, plyr{id: B}) :- A \= B.
-hostile(plyr{id: _}, mob{id: _}).
-hostile(mob{id: _}, plyr{id: _}).
+val(potion, 10).
+val(sword, 50).
+val(robe, 20).
+
+enemy(guard, monster).
+enemy(guard, criminal).
+enemy(citizen, monster).
+enemy(citizen, criminal).
+enemy(player, monster).

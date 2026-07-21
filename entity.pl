@@ -1,8 +1,8 @@
 :- module(entity, [
     hp/2, hp/3, room/2, room/3, mp/2, mp/3,
     lvl/2, lvl/3, inv/2, inv/3, equip/2, equip/3,
-    wpn/2, alive/1, inv_add/4, inv_rem/4,
-    inv_wt/2, max_wt/2
+    fac/2, fac/3, wpn/2, alive/1,
+    inv_add/4, inv_rem/4, inv_wt/2, max_wt/2
 ]).
 
 :- use_module(config).
@@ -13,6 +13,7 @@ mp(E, E.mp).         mp(E, V, E.put(mp, V)).
 lvl(E, E.lvl).       lvl(E, V, E.put(lvl, V)).
 inv(E, E.inv).       inv(E, V, E.put(inv, V)).
 equip(E, E.equip).   equip(E, V, E.put(equip, V)).
+fac(E, E.fac).       fac(E, V, E.put(fac, V)).
 
 wpn(E, W) :- is_dict(E, plyr), get_dict(wpn, E.equip, W), W \== none, !.
 wpn(_, fists).
