@@ -1,6 +1,7 @@
-:- module(prog, [add_xp/4, step_train/5]).
+:- module(prog, [add_xp/4, step_train/5, rebirth_player/3]).
 
 :- use_module(library(random)).
+:- use_module(library(lists)).
 :- use_module(config).
 :- use_module(entity).
 :- use_module(world).
@@ -56,4 +57,36 @@ step_train(W, Id, Stat, NW, Evts) :-
             Evts = [train_failed(Id, Stat)],
             world:update(W, A1, NW)
         )
+    ).
+
+keep_stack(S) :-
+    get_dict(tag, S, Tag),
+    ( config:soulbound(Tag) -> true
+    ; get_dict(enchanted, S, Enc), member(permanent, E) -> true
+    ).
+
+rebirth_player(P, NP, SpawnRId) :-
+    SpawnRId = temple,
+    get_dict(max_hp, P, MaxHp),
+    get_dict(max_mp, P, MaxMp),
+    ( is_special(P) ->
+        NP = P.put(hp, MaxHp).put(mp, MaxMp).put(room, SpawnRId).put(affs, []).put(cds, cds{})
+    ;
+        inv(P, Inv),
+        include(keep_stack, Inv, NInv),
+        str(P, Str), NStr is max(10, floor(Str * 0.8)),
+        dex(P, Dex), NDex is max(10, floor(Dex * 0.8)),
+        int(P, Int), NInt is max(10, floor(Int * 0.8)),
+        NP = P.put(hp, MaxHp)
+               .put(mp, MaxMp)
+               .put(lvl, 1)
+               .put(xp, 0)
+               .put(str, NStr)
+               .put(dex, NDex)
+               .put(int, NInt)
+               .put(inv, NInv)
+               .put(room, SpawnRId)
+               .put(equip, equip{wpn: fists, shield: none, body: none})
+               .put(affs, [])
+               .put(cds, cds{})
     ).

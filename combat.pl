@@ -83,8 +83,6 @@ step_kill(W, AId, TId, NW, Evts) :-
     ( roll_hit(CleanA, T) ->
         wpn(CleanA, Wpn),
         calc_dmg(CleanA, Wpn, BaseDmg),
-
-        % Wolf Pack Hunter Ability
         ( get_dict(tag, CleanA, wolf) ->
             room(CleanA, RId),
             world:room_entities(W, RId, Ents),
@@ -95,7 +93,6 @@ step_kill(W, AId, TId, NW, Evts) :-
         ;
             Dmg1 = BaseDmg
         ),
-
         total_armor(T, Arm),
         NetDmg is max(1, Dmg1 - Arm),
         roll_crit(CleanA, IsCrit),
@@ -103,7 +100,8 @@ step_kill(W, AId, TId, NW, Evts) :-
         roll_double(CleanA, IsDouble),
         ( IsDouble == true -> Dmg is Dmg2 * 2, Evt = double_hit(AId, TId, Dmg)
         ; Dmg = Dmg2, ( IsCrit == true -> Evt = crit(AId, TId, Dmg) ; Evt = hit(AId, TId, Dmg) ) ),
-        get_aff(Wpn, Aff),
+
+        ( is_dict(CleanA, mob) -> get_aff(CleanA.tag, Aff) ; get_aff(Wpn, Aff) ),
         apply_dmg(W, CleanA, T, Dmg, Aff, NW, Evts, Evt)
     ;
         world:update(W, CleanA, NW),
@@ -160,8 +158,6 @@ apply_dmg(W, A, T, Dmg, _, NW, [HitEvt, dead(TId) | REvts], HitEvt) :-
 apply_dmg(W, A, T, Dmg, Aff, NW, [HitEvt | AffEvts], HitEvt) :-
     hp(T, THp), NTHp is THp - Dmg, hp(T, NTHp, NT1),
     status:apply_aff(NT1, Aff, NT2, BaseAffEvts),
-
-    % Basilisk Gaze Petrifying Ability
     ( get_dict(tag, A, basilisk), alive(NT2) ->
         random_between(1, 100, Roll),
         ( Roll <= 30 ->
@@ -183,5 +179,8 @@ reward(W, A, mob{id: MId, tag: Tag} = M, NW, [xp(AId, Xp) | Evts]) :-
     world:update(W1, NA, W2),
     drop:gen_drops(W2, M, NW, DropEvts),
     append(ProgEvts, DropEvts, Evts).
-reward(W, A, plyr{id: PId} = NT, NW, []) :-
-    world:update(W, A, TW), world:update(TW, NT, NW).
+reward(W, A, plyr{id: PId} = NT, NW, [respawn(PId, SpawnRId) | Evts]) :-
+    prog:rebirth_player(NT, RebornPlayer, SpawnRId),
+    world:update(W, A, TW),
+    world:update(TW, RebornPlayer, NW),
+    Evts = [].

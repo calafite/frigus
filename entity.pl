@@ -6,7 +6,7 @@
     fac/2, fac/3, affs/2, affs/3, wpn/2, alive/1,
     reps/2, reps/3, rep_val/3, rep_mod/4,
     cds/2, cds/3, total_armor/2, props/2,
-    ceils/2, ceils/3, get_ceil/3,
+    ceils/2, ceils/3, get_ceil/3, is_special/1,
     inv_add/4, inv_rem/4, inv_wt/2, max_wt/2,
     allowed_race/2
 ]).
@@ -126,3 +126,6 @@ max_wt(E, W) :- stat(E, str, S), W is S * 10.
 
 allowed_race(E, Race) :- \+ config:restricted_race(Race), !.
 allowed_race(E, Race) :- config:restricted_race(Race), config:special_player(E.id).
+
+is_special(E) :- get_dict(race, E, Race), config:restricted_race(Race), !.
+is_special(E) :- config:special_player(E.id).
