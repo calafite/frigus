@@ -11,17 +11,23 @@ step(W, Id, kill(TId), NW, Evts) :- step_kill(W, Id, TId, NW, Evts).
 step(W, Id, cast(Sp, TId), NW, Evts) :- step_cast(W, Id, Sp, TId, NW, Evts).
 step(W, Id, loot(IId), NW, Evts) :- step_loot(W, Id, IId, NW, Evts).
 step(W, Id, equip(Tag), NW, Evts) :- step_equip(W, Id, Tag, NW, Evts).
+step(W, Id, use(Tag), NW, Evts) :- step_use(W, Id, Tag, NW, Evts).
 
-step(W, Id, look, W, [look(RId, Type, Exits, OIds, MIds, IIds)]) :-
+step(W, Id, look, W, [look(RId, Desc, Props, Exits, OIds, MIds, IData)]) :-
     world:entity(W, Id, A),
     entity:room(A, RId),
     world:node(W, RId, Node),
-    Type = Node.type,
+
+    Desc = Node.desc,
+    Props = Node.props,
     dict_keys(Node.exits, Exits),
+
     world:room_entities(W, RId, Ents),
     findall(E.id, (member(E, Ents), is_dict(E, plyr), E.id \= Id), OIds),
     findall(E.id, (member(E, Ents), is_dict(E, mob), alive(E)), MIds),
-    findall(E.id, (member(E, Ents), is_dict(E, item)), IIds).
+
+    findall(item{id: E.id, tag: E.tag, qty: E.qty},
+           (member(E, Ents), is_dict(E, item)), IData).
 
 to_act(D, move(Dir)) :- D.type == "move", atom_string(Dir, D.dir).
 to_act(D, look)      :- D.type == "look".
@@ -29,6 +35,7 @@ to_act(D, kill(T))   :- D.type == "kill", atom_string(T, D.target).
 to_act(D, cast(S, T)):- D.type == "cast", atom_string(S, D.spell), atom_string(T, D.target).
 to_act(D, loot(T))   :- D.type == "loot", atom_string(T, D.target).
 to_act(D, equip(I))  :- D.type == "equip", atom_string(I, D.item).
+to_act(D, use(I))    :- D.type == "use", atom_string(I, D.item).
 
 api_step(Req, Res) :-
     to_act(Req.action, Act),

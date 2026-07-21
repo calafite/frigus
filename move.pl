@@ -7,13 +7,16 @@
 step_move(W, Id, Dir, NW, [moved(Id, Dir, NRId) | SideEvts]) :-
     world:entity(W, Id, A),
     entity:room(A, RId),
-    world:node(W, RId, Node),
+    world:node(W, RId, CurNode),
 
-    get_dict(Dir, Node.exits, NRId),
+    get_dict(Dir, CurNode.exits, NRId),
     world:node(W, NRId, NextNode),
 
     map:can_enter(W, A, NextNode),
-    entity:room(A, NRId, NA),
-    map:on_enter(W, NA, NextNode, NNA, SideEvts),
 
-    world:update(W, NNA, NW).
+    map:on_exit(W, A, CurNode, MidA, ExitEvts),
+    entity:room(MidA, NRId, MovedA),
+    map:on_enter(W, MovedA, NextNode, FinalA, EnterEvts),
+
+    append(ExitEvts, EnterEvts, SideEvts),
+    world:update(W, FinalA, NW).
