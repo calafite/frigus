@@ -1,4 +1,4 @@
-:- module(map, [can_enter/3, on_enter/5, on_exit/5]).
+:- module(map, [can_enter/5, on_enter/5, on_exit/5]).
 
 :- use_module(entity).
 :- use_module(world).
@@ -6,15 +6,33 @@
 :- use_module(library(random)).
 :- use_module(library(lists)).
 
-cannot_enter(_W, A, N) :- get_dict(req_lvl, N, Lvl), lvl(A, ALvl), ALvl < Lvl.
-cannot_enter(_W, A, N) :- get_dict(req_key, N, Key), inv(A, Inv), \+ member(stack{tag: Key, qty: _}, Inv).
-cannot_enter(W, _A, N) :- get_dict(req_switch, N, Sw), world:flags(W, Fs), \+ get_dict(Sw, Fs, true).
-cannot_enter(_W, A, N) :-
+cannot_enter(_W, A, _C, N, _Dir) :- get_dict(req_lvl, N, Lvl), lvl(A, ALvl), ALvl < Lvl.
+cannot_enter(_W, A, _C, N, _Dir) :- get_dict(req_key, N, Key), inv(A, Inv), \+ member(stack{tag: Key, qty: _}, Inv).
+cannot_enter(W, _A, _C, N, _Dir) :- get_dict(req_switch, N, Sw), world:flags(W, Fs), \+ get_dict(Sw, Fs, true).
+
+cannot_enter(_W, A, _C, N, _Dir) :-
     member(deep_water, N.props),
+    \+ altitude(A, air),
     \+ (props(A, P), member(swimming, P)),
     \+ (inv(A, Inv), member(stack{tag: boat, qty: _}, Inv)).
 
-can_enter(W, A, N) :- \+ cannot_enter(W, A, N).
+cannot_enter(_W, A, C, _N, Dir) :-
+    get_dict(req_climb, C, Climbs), member(Dir, Climbs),
+    \+ altitude(A, air),
+    \+ climb_state(A, true).
+
+cannot_enter(_W, A, C, _N, Dir) :-
+    get_dict(req_flying, C, Flights), member(Dir, Flights),
+    \+ altitude(A, air).
+
+cannot_enter(_W, A, C, _N, Dir) :-
+    get_dict(chasm_exits, C, Chasms), member(Dir, Chasms),
+    \+ altitude(A, air).
+
+cannot_enter(_W, _A, C, _N, Dir) :-
+    get_dict(one_way_exits, C, OneWays), member(Dir, OneWays).
+
+can_enter(W, A, C, N, Dir) :- \+ cannot_enter(W, A, C, N, Dir).
 
 on_exit(_W, A, _N, A, []) :- !.
 
@@ -30,6 +48,7 @@ on_enter(W, A, N, NA, [teleported(A.id, TargetId)]) :-
 
 on_enter(_W, A, N, NA, [trap(A.id, Dmg) | AffEvts]) :-
     get_dict(trap, N, Dmg),
+    \+ altitude(A, air),
     hp(A, Hp),
     NHp is max(0, Hp - Dmg),
     hp(A, NHp, A1),

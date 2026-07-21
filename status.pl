@@ -4,6 +4,7 @@
 :- use_module(world).
 :- use_module(env).
 :- use_module(survival).
+:- use_module(simulation).
 
 can_act(E) :-
     affs(E, A),
@@ -20,7 +21,9 @@ apply_aff(E, Aff, NE, [inflicted(E.id, Aff.type)]) :-
     affs(E, NA, NE).
 
 step_tick(W, system, NW, Evts) :- !,
-    env:tick_env(W, NW, Evts).
+    env:tick_env(W, W1, Evts1),
+    simulation:tick_simulation(W1, NW, Evts2),
+    append(Evts1, Evts2, Evts).
 
 step_tick(W, Id, NW, Evts) :-
     world:entity(W, Id, E),
@@ -36,17 +39,27 @@ step_tick(W, Id, NW, Evts) :-
         Regen is floor(MaxHp * 0.1),
         TmpHp is min(MaxHp, Hp + Regen)
     ; TmpHp = Hp ),
-    NHp is max(0, TmpHp - Dmg),
+    room(E1, RId), world:node(W, RId, N),
+    ( member(burning(I), N.props) ->
+        FDmg is I * 4,
+        NHp is max(0, TmpHp - FDmg - Dmg),
+        FEvt = [fire_burn(Id, FDmg)]
+    ;
+        NHp is max(0, TmpHp - Dmg),
+        FEvt = []
+    ),
     hp(E1, NHp, E2),
     affs(E2, NA, E3),
     cds(E3, Cds),
     dec_cds(Cds, NCds),
     cds(E3, NCds, NE),
     ( NHp =:= 0 ->
-        append([dead(Id)|TEvts], SEvts, AllEvts),
+        append([dead(Id)|TEvts], SEvts, AllEvts1),
+        append(AllEvts1, FEvt, AllEvts),
         Evts = AllEvts,
         world:remove(W, Id, NW)
-    ; append(TEvts, SEvts, Evts),
+    ; append(TEvts, SEvts, TmpEvts),
+      append(TmpEvts, FEvt, Evts),
       world:update(W, NE, NW) ).
 
 dec_cds(Cds, NCds) :-
@@ -80,5 +93,8 @@ tick_affs(E, [A|T], [NA|NT], Dmg, Evts) :-
 aff_dmg(aff{type: poison, val: V, dur: _}, V, tick(poison, V)) :- !.
 aff_dmg(aff{type: burn, val: V, dur: _}, V, tick(burn, V)) :- !.
 aff_dmg(aff{type: bloodline_curse, val: V, dur: _}, V, tick(bloodline_curse, V)) :- !.
+aff_dmg(aff{type: plague, val: _, dur: _}, 2, tick(plague, 2)) :- !.
+aff_dmg(aff{type: fever, val: _, dur: _}, 3, tick(fever, 3)) :- !.
+aff_dmg(aff{type: blight, val: _, dur: _}, 4, tick(blight, 4)) :- !.
 aff_dmg(aff{type: buff, stat: S, val: V, dur: _}, 0, tick(buff(S), V)) :- !.
 aff_dmg(aff{type: T, val: _, dur: _}, 0, tick(T, 0)).

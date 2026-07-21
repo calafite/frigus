@@ -9,6 +9,7 @@
     ceils/2, ceils/3, get_ceil/3, is_special/1,
     skills/2, skills/3, skill_val/3, skill_mod/4,
     quests/2, quests/3,
+    altitude/2, altitude/3, climb_state/2, climb_state/3,
     inv_add/4, inv_rem/4, inv_wt/2, max_wt/2,
     allowed_race/2
 ]).
@@ -54,6 +55,14 @@ ceils(E, V, E.put(ceils, V)).
 quests(E, Q) :- get_dict(quests, E, Q), !.
 quests(_, quests{}).
 quests(E, V, E.put(quests, V)).
+
+altitude(E, A) :- get_dict(altitude, E, A), !.
+altitude(_, ground).
+altitude(E, V, E.put(altitude, V)).
+
+climb_state(E, C) :- get_dict(climb_state, E, C), !.
+climb_state(_, false).
+climb_state(E, V, E.put(climb_state, V)).
 
 get_ceil(E, Stat, Val) :-
     ( race(E, demigod) -> Val = 9999
@@ -103,6 +112,9 @@ total_armor(_, 0).
 
 buff_mod([], _, 0).
 buff_mod([aff{type: buff, stat: S, val: V, dur: _}|T], S, Out) :- buff_mod(T, S, R), Out is R + V, !.
+buff_mod([aff{type: plague, val: _, dur: _}|T], S, Out) :- buff_mod(T, S, R), Out is R - 5, !.
+buff_mod([aff{type: fever, val: _, dur: _}|T], S, Out) :- (S == int -> buff_mod(T, S, R), Out is R - 10, ! ; buff_mod(T, S, Out)).
+buff_mod([aff{type: blight, val: _, dur: _}|T], S, Out) :- ((S == str ; S == dex) -> buff_mod(T, S, R), Out is R - 5, ! ; buff_mod(T, S, Out)).
 buff_mod([_|T], S, Out) :- buff_mod(T, S, Out).
 
 stat(E, S, V) :-

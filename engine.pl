@@ -48,6 +48,9 @@ step(W, Id, wake, NW, Evts) :- survival:step_wake(W, Id, NW, Evts).
 step(W, Id, drink(S), NW, Evts) :- survival:step_drink(W, Id, S, NW, Evts).
 step(W, Id, fill, NW, Evts) :- survival:step_fill(W, Id, NW, Evts).
 step(W, Id, fish, NW, Evts) :- survival:step_fish(W, Id, NW, Evts).
+step(W, Id, fly(Alt), NW, Evts) :- survival:step_fly(W, Id, Alt, NW, Evts).
+step(W, Id, climb, NW, Evts) :- survival:step_climb(W, Id, NW, Evts).
+step(W, Id, jump(Dir), NW, Evts) :- move:step_jump(W, Id, Dir, NW, Evts).
 
 step(W, Id, look, W, [look(RId, Desc, Props, Exits, OIds, MIds, IData)]) :-
     world:entity(W, Id, A), room(A, RId), world:node(W, RId, Node),
@@ -111,6 +114,10 @@ to_act(D, drink) :- D.type == "drink", \+ get_dict(item, D, _), S = room.
 to_act(D, drink(S)) :- D.type == "drink", atom_string(S, D.item).
 to_act(D, fill) :- D.type == "fill".
 to_act(D, fish) :- D.type == "fish".
+to_act(D, fly) :- D.type == "fly", atom_string(A, D.altitude), A == "air", Alt = air.
+to_act(D, fly) :- D.type == "fly", atom_string(A, D.altitude), A == "ground", Alt = ground.
+to_act(D, climb) :- D.type == "climb".
+to_act(D, jump(Dir)) :- D.type == "jump", atom_string(Dir, D.dir).
 
 api_step(Req, Res) :-
     to_act(Req.action, Act),
