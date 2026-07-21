@@ -3,10 +3,12 @@
 :- use_module(config).
 :- use_module(entity).
 :- use_module(world).
+:- use_module(status).
 
 step_loot(W, Id, IId, NW, [looted(Id, Tag, Qty)]) :-
     world:entity(W, Id, A),
     alive(A),
+    status:can_act(A),
     room(A, RId),
     world:entity(W, IId, I),
     room(I, RId),
@@ -25,6 +27,7 @@ step_loot(W, Id, IId, NW, [looted(Id, Tag, Qty)]) :-
 step_equip(W, Id, Tag, NW, [equipped(Id, Tag, Slot)]) :-
     world:entity(W, Id, A),
     alive(A),
+    status:can_act(A),
     config:req(Tag, ReqStat, ReqVal),
     stat(A, ReqStat, Val),
     Val >= ReqVal,
@@ -39,17 +42,20 @@ step_equip(W, Id, Tag, NW, [equipped(Id, Tag, Slot)]) :-
     inv(TmpA, NInv, NA),
     world:update(W, NA, NW).
 
-step_use(W, Id, Tag, NW, [used(Id, Tag, Effect)]) :-
+step_use(W, Id, Tag, NW, [used(Id, Tag, Effect) | Evts]) :-
     world:entity(W, Id, A),
     alive(A),
+    status:can_act(A),
     inv(A, Inv),
     inv_rem(Inv, Tag, 1, NInv),
     config:consumable(Tag, Effect),
-    apply_eff(Effect, A, TmpA),
+    apply_eff(Effect, A, TmpA, Evts),
     inv(TmpA, NInv, NA),
     world:update(W, NA, NW).
 
-apply_eff(heal(Amt), A, NA) :-
+apply_eff(heal(Amt), A, NA, []) :-
     hp(A, Hp),
     NHp is Hp + Amt,
     hp(A, NHp, NA).
+apply_eff(buff(Stat, Val, Dur), A, NA, Evts) :-
+    status:apply_aff(A, aff{type: buff, stat: Stat, val: Val, dur: Dur}, NA, Evts).

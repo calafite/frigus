@@ -3,7 +3,7 @@
     lvl/2, lvl/3, xp/2, xp/3, class/2,
     str/2, str/3, dex/2, dex/3, int/2, int/3,
     inv/2, inv/3, equip/2, equip/3, stat/3,
-    fac/2, fac/3, wpn/2, alive/1,
+    fac/2, fac/3, affs/2, affs/3, wpn/2, alive/1,
     inv_add/4, inv_rem/4, inv_wt/2, max_wt/2
 ]).
 
@@ -21,8 +21,19 @@ int(E, E.int).       int(E, V, E.put(int, V)).
 inv(E, E.inv).       inv(E, V, E.put(inv, V)).
 equip(E, E.equip).   equip(E, V, E.put(equip, V)).
 fac(E, E.fac).       fac(E, V, E.put(fac, V)).
+affs(E, A) :- get_dict(affs, E, A), !.
+affs(_, []).
+affs(E, V, E.put(affs, V)).
 
-stat(E, S, V) :- get_dict(S, E, V), !.
+buff_mod([], _, 0).
+buff_mod([aff{type: buff, stat: S, val: V, dur: _}|T], S, Out) :- buff_mod(T, S, R), Out is R + V, !.
+buff_mod([_|T], S, Out) :- buff_mod(T, S, Out).
+
+stat(E, S, V) :-
+    get_dict(S, E, Base),
+    affs(E, A),
+    buff_mod(A, S, Mod),
+    V is Base + Mod, !.
 stat(_, _, 1).
 
 wpn(E, W) :- is_dict(E, plyr), get_dict(wpn, E.equip, W), W \== none, !.

@@ -7,6 +7,7 @@
 :- use_module(item).
 :- use_module(npc).
 :- use_module(ai).
+:- use_module(status).
 
 step(W, Id, move(Dir), NW, Evts) :- step_move(W, Id, Dir, NW, Evts).
 step(W, Id, kill(TId), NW, Evts) :- step_kill(W, Id, TId, NW, Evts).
@@ -19,6 +20,7 @@ step(W, Id, buy(TId, T, Q), NW, Evts) :- step_buy(W, Id, TId, T, Q, NW, Evts).
 step(W, Id, sell(TId, T, Q), NW, Evts) :- step_sell(W, Id, TId, T, Q, NW, Evts).
 step(W, Id, steal(TId, T, Q), NW, Evts) :- step_steal(W, Id, TId, T, Q, NW, Evts).
 step(W, Id, ai_tick, NW, Evts) :- step_ai(W, Id, NW, Evts).
+step(W, Id, tick, NW, Evts) :- step_tick(W, Id, NW, Evts).
 
 step(W, Id, look, W, [look(RId, Desc, Props, Exits, OIds, MIds, IData)]) :-
     world:entity(W, Id, A),
@@ -45,6 +47,7 @@ to_act(D, buy(T, I, Q)) :- D.type == "buy", atom_string(T, D.target), atom_strin
 to_act(D, sell(T, I, Q)):- D.type == "sell", atom_string(T, D.target), atom_string(I, D.item), Q = D.qty.
 to_act(D, steal(T, I, Q)):- D.type == "steal", atom_string(T, D.target), atom_string(I, D.item), Q = D.qty.
 to_act(D, ai_tick)   :- D.type == "ai_tick".
+to_act(D, tick)      :- D.type == "tick".
 
 api_step(Req, Res) :-
     to_act(Req.action, Act),

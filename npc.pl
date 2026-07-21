@@ -50,11 +50,14 @@ step_sell(W, AId, TId, Tag, Qty, NW, [sold(AId, Tag, Qty, Earned)]) :-
     world:update(W, NT, W1),
     world:update(W1, NA, NW).
 
-roll_steal(A, T) :-
+roll_steal(A, T, Tag, Qty) :-
     stat(A, dex, Dex),
     stat(T, int, Int),
+    config:val(Tag, Val),
+    config:rarity(Tag, Rar),
     random_between(1, 20, Roll),
-    Roll + Dex >= 10 + Int.
+    Target is 10 + Int + floor((Val * Qty) / 10) + (Rar * 5),
+    Roll + Dex >= Target.
 
 step_steal(W, AId, TId, Tag, Qty, NW, Evts) :-
     world:entity(W, AId, A),
@@ -63,7 +66,7 @@ step_steal(W, AId, TId, Tag, Qty, NW, Evts) :-
     room(T, RId),
     inv(T, TInv),
     inv_rem(TInv, Tag, Qty, NTInv),
-    ( roll_steal(A, T) ->
+    ( roll_steal(A, T, Tag, Qty) ->
         inv(A, AInv),
         inv_add(AInv, Tag, Qty, NAInv),
         inv(A, NAInv, NA),
