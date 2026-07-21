@@ -8,6 +8,7 @@
     cds/2, cds/3, total_armor/2, props/2,
     ceils/2, ceils/3, get_ceil/3, is_special/1,
     skills/2, skills/3, skill_val/3, skill_mod/4,
+    quests/2, quests/3,
     inv_add/4, inv_rem/4, inv_wt/2, max_wt/2,
     allowed_race/2
 ]).
@@ -50,6 +51,10 @@ ceils(E, R) :- get_dict(ceils, E, R), !.
 ceils(_, ceils{}).
 ceils(E, V, E.put(ceils, V)).
 
+quests(E, Q) :- get_dict(quests, E, Q), !.
+quests(_, quests{}).
+quests(E, V, E.put(quests, V)).
+
 get_ceil(E, Stat, Val) :-
     ( race(E, demigod) -> Val = 9999
     ; race(E, angel) -> Val = 9999
@@ -63,28 +68,22 @@ skills(_, skills{}).
 skills(E, V, E.put(skills, V)).
 
 skill_val(E, Skill, Val) :-
-    skills(E, S),
-    get_dict(Skill, S, Val), !.
+    skills(E, S), get_dict(Skill, S, Val), !.
 skill_val(_, _, 1).
 
 skill_mod(E, Skill, Val, NE) :-
     skills(E, S),
     ( get_dict(Skill, S, Cur) -> NVal is Cur + Val ; NVal = Val ),
-    NS = S.put(Skill, NVal),
-    skills(E, NS, NE).
+    NS = S.put(Skill, NVal), skills(E, NS, NE).
 
 rep_val(E, Fac, Val) :-
-    is_dict(E, plyr),
-    reps(E, Reps),
-    get_dict(Fac, Reps, Val), !.
+    is_dict(E, plyr), reps(E, Reps), get_dict(Fac, Reps, Val), !.
 rep_val(_, _, 0).
 
 rep_mod(E, Fac, Val, NE) :-
-    is_dict(E, plyr),
-    reps(E, Reps),
+    is_dict(E, plyr), reps(E, Reps),
     ( get_dict(Fac, Reps, Cur) -> NVal is Cur + Val ; NVal = Val ),
-    NReps = Reps.put(Fac, NVal),
-    reps(E, NReps, NE), !.
+    NReps = Reps.put(Fac, NVal), reps(E, NReps, NE), !.
 rep_mod(E, _, _, E).
 
 armor_val(none, 0).
@@ -93,16 +92,13 @@ armor_val(Tag, Val) :- config:armor_val(Tag, Val), !.
 armor_val(_, 0).
 
 total_armor(E, Armor) :-
-    is_dict(E, plyr), !,
-    equip(E, Eq),
+    is_dict(E, plyr), !, equip(E, Eq),
     get_dict(shield, Eq, Shield), armor_val(Shield, SVal),
     get_dict(body, Eq, Body), armor_val(Body, BVal),
     affs(E, Affs),
     ( member(aff{type: buff, stat: body, val: BMod, dur: _}, Affs) ->
         Armor is SVal + BVal + BMod
-    ;
-        Armor is SVal + BVal
-    ).
+    ; Armor is SVal + BVal ).
 total_armor(_, 0).
 
 buff_mod([], _, 0).
@@ -110,9 +106,7 @@ buff_mod([aff{type: buff, stat: S, val: V, dur: _}|T], S, Out) :- buff_mod(T, S,
 buff_mod([_|T], S, Out) :- buff_mod(T, S, Out).
 
 stat(E, S, V) :-
-    get_dict(S, E, Base),
-    affs(E, A),
-    buff_mod(A, S, Mod),
+    get_dict(S, E, Base), affs(E, A), buff_mod(A, S, Mod),
     ( race(E, Race) -> config:race_bonus(Race, S, Bonus) ; Bonus = 0 ),
     V is Base + Mod + Bonus, !.
 stat(_, _, 1).
@@ -128,15 +122,12 @@ inv_add(Inv, Tag, Qty, [stack{tag: Tag, qty: Qty} | Inv]).
 
 inv_rem(Inv, Tag, Qty, NInv) :-
     select(stack{tag: Tag, qty: OQ}, Inv, R),
-    OQ >= Qty,
-    NQ is OQ - Qty,
+    OQ >= Qty, NQ is OQ - Qty,
     ( NQ =:= 0 -> NInv = R ; NInv = [stack{tag: Tag, qty: NQ} | R] ).
 
 inv_wt([], 0).
 inv_wt([stack{tag: Tag, qty: Q} | T], W) :-
-    config:weight(Tag, UW),
-    inv_wt(T, RW),
-    W is RW + (UW * Q).
+    config:weight(Tag, UW), inv_wt(T, RW), W is RW + (UW * Q).
 
 max_wt(E, W) :- stat(E, str, S), W is S * 10.
 

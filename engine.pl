@@ -16,6 +16,7 @@
 :- use_module(craft).
 :- use_module(social).
 :- use_module(trade).
+:- use_module(quest).
 
 step(W, Id, move(Dir), NW, Evts) :- step_move(W, Id, Dir, NW, Evts).
 step(W, Id, kill(TId), NW, Evts) :- step_kill(W, Id, TId, NW, Evts).
@@ -38,6 +39,8 @@ step(W, Id, chat(C, M), NW, Evts) :- social:step_chat(W, Id, C, M, NW, Evts).
 step(W, Id, party(A), NW, Evts) :- social:step_party(W, Id, A, NW, Evts).
 step(W, Id, guild(A), NW, Evts) :- social:step_guild(W, Id, A, NW, Evts).
 step(W, Id, trade(A), NW, Evts) :- trade:step_trade(W, Id, A, NW, Evts).
+step(W, Id, quest(accept(Q)), NW, Evts) :- quest:step_accept(W, Id, Q, NW, Evts).
+step(W, Id, quest(turn_in(Q)), NW, Evts) :- quest:step_turn_in(W, Id, Q, NW, Evts).
 
 step(W, Id, look, W, [look(RId, Desc, Props, Exits, OIds, MIds, IData)]) :-
     world:entity(W, Id, A), room(A, RId), world:node(W, RId, Node),
@@ -90,6 +93,9 @@ to_act(D, trade(add(TId, I, Q))) :- D.type == "trade_add", atom_string(TId, D.tr
 to_act(D, trade(gold(TId, G))) :- D.type == "trade_gold", atom_string(TId, D.trade), G = D.qty.
 to_act(D, trade(ready(TId))) :- D.type == "trade_ready", atom_string(TId, D.trade).
 to_act(D, trade(cancel(TId))) :- D.type == "trade_cancel", atom_string(TId, D.trade).
+
+to_act(D, quest(accept(Q))) :- D.type == "quest_accept", atom_string(Q, D.quest).
+to_act(D, quest(turn_in(Q))) :- D.type == "quest_turn_in", atom_string(Q, D.quest).
 
 api_step(Req, Res) :-
     to_act(Req.action, Act),

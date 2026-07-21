@@ -1,6 +1,6 @@
 :- module(social, [
     step_chat/6, step_party/5, step_guild/5,
-    party_reward/6, soc/2, soc/3
+    party_reward/7, soc/2, soc/3
 ]).
 
 :- use_module(library(random)).
@@ -8,17 +8,16 @@
 :- use_module(entity).
 :- use_module(world).
 :- use_module(prog).
+:- use_module(quest).
 
 soc(W, S) :- get_dict(social, W, S), !.
 soc(_, dict{parties: dict{}, guilds: dict{}, trades: dict{}}).
 soc(W, S, W.put(social, S)).
 
 chat_tgts(W, local, Id, Tgts) :-
-    world:entity(W, Id, A), room(A, RId),
-    world:room_entities(W, RId, Ents),
+    world:entity(W, Id, A), room(A, RId), world:room_entities(W, RId, Ents),
     findall(E.id, (member(E, Ents), is_dict(E, plyr)), Tgts).
-chat_tgts(W, global, _, Tgts) :-
-    findall(P.id, member(P, W.plyrs), Tgts).
+chat_tgts(W, global, _, Tgts) :- findall(P.id, member(P, W.plyrs), Tgts).
 chat_tgts(W, party, Id, Tgts) :-
     world:entity(W, Id, A), get_dict(party, A, PId), PId \== none,
     soc(W, S), get_dict(PId, S.parties, P), Tgts = P.members.
@@ -66,17 +65,18 @@ step_party(W, Id, kick(Tgt), NW, [party_kicked(Tgt)]) :-
     soc(W, S.put(parties, NPs), W1),
     world:entity(W1, Tgt, T), world:update(W1, T.put(party, none), NW).
 
-party_reward(W, PId, RId, Base, NW, Evts) :-
+party_reward(W, PId, RId, Tag, Base, NW, Evts) :-
     soc(W, S), get_dict(PId, S.parties, P),
     findall(M, (member(M, P.members), world:entity(W, M, E), room(E, RId)), Valid),
     length(Valid, L), ( L > 0 -> Xp is ceil(Base / L) ; Xp = Base ),
-    dist_xp(W, Valid, Xp, NW, Evts).
+    dist_rew(W, Valid, Tag, Xp, NW, Evts).
 
-dist_xp(W, [], _, W, []).
-dist_xp(W, [H|T], Xp, NW, [xp(H, Xp)|Evts]) :-
-    world:entity(W, H, A), prog:add_xp(A, Xp, NA, PEvts),
-    world:update(W, NA, W1), dist_xp(W1, T, Xp, NW, REvts),
-    append(PEvts, REvts, Evts).
+dist_rew(W, [], _, _, W, []).
+dist_rew(W, [H|T], Tag, Xp, NW, [xp(H, Xp)|Evts]) :-
+    world:entity(W, H, A), quest:update_kill(A, Tag, QA, QEvts),
+    prog:add_xp(QA, Xp, NA, PEvts), world:update(W, NA, W1),
+    dist_rew(W1, T, Tag, Xp, NW, REvts),
+    append(QEvts, PEvts, Tmp), append(Tmp, REvts, Evts).
 
 step_guild(W, Id, create(Name), NW, [guild_created(Id, GId)]) :-
     world:entity(W, Id, A), \+ get_dict(guild, A, _),

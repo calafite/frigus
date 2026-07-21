@@ -14,6 +14,7 @@
 :- use_module(visibility).
 :- use_module(stealth).
 :- use_module(social).
+:- use_module(quest).
 
 dynamic_enemy(A, T) :-
     fac(A, FA), fac(T, FT),
@@ -117,8 +118,9 @@ apply_dmg(W, A, T, Dmg, Aff, NW, [HitEvt | AffEvts], HitEvt) :-
 reward(W, A, mob{id: MId, tag: Tag} = M, NW, Evts) :-
     config:mob_xp(Tag, Xp), world:remove(W, MId, W1),
     ( get_dict(party, A, PId), PId \== none ->
-        social:party_reward(W1, PId, A.room, Xp, W2, XpEvts)
-    ; prog:add_xp(A, Xp, NA, ProgEvts), world:update(W1, NA, W2), XpEvts = [xp(A.id, Xp) | ProgEvts] ),
+        social:party_reward(W1, PId, A.room, Tag, Xp, W2, XpEvts)
+    ; quest:update_kill(A, Tag, QA, QEvts), prog:add_xp(QA, Xp, NA, PEvts),
+      world:update(W1, NA, W2), append(QEvts, PEvts, XpEvts) ),
     drop:gen_drops(W2, M, NW, DropEvts), append(XpEvts, DropEvts, Evts).
 reward(W, A, plyr{id: PId} = NT, NW, [respawn(PId, SpawnRId) | Evts]) :-
     prog:rebirth_player(NT, RebornPlayer, SpawnRId),
