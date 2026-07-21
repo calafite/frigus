@@ -1,4 +1,4 @@
-:- module(combat, [step_kill/5, step_cast/6, valid_target/3]).
+:- module(combat, [step_kill/5, step_cast/6, valid_target/3, dynamic_enemy/2]).
 
 :- use_module(library(lists)).
 :- use_module(config).
@@ -8,12 +8,22 @@
 :- use_module(drop).
 :- use_module(status).
 
-is_crime(FA, FB) :- \+ config:enemy(FA, FB), FA \== criminal.
+dynamic_enemy(A, T) :-
+    fac(A, FA), fac(T, FT),
+    ( config:enemy(FA, FT)
+    ; rep_val(A, FT, Val), Val =< -20
+    ; rep_val(T, FA, Val), Val =< -20
+    ).
+
+is_crime(A, T) :-
+    \+ dynamic_enemy(A, T),
+    fac(A, FA), FA \== criminal.
 
 crime_check(A, T, NA) :-
-    fac(A, FA), fac(T, FT),
-    is_crime(FA, FT), !,
-    fac(A, criminal, NA).
+    fac(T, FT),
+    is_crime(A, T), !,
+    fac(A, criminal, A1),
+    rep_mod(A1, FT, -15, NA).
 crime_check(A, _, A).
 
 valid_target(W, A, T) :-

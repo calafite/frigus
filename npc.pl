@@ -10,7 +10,27 @@ step_talk(W, AId, TId, W, [say(TId, Msg)]) :-
     world:entity(W, TId, T),
     room(A, RId),
     room(T, RId),
+    fac(T, TFac),
+    rep_val(A, TFac, Rep),
+    get_dict(dialogue, T, Dial),
+    ( Rep =< -20 -> get_dict(hostile, Dial, Msg)
+    ; Rep >= 20  -> get_dict(friendly, Dial, Msg)
+    ; get_dict(neutral, Dial, Msg)
+    ), !.
+step_talk(W, AId, TId, W, [say(TId, Msg)]) :-
+    world:entity(W, AId, A),
+    world:entity(W, TId, T),
+    room(A, RId),
+    room(T, RId),
     get_dict(dialogue, T, Msg).
+
+buy_mod(Rep, Mod) :-
+    M is 1.0 - (Rep * 0.01),
+    Mod is max(0.5, min(2.0, M)).
+
+sell_mod(Rep, Mod) :-
+    M is 0.5 + (Rep * 0.01),
+    Mod is max(0.2, min(0.9, M)).
 
 step_buy(W, AId, TId, Tag, Qty, NW, [bought(AId, Tag, Qty, Cost)]) :-
     world:entity(W, AId, A),
@@ -18,15 +38,19 @@ step_buy(W, AId, TId, Tag, Qty, NW, [bought(AId, Tag, Qty, Cost)]) :-
     room(A, RId),
     room(T, RId),
     member(merchant, T.props),
+    fac(T, TFac),
+    rep_val(A, TFac, Rep),
+    buy_mod(Rep, Mod),
     config:val(Tag, Val),
-    Cost is Val * Qty,
+    Cost is floor(Val * Qty * Mod),
     inv(A, AInv),
     inv(T, TInv),
     inv_rem(TInv, Tag, Qty, TInv1),
     inv_add(TInv1, gold, Cost, NTInv),
     inv_rem(AInv, gold, Cost, AInv1),
     inv_add(AInv1, Tag, Qty, NAInv),
-    inv(A, NAInv, NA),
+    rep_mod(A, TFac, 1, NA1),
+    inv(NA1, NAInv, NA),
     inv(T, NTInv, NT),
     world:update(W, NT, W1),
     world:update(W1, NA, NW).
@@ -37,15 +61,19 @@ step_sell(W, AId, TId, Tag, Qty, NW, [sold(AId, Tag, Qty, Earned)]) :-
     room(A, RId),
     room(T, RId),
     member(merchant, T.props),
+    fac(T, TFac),
+    rep_val(A, TFac, Rep),
+    sell_mod(Rep, Mod),
     config:val(Tag, Val),
-    Earned is floor(Val * Qty * 0.5),
+    Earned is floor(Val * Qty * Mod),
     inv(A, AInv),
     inv(T, TInv),
     inv_rem(TInv, gold, Earned, TInv1),
     inv_add(TInv1, Tag, Qty, NTInv),
     inv_rem(AInv, Tag, Qty, AInv1),
     inv_add(AInv1, gold, Earned, NAInv),
-    inv(A, NAInv, NA),
+    rep_mod(A, TFac, 1, NA1),
+    inv(NA1, NAInv, NA),
     inv(T, NTInv, NT),
     world:update(W, NT, W1),
     world:update(W1, NA, NW).
@@ -66,16 +94,19 @@ step_steal(W, AId, TId, Tag, Qty, NW, Evts) :-
     room(T, RId),
     inv(T, TInv),
     inv_rem(TInv, Tag, Qty, NTInv),
+    fac(T, TFac),
     ( roll_steal(A, T, Tag, Qty) ->
         inv(A, AInv),
         inv_add(AInv, Tag, Qty, NAInv),
-        inv(A, NAInv, NA),
+        rep_mod(A, TFac, -5, NA1),
+        inv(NA1, NAInv, NA),
         inv(T, NTInv, NT),
         world:update(W, NT, W1),
         world:update(W1, NA, NW),
         Evts = [stole(AId, TId, Tag, Qty)]
     ;
-        fac(A, criminal, NA),
+        fac(A, criminal, A1),
+        rep_mod(A1, TFac, -20, NA),
         world:update(W, NA, NW),
         Evts = [caught(AId, TId), fac_change(AId, criminal)]
     ).

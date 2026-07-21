@@ -32,8 +32,7 @@ ai_attack(W, Id, NW, Evts) :-
     world:room_entities(W, RId, Ents),
     member(T, Ents),
     alive(T),
-    fac(M, F1), fac(T, F2),
-    config:enemy(F1, F2),
+    combat:dynamic_enemy(M, T),
     combat:valid_target(W, M, T),
     !,
     step_kill(W, Id, T.id, NW, Evts).
@@ -61,7 +60,7 @@ ai_chase(W, Id, NW, Evts) :-
     get_dict(Dir, N.exits, NRId),
     world:room_entities(W, NRId, Ents),
     member(T, Ents), alive(T),
-    fac(M, F1), fac(T, F2), config:enemy(F1, F2),
+    combat:dynamic_enemy(M, T),
     !,
     step_move(W, Id, Dir, NW, Evts).
 

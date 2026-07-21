@@ -4,6 +4,7 @@
     str/2, str/3, dex/2, dex/3, int/2, int/3,
     inv/2, inv/3, equip/2, equip/3, stat/3,
     fac/2, fac/3, affs/2, affs/3, wpn/2, alive/1,
+    reps/2, reps/3, rep_val/3, rep_mod/4,
     inv_add/4, inv_rem/4, inv_wt/2, max_wt/2
 ]).
 
@@ -24,6 +25,24 @@ fac(E, E.fac).       fac(E, V, E.put(fac, V)).
 affs(E, A) :- get_dict(affs, E, A), !.
 affs(_, []).
 affs(E, V, E.put(affs, V)).
+
+reps(E, R) :- get_dict(reps, E, R), !.
+reps(_, reps{}).
+reps(E, V, E.put(reps, V)).
+
+rep_val(E, Fac, Val) :-
+    is_dict(E, plyr),
+    reps(E, Reps),
+    get_dict(Fac, Reps, Val), !.
+rep_val(_, _, 0).
+
+rep_mod(E, Fac, Val, NE) :-
+    is_dict(E, plyr),
+    reps(E, Reps),
+    ( get_dict(Fac, Reps, Cur) -> NVal is Cur + Val ; NVal = Val ),
+    NReps = Reps.put(Fac, NVal),
+    reps(E, NReps, NE), !.
+rep_mod(E, _, _, E).
 
 buff_mod([], _, 0).
 buff_mod([aff{type: buff, stat: S, val: V, dur: _}|T], S, Out) :- buff_mod(T, S, R), Out is R + V, !.
