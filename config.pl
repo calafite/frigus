@@ -4,7 +4,8 @@
     enemy/2, req/3, scale/3, growth/3, mob_xp/2,
     loot_table/5, armor_val/2, cooldown/2,
     race_bonus/3, race_prop/2, restricted_race/1,
-    special_player/1
+    special_player/1, spell_nature/2, req_race/2,
+    base_ceiling/3
 ]).
 
 dmg(fists, 3).
@@ -14,10 +15,21 @@ dmg(fireball, 12).
 dmg(iceblast, 8).
 dmg(bash, 5).
 dmg(poison_dagger, 6).
+dmg(mend, 15).
+dmg(rejuvenate, 10).
+dmg(meteor_storm, 50).
+dmg(judgment, 40).
 
 cost(fireball, 5).
 cost(iceblast, 6).
 cost(bash, 3).
+cost(mend, 4).
+cost(rejuvenate, 8).
+cost(raise_dead, 10).
+cost(haste, 5).
+cost(stoneskin, 6).
+cost(meteor_storm, 25).
+cost(judgment, 20).
 
 slot(sword, wpn).
 slot(poison_dagger, wpn).
@@ -57,6 +69,11 @@ inflicts(fireball, burn, 3, 5).
 inflicts(iceblast, freeze, 2, 0).
 inflicts(bash, stun, 1, 0).
 inflicts(poison_dagger, poison, 4, 3).
+inflicts(rejuvenate, regen, 3, 0).
+inflicts(haste, haste, 3, 25).
+inflicts(stoneskin, buff, 5, 5).
+inflicts(meteor_storm, burn, 5, 10).
+inflicts(judgment, stun, 1, 0).
 
 enemy(guard, monster).
 enemy(guard, criminal).
@@ -67,6 +84,13 @@ enemy(player, monster).
 req(sword, str, 10).
 req(staff, int, 10).
 req(fireball, int, 15).
+req(mend, int, 10).
+req(rejuvenate, int, 12).
+req(raise_dead, int, 14).
+req(haste, dex, 12).
+req(stoneskin, str, 12).
+req(meteor_storm, int, 30).
+req(judgment, int, 25).
 req(_, _, 0).
 
 scale(sword, str, 1.2).
@@ -74,6 +98,10 @@ scale(poison_dagger, dex, 1.5).
 scale(fists, str, 1.0).
 scale(staff, int, 1.2).
 scale(fireball, int, 1.5).
+scale(mend, int, 1.0).
+scale(rejuvenate, int, 0.5).
+scale(meteor_storm, int, 2.0).
+scale(judgment, int, 1.5).
 scale(_, str, 1.0).
 
 growth(fighter, str, 3).
@@ -97,6 +125,13 @@ armor_val(_, 0).
 cooldown(fireball, 3).
 cooldown(iceblast, 4).
 cooldown(bash, 2).
+cooldown(mend, 2).
+cooldown(rejuvenate, 4).
+cooldown(raise_dead, 8).
+cooldown(haste, 6).
+cooldown(stoneskin, 6).
+cooldown(meteor_storm, 10).
+cooldown(judgment, 8).
 
 race_bonus(orc, str, 5).
 race_bonus(dwarf, dex, 5).
@@ -123,3 +158,23 @@ restricted_race(demigod).
 
 special_player(sa).
 special_player(miguel).
+
+spell_nature(fireball, damage).
+spell_nature(iceblast, damage).
+spell_nature(mend, healing).
+spell_nature(rejuvenate, healing).
+spell_nature(raise_dead, necromancy).
+spell_nature(haste, buff).
+spell_nature(stoneskin, buff).
+spell_nature(meteor_storm, cataclysm).
+spell_nature(judgment, cataclysm).
+
+req_race(meteor_storm, demigod).
+req_race(judgment, angel).
+
+base_ceiling(fighter, str, 40).
+base_ceiling(fighter, dex, 35).
+base_ceiling(fighter, int, 20).
+base_ceiling(wizard, str, 20).
+base_ceiling(wizard, dex, 30).
+base_ceiling(wizard, int, 45).

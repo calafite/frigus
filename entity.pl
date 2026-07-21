@@ -6,6 +6,7 @@
     fac/2, fac/3, affs/2, affs/3, wpn/2, alive/1,
     reps/2, reps/3, rep_val/3, rep_mod/4,
     cds/2, cds/3, total_armor/2, props/2,
+    ceils/2, ceils/3, get_ceil/3,
     inv_add/4, inv_rem/4, inv_wt/2, max_wt/2,
     allowed_race/2
 ]).
@@ -44,6 +45,18 @@ cds(E, R) :- get_dict(cds, E, R), !.
 cds(_, cds{}).
 cds(E, V, E.put(cds, V)).
 
+ceils(E, R) :- get_dict(ceils, E, R), !.
+ceils(_, ceils{}).
+ceils(E, V, E.put(ceils, V)).
+
+get_ceil(E, Stat, Val) :-
+    ( race(E, demigod) -> Val = 9999
+    ; race(E, angel) -> Val = 9999
+    ; ceils(E, Ceils), get_dict(Stat, Ceils, Val) -> true
+    ; class(E, Class), config:base_ceiling(Class, Stat, Val) -> true
+    ; Val = 50
+    ).
+
 rep_val(E, Fac, Val) :-
     is_dict(E, plyr),
     reps(E, Reps),
@@ -68,7 +81,12 @@ total_armor(E, Armor) :-
     equip(E, Eq),
     get_dict(shield, Eq, Shield), armor_val(Shield, SVal),
     get_dict(body, Eq, Body), armor_val(Body, BVal),
-    Armor is SVal + BVal.
+    affs(E, Affs),
+    ( member(aff{type: buff, stat: body, val: BMod, dur: _}, Affs) ->
+        Armor is SVal + BVal + BMod
+    ;
+        Armor is SVal + BVal
+    ).
 total_armor(_, 0).
 
 buff_mod([], _, 0).
@@ -106,5 +124,5 @@ inv_wt([stack{tag: Tag, qty: Q} | T], W) :-
 
 max_wt(E, W) :- stat(E, str, S), W is S * 10.
 
-allowed_race(_, Race) :- \+ config:restricted_race(Race), !.
-allowed_race(Id, Race) :- config:restricted_race(Race), config:special_player(Id).
+allowed_race(E, Race) :- \+ config:restricted_race(Race), !.
+allowed_race(E, Race) :- config:restricted_race(Race), config:special_player(E.id).

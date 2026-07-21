@@ -1,4 +1,7 @@
-:- module(combat, [step_kill/5, step_cast/6, valid_target/3, dynamic_enemy/2]).
+:- module(combat, [
+    step_kill/5, valid_target/3, dynamic_enemy/2,
+    calc_dmg/3, get_aff/2, roll_hit/2, roll_crit/2, apply_dmg/8
+]).
 
 :- use_module(library(lists)).
 :- use_module(library(random)).
@@ -90,37 +93,6 @@ step_kill(W, AId, TId, NW, Evts) :-
     ;
         world:update(W, CleanA, NW),
         Evts = [miss(AId, TId)]
-    ).
-
-step_cast(W, AId, Sp, TId, NW, Evts) :-
-    world:entity(W, AId, A),
-    status:can_act(A),
-    cds(A, Cds),
-    \+ get_dict(Sp, Cds, _),
-    world:entity(W, TId, T),
-    valid_target(W, A, T),
-    config:req(Sp, ReqStat, ReqVal),
-    stat(A, ReqStat, Val),
-    Val >= ReqVal,
-    crime_check(A, T, MidA),
-    stealth:strip_stealth(MidA, CleanA),
-    cost(Sp, Cost),
-    mp(CleanA, Mp),
-    Mp >= Cost,
-    NMp is Mp - Cost,
-    mp(CleanA, NMp, CastA),
-    ( config:cooldown(Sp, CD) -> cds(CastA, Cds.put(Sp, CD), FinalA) ; FinalA = CastA ),
-    ( roll_hit(FinalA, T) ->
-        calc_dmg(FinalA, Sp, BaseDmg),
-        total_armor(T, Arm),
-        NetDmg is max(1, BaseDmg - Arm),
-        roll_crit(FinalA, IsCrit),
-        ( IsCrit == true -> Dmg is NetDmg * 2, Evt = cast_crit(AId, Sp, TId, Dmg) ; Dmg = NetDmg, Evt = cast(AId, Sp, TId, Dmg) ),
-        get_aff(Sp, Aff),
-        apply_dmg(W, FinalA, T, Dmg, Aff, NW, Evts, Evt)
-    ;
-        world:update(W, FinalA, NW),
-        Evts = [cast_miss(AId, Sp, TId)]
     ).
 
 apply_dmg(W, A, T, Dmg, _, NW, [HitEvt, dead(TId) | REvts], HitEvt) :-
