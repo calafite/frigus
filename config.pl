@@ -2,7 +2,9 @@
     dmg/2, cost/2, slot/2, weight/2, desc/2,
     consumable/2, val/2, rarity/2, inflicts/4,
     enemy/2, req/3, scale/3, growth/3, mob_xp/2,
-    loot_table/5, armor_val/2, cooldown/2
+    loot_table/5, armor_val/2, cooldown/2,
+    race_bonus/3, race_prop/2, restricted_race/1,
+    special_player/1
 ]).
 
 dmg(fists, 3).
@@ -95,3 +97,29 @@ armor_val(_, 0).
 cooldown(fireball, 3).
 cooldown(iceblast, 4).
 cooldown(bash, 2).
+
+race_bonus(orc, str, 5).
+race_bonus(dwarf, dex, 5).
+race_bonus(human, int, 5).
+race_bonus(elf, dex, 3).
+race_bonus(demon, str, 10).
+race_bonus(demon, int, 5).
+race_bonus(angel, int, 10).
+race_bonus(angel, dex, 5).
+race_bonus(demigod, str, 15).
+race_bonus(demigod, dex, 15).
+race_bonus(demigod, int, 15).
+race_bonus(_, _, 0).
+
+race_prop(elf, night_vision).
+race_prop(orc, regen).
+race_prop(demon, fire_immune).
+race_prop(angel, flight).
+race_prop(demigod, night_vision).
+
+restricted_race(demon).
+restricted_race(angel).
+restricted_race(demigod).
+
+special_player(sa).
+special_player(miguel).

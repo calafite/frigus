@@ -14,7 +14,7 @@
 can_see(W, A, RId) :-
     world:node(W, RId, N),
     ( \+ member(dark, N.props) -> true
-    ; get_dict(props, A, P), member(night_vision, P) -> true
+    ; props(A, P), member(night_vision, P) -> true
     ; inv(A, Inv), member(stack{tag: torch, qty: _}, Inv) -> true
     ; equip(A, Eq), get_dict(shield, Eq, torch) -> true
     ).

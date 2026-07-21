@@ -1,12 +1,13 @@
 :- module(entity, [
     hp/2, hp/3, room/2, room/3, mp/2, mp/3,
-    lvl/2, lvl/3, xp/2, xp/3, class/2,
+    lvl/2, lvl/3, xp/2, xp/3, class/2, race/2,
     str/2, str/3, dex/2, dex/3, int/2, int/3,
     inv/2, inv/3, equip/2, equip/3, stat/3,
     fac/2, fac/3, affs/2, affs/3, wpn/2, alive/1,
     reps/2, reps/3, rep_val/3, rep_mod/4,
-    cds/2, cds/3, total_armor/2,
-    inv_add/4, inv_rem/4, inv_wt/2, max_wt/2
+    cds/2, cds/3, total_armor/2, props/2,
+    inv_add/4, inv_rem/4, inv_wt/2, max_wt/2,
+    allowed_race/2
 ]).
 
 :- use_module(config).
@@ -26,6 +27,14 @@ fac(E, E.fac).       fac(E, V, E.put(fac, V)).
 affs(E, A) :- get_dict(affs, E, A), !.
 affs(_, []).
 affs(E, V, E.put(affs, V)).
+
+race(E, E.race) :- get_dict(race, E, _), !.
+race(_, human).
+
+props(E, P) :-
+    get_dict(props, E, Base), !,
+    ( race(E, Race), config:race_prop(Race, Prop) -> P = [Prop | Base] ; P = Base ).
+props(_, []).
 
 reps(E, R) :- get_dict(reps, E, R), !.
 reps(_, reps{}).
@@ -70,7 +79,8 @@ stat(E, S, V) :-
     get_dict(S, E, Base),
     affs(E, A),
     buff_mod(A, S, Mod),
-    V is Base + Mod, !.
+    ( race(E, Race) -> config:race_bonus(Race, S, Bonus) ; Bonus = 0 ),
+    V is Base + Mod + Bonus, !.
 stat(_, _, 1).
 
 wpn(E, W) :- is_dict(E, plyr), get_dict(wpn, E.equip, W), W \== none, !.
@@ -95,3 +105,6 @@ inv_wt([stack{tag: Tag, qty: Q} | T], W) :-
     W is RW + (UW * Q).
 
 max_wt(E, W) :- stat(E, str, S), W is S * 10.
+
+allowed_race(_, Race) :- \+ config:restricted_race(Race), !.
+allowed_race(Id, Race) :- config:restricted_race(Race), config:special_player(Id).

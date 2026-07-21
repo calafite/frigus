@@ -19,9 +19,17 @@ apply_aff(E, Aff, NE, [inflicted(E.id, Aff.type)]) :-
 step_tick(W, Id, NW, Evts) :-
     world:entity(W, Id, E),
     affs(E, A),
-    tick_affs(A, NA, Dmg, TEvts),
+    tick_affs(E, A, NA, Dmg, TEvts),
     hp(E, Hp),
-    NHp is max(0, Hp - Dmg),
+    props(E, P),
+    ( member(regen, P) ->
+        get_dict(max_hp, E, MaxHp),
+        Regen is floor(MaxHp * 0.1),
+        TmpHp is min(MaxHp, Hp + Regen)
+    ;
+        TmpHp = Hp
+    ),
+    NHp is max(0, TmpHp - Dmg),
     hp(E, NHp, E1),
     affs(E1, NA, E2),
     cds(E2, Cds),
@@ -44,17 +52,23 @@ dec_pairs([], []).
 dec_pairs([_-V|T], NT) :- V =< 1, !, dec_pairs(T, NT).
 dec_pairs([K-V|T], [K-NV|NT]) :- NV is V - 1, dec_pairs(T, NT).
 
-tick_affs([], [], 0, []).
-tick_affs([A|T], NT, Dmg, Evts) :-
+is_immune(E, burn) :- props(E, P), member(fire_immune, P).
+is_immune(_, _).
+
+tick_affs(_, [], [], 0, []).
+tick_affs(E, [A|T], NT, Dmg, Evts) :-
+    is_immune(E, A.type), !,
+    tick_affs(E, T, NT, Dmg, Evts).
+tick_affs(E, [A|T], NT, Dmg, Evts) :-
     A.dur =< 1,
     aff_dmg(A, ADmg, Evt),
-    tick_affs(T, RestA, RestDmg, RestEvts),
+    tick_affs(E, T, RestA, RestDmg, RestEvts),
     NT = RestA, Dmg is ADmg + RestDmg, Evts = [Evt, exp(A.type)|RestEvts].
-tick_affs([A|T], [NA|NT], Dmg, Evts) :-
+tick_affs(E, [A|T], [NA|NT], Dmg, Evts) :-
     A.dur > 1,
     NA = A.put(dur, A.dur - 1),
     aff_dmg(A, ADmg, Evt),
-    tick_affs(T, NT, RestDmg, RestEvts),
+    tick_affs(E, T, NT, RestDmg, RestEvts),
     Dmg is ADmg + RestDmg, Evts = [Evt|RestEvts].
 
 aff_dmg(aff{type: poison, val: V, dur: _}, V, tick(poison, V)) :- !.
