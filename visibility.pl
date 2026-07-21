@@ -3,7 +3,8 @@
     can_see_target/3,
     revealed_exits/4,
     reveal_details/3,
-    resolve_exit/5
+    resolve_exit/5,
+    step_search/4
 ]).
 
 :- use_module(entity).
@@ -70,4 +71,21 @@ reveal_details(A, Node, FullDesc) :-
         atomic_list_concat([Base | Extras], " ", FullDesc)
     ;
         FullDesc = Base
+    ).
+
+step_search(W, Id, W, Evts) :-
+    world:entity(W, Id, A), room(A, RId),
+    world:node(W, RId, N),
+    ( get_dict(secrets, N, Secrets) ->
+        stat(A, int, Int),
+        get_dict(reqs, N, Reqs),
+        dict_keys(Secrets, SecKeys),
+        findall(Dir, (
+            member(Dir, SecKeys),
+            get_dict(Dir, Reqs, ReqVal),
+            Int + 5 >= ReqVal
+        ), Found),
+        ( Found \== [] -> Evts = [searched(Id, RId, Found)] ; Evts = [searched_nothing(Id, RId)] )
+    ;
+        Evts = [searched_nothing(Id, RId)]
     ).

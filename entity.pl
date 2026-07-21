@@ -10,6 +10,7 @@
     skills/2, skills/3, skill_val/3, skill_mod/4,
     quests/2, quests/3,
     altitude/2, altitude/3, climb_state/2, climb_state/3,
+    stance/2, stance/3, mount/2, mount/3,
     inv_add/4, inv_rem/4, inv_wt/2, max_wt/2,
     allowed_race/2
 ]).
@@ -37,7 +38,9 @@ race(_, human).
 
 props(E, P) :-
     get_dict(props, E, Base), !,
-    ( race(E, Race), config:race_prop(Race, Prop) -> P = [Prop | Base] ; P = Base ).
+    ( race(E, Race), config:race_prop(Race, Prop) -> P1 = [Prop | Base] ; P1 = Base ),
+    ( mount(E, Mount), Mount \== none -> P2 = [Mount | P1] ; P2 = P1 ),
+    ( member(griffin, P2) -> P = [flight | P2] ; P = P2 ).
 props(_, []).
 
 reps(E, R) :- get_dict(reps, E, R), !.
@@ -63,6 +66,14 @@ altitude(E, V, E.put(altitude, V)).
 climb_state(E, C) :- get_dict(climb_state, E, C), !.
 climb_state(_, false).
 climb_state(E, V, E.put(climb_state, V)).
+
+stance(E, S) :- get_dict(stance, E, S), !.
+stance(_, walk).
+stance(E, V, E.put(stance, V)).
+
+mount(E, M) :- get_dict(mount, E, M), !.
+mount(_, none).
+mount(E, V, E.put(mount, V)).
 
 get_ceil(E, Stat, Val) :-
     ( race(E, demigod) -> Val = 9999
@@ -105,9 +116,10 @@ total_armor(E, Armor) :-
     get_dict(shield, Eq, Shield), armor_val(Shield, SVal),
     get_dict(body, Eq, Body), armor_val(Body, BVal),
     affs(E, Affs),
+    ( stance(E, crawl) -> StBonus = 10 ; StBonus = 0 ),
     ( member(aff{type: buff, stat: body, val: BMod, dur: _}, Affs) ->
-        Armor is SVal + BVal + BMod
-    ; Armor is SVal + BVal ).
+        Armor is SVal + BVal + BMod + StBonus
+    ; Armor is SVal + BVal + StBonus ).
 total_armor(_, 0).
 
 buff_mod([], _, 0).
@@ -120,7 +132,8 @@ buff_mod([_|T], S, Out) :- buff_mod(T, S, Out).
 stat(E, S, V) :-
     get_dict(S, E, Base), affs(E, A), buff_mod(A, S, Mod),
     ( race(E, Race) -> config:race_bonus(Race, S, Bonus) ; Bonus = 0 ),
-    V is Base + Mod + Bonus, !.
+    ( stance(E, crawl) -> (S == dex -> StMod = -5 ; S == str -> StMod = -3 ; StMod = 0) ; StMod = 0 ),
+    V is Base + Mod + Bonus + StMod, !.
 stat(_, _, 1).
 
 wpn(E, W) :- is_dict(E, plyr), get_dict(wpn, E.equip, W), W \== none, !.
@@ -141,7 +154,11 @@ inv_wt([], 0).
 inv_wt([stack{tag: Tag, qty: Q} | T], W) :-
     config:weight(Tag, UW), inv_wt(T, RW), W is RW + (UW * Q).
 
-max_wt(E, W) :- stat(E, str, S), W is S * 10.
+max_wt(E, W) :-
+    stat(E, str, S),
+    mount(E, Mount),
+    ( Mount == horse -> Extra = 200 ; Mount == griffin -> Extra = 300 ; Extra = 0 ),
+    W is (S * 10) + Extra.
 
 allowed_race(E, Race) :- \+ config:restricted_race(Race), !.
 allowed_race(E, Race) :- config:restricted_race(Race), config:special_player(E.id).

@@ -51,6 +51,11 @@ step(W, Id, fish, NW, Evts) :- survival:step_fish(W, Id, NW, Evts).
 step(W, Id, fly(Alt), NW, Evts) :- survival:step_fly(W, Id, Alt, NW, Evts).
 step(W, Id, climb, NW, Evts) :- survival:step_climb(W, Id, NW, Evts).
 step(W, Id, jump(Dir), NW, Evts) :- move:step_jump(W, Id, Dir, NW, Evts).
+step(W, Id, mount(Mount), NW, Evts) :- survival:step_mount(W, Id, Mount, NW, Evts).
+step(W, Id, dismount, NW, Evts) :- survival:step_dismount(W, Id, NW, Evts).
+step(W, Id, stance(Stance), NW, Evts) :- survival:step_stance(W, Id, Stance, NW, Evts).
+step(W, Id, search, NW, Evts) :- visibility:step_search(W, Id, NW, Evts).
+step(W, Id, travel(Dest), NW, Evts) :- move:step_travel(W, Id, Dest, NW, Evts).
 
 step(W, Id, look, W, [look(RId, Desc, Props, Exits, OIds, MIds, IData)]) :-
     world:entity(W, Id, A), room(A, RId), world:node(W, RId, Node),
@@ -118,6 +123,11 @@ to_act(D, fly) :- D.type == "fly", atom_string(A, D.altitude), A == "air", Alt =
 to_act(D, fly) :- D.type == "fly", atom_string(A, D.altitude), A == "ground", Alt = ground.
 to_act(D, climb) :- D.type == "climb".
 to_act(D, jump(Dir)) :- D.type == "jump", atom_string(Dir, D.dir).
+to_act(D, mount(Mount)) :- D.type == "mount", atom_string(Mount, D.mount_tag).
+to_act(D, dismount) :- D.type == "dismount".
+to_act(D, stance(Stance)) :- D.type == "stance", atom_string(Stance, D.stance).
+to_act(D, search) :- D.type == "search".
+to_act(D, travel(Dest)) :- D.type == "travel", atom_string(Dest, D.destination).
 
 api_step(Req, Res) :-
     to_act(Req.action, Act),

@@ -1,4 +1,4 @@
-:- module(move, [step_move/5, step_jump/5]).
+:- module(move, [step_move/5, step_jump/5, step_travel/5]).
 
 :- use_module(world).
 :- use_module(entity).
@@ -46,3 +46,16 @@ step_jump(W, Id, Dir, NW, Evts) :-
         world:update(W, FinalA, NW),
         Evts = [failed_jump(Id, Dir, FallId), fallen(Id, 30) | EnterEvts]
     ).
+
+step_travel(W, Id, DestId, NW, [fast_traveled(Id, DestId)]) :-
+    world:entity(W, Id, A), alive(A), \+ altitude(A, air),
+    room(A, CurId), world:node(W, CurId, CurNode),
+    member(safe, CurNode.props),
+    world:node(W, DestId, DestNode),
+    member(safe, DestNode.props),
+    member(landmark, DestNode.props),
+    get_dict(landmarks, A, Known), member(DestId, Known),
+    inv(A, Inv), inv_rem(Inv, gold, 50, NInv),
+    get_dict(fatigue, A, F), NF is min(100, F + 20),
+    A1 = A.put(inv, NInv).put(fatigue, NF).put(room, DestId),
+    world:update(W, A1, NW).

@@ -1,7 +1,8 @@
 :- module(survival, [
     tick_srv/5, step_rest/4, step_sleep/4, step_wake/4,
     step_drink/5, step_fill/4, step_fish/4,
-    step_fly/5, step_climb/4
+    step_fly/5, step_climb/4, step_mount/4, step_dismount/3,
+    step_stance/4
 ]).
 
 :- use_module(library(random)).
@@ -20,9 +21,18 @@ tick_srv(W, Id, E, NE, Evts) :-
     get_val(state, E, normal, S),
     altitude(E, Alt),
     climb_state(E, Climbing),
+    stance(E, Stance),
+    mount(E, Mount),
     get_dict(env, W, Env),
     ( Env.weath == heatwave -> TMod = 4 ; TMod = 2 ),
     ( Env.weath == storm -> FMod = 3 ; Env.weath == blizzard -> FMod = 3 ; FMod = 1 ),
+    ( Mount \== none ->
+        NFatigueIncrement = 0
+    ; Stance == crawl ->
+        NFatigueIncrement = 3
+    ;
+        NFatigueIncrement = 1
+    ),
     ( Alt == air ->
         mp(E, Mp),
         ( Mp >= 4 ->
@@ -56,7 +66,7 @@ tick_srv(W, Id, E, NE, Evts) :-
         E1 = E.put(hp, NHp).put(mp, NMp),
         NS = resting, Evts1 = [], Crash = false, Fall = false
     ;
-        NH is min(100, H + 1), NT is min(100, T + TMod), NF is min(100, F + 1),
+        NH is min(100, H + 1), NT is min(100, T + TMod), NF is min(100, F + NFatigueIncrement),
         E1 = E, NS = normal, Evts1 = [], Crash = false, Fall = false
     ),
     ( Crash == true ->
@@ -157,3 +167,22 @@ step_climb(W, Id, NW, [climbing_started(Id)]) :-
     ( member(cliffs, N.props) ; member(walls, N.props) ),
     ( (inv(A, Inv), member(stack{tag: climbing_gear, qty: _}, Inv)) ; (props(A, P), member(climbing, P)) ),
     world:update(W, A.put(climb_state, true).put(state, normal), NW).
+
+step_mount(W, Id, MountTag, NW, [mounted(Id, MountTag)]) :-
+    world:entity(W, Id, A), alive(A),
+    mount(A, none), \+ altitude(A, air),
+    ( MountTag == horse ; MountTag == griffin ),
+    inv(A, Inv), inv_rem(Inv, MountTag, 1, NInv),
+    world:update(W, A.put(mount, MountTag).put(inv, NInv), NW).
+
+step_dismount(W, Id, NW, [dismounted(Id, MountTag)]) :-
+    world:entity(W, Id, A), alive(A),
+    mount(A, MountTag), MountTag \== none, \+ altitude(A, air),
+    inv(A, Inv), inv_add(Inv, MountTag, 1, NInv),
+    world:update(W, A.put(mount, none).put(inv, NInv), NW).
+
+step_stance(W, Id, Stance, NW, [stance_changed(Id, Stance)]) :-
+    world:entity(W, Id, A), alive(A), \+ altitude(A, air),
+    climb_state(A, false), mount(A, none),
+    ( Stance == walk ; Stance == crawl ),
+    world:update(W, A.put(stance, Stance), NW).
