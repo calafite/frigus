@@ -12,13 +12,11 @@ step_loot(W, Id, IId, NW, [looted(Id, Tag, Qty)]) :-
     room(I, RId),
     Tag = I.tag,
     Qty = I.qty,
-
     config:weight(Tag, Wt),
     inv(A, Inv),
     inv_wt(Inv, CurWt),
     max_wt(A, MaxWt),
     CurWt + (Wt * Qty) =< MaxWt,
-
     inv_add(Inv, Tag, Qty, NInv),
     inv(A, NInv, NA),
     world:remove(W, IId, TW),
@@ -27,6 +25,9 @@ step_loot(W, Id, IId, NW, [looted(Id, Tag, Qty)]) :-
 step_equip(W, Id, Tag, NW, [equipped(Id, Tag, Slot)]) :-
     world:entity(W, Id, A),
     alive(A),
+    config:req(Tag, ReqStat, ReqVal),
+    stat(A, ReqStat, Val),
+    Val >= ReqVal,
     inv(A, Inv),
     inv_rem(Inv, Tag, 1, TmpInv),
     slot(Tag, Slot),

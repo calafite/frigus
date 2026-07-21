@@ -2,15 +2,16 @@
     dmg/2, cost/2, slot/2,
     weight/2, desc/2,
     consumable/2, val/2,
-    enemy/2
+    enemy/2, req/3, scale/3,
+    growth/3, mob_xp/2
 ]).
 
 dmg(fists, 3).
 dmg(staff, 5).
 dmg(sword, 10).
+dmg(fireball, 12).
 
 cost(fireball, 5).
-dmg(fireball, 12).
 
 slot(sword, wpn).
 slot(staff, wpn).
@@ -39,3 +40,24 @@ enemy(guard, criminal).
 enemy(citizen, monster).
 enemy(citizen, criminal).
 enemy(player, monster).
+
+req(sword, str, 10).
+req(staff, int, 10).
+req(fireball, int, 15).
+req(_, _, 0).
+
+scale(sword, str, 1.2).
+scale(fists, str, 1.0).
+scale(staff, int, 1.2).
+scale(fireball, int, 1.5).
+scale(_, str, 1.0).
+
+growth(fighter, str, 3).
+growth(fighter, dex, 2).
+growth(fighter, int, 1).
+growth(wizard, str, 1).
+growth(wizard, dex, 2).
+growth(wizard, int, 3).
+
+mob_xp(goblin, 120).
+mob_xp(_, 100).

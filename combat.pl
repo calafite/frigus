@@ -1,8 +1,9 @@
-:- module(combat, [step_kill/5, step_cast/6]).
+:- module(combat, [step_kill/5, step_cast/6, valid_target/3]).
 
 :- use_module(config).
 :- use_module(entity).
 :- use_module(world).
+:- use_module(prog).
 
 is_crime(FA, FB) :- \+ config:enemy(FA, FB), FA \== criminal.
 
@@ -18,26 +19,35 @@ valid_target(W, A, T) :-
     world:node(W, RId, N),
     \+ member(safe, N.props).
 
+calc_dmg(A, Tag, Final) :-
+    config:dmg(Tag, Base),
+    config:scale(Tag, Stat, Mult),
+    stat(A, Stat, Val),
+    Final is Base + floor(Val * Mult).
+
 step_kill(W, AId, TId, NW, Evts) :-
     world:entity(W, AId, A),
     world:entity(W, TId, T),
     valid_target(W, A, T),
     crime_check(A, T, MidA),
     wpn(MidA, Wpn),
-    dmg(Wpn, Dmg),
+    calc_dmg(MidA, Wpn, Dmg),
     apply_dmg(W, MidA, T, Dmg, NW, Evts, hit(AId, TId, Dmg)).
 
 step_cast(W, AId, Sp, TId, NW, Evts) :-
     world:entity(W, AId, A),
     world:entity(W, TId, T),
     valid_target(W, A, T),
+    config:req(Sp, ReqStat, ReqVal),
+    stat(A, ReqStat, Val),
+    Val >= ReqVal,
     crime_check(A, T, MidA),
     cost(Sp, Cost),
     mp(MidA, Mp),
     Mp >= Cost,
     NMp is Mp - Cost,
     mp(MidA, NMp, CastA),
-    dmg(Sp, Dmg),
+    calc_dmg(CastA, Sp, Dmg),
     apply_dmg(W, CastA, T, Dmg, NW, Evts, cast(AId, Sp, TId, Dmg)).
 
 apply_dmg(W, A, T, Dmg, NW, [HitEvt, dead(TId) | REvts], HitEvt) :-
@@ -47,8 +57,11 @@ apply_dmg(W, A, T, Dmg, NW, [HitEvt], HitEvt) :-
     hp(T, THp), NTHp is THp - Dmg, hp(T, NTHp, NT),
     world:update(W, A, TW), world:update(TW, NT, NW).
 
-reward(W, A, mob{id: MId}, NW, [lvl_up(A.id, NLvl)]) :-
-    lvl(A, Lvl), NLvl is Lvl + 1, lvl(A, NLvl, NA),
-    world:remove(W, MId, TW), world:update(TW, NA, NW).
+reward(W, A, mob{id: MId, tag: Tag}, NW, [xp(AId, Xp) | ProgEvts]) :-
+    config:mob_xp(Tag, Xp),
+    AId = A.id,
+    prog:add_xp(A, Xp, NA, ProgEvts),
+    world:remove(W, MId, TW),
+    world:update(TW, NA, NW).
 reward(W, A, plyr{id: PId} = NT, NW, []) :-
     world:update(W, A, TW), world:update(TW, NT, NW).
