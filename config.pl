@@ -5,7 +5,7 @@
     loot_table/5, armor_val/2, cooldown/2,
     race_bonus/3, race_prop/2, restricted_race/1,
     special_player/1, spell_nature/2, req_race/2,
-    base_ceiling/3
+    base_ceiling/3, aggression/2, habitat/2
 ]).
 
 dmg(fists, 3).
@@ -112,6 +112,10 @@ growth(wizard, dex, 2).
 growth(wizard, int, 3).
 
 mob_xp(goblin, 120).
+mob_xp(wolf, 150).
+mob_xp(basilisk, 400).
+mob_xp(phoenix, 600).
+mob_xp(shadow_panther, 300).
 mob_xp(_, 100).
 
 loot_table(goblin, gold, 1.0, 5, 20).
@@ -178,3 +182,19 @@ base_ceiling(fighter, int, 20).
 base_ceiling(wizard, str, 20).
 base_ceiling(wizard, dex, 30).
 base_ceiling(wizard, int, 45).
+
+aggression(dog, neutral).
+aggression(wolf, aggressive).
+aggression(basilisk, aggressive).
+aggression(phoenix, neutral).
+aggression(shadow_panther, aggressive).
+aggression(_, aggressive).
+
+habitat(dog, settlement).
+habitat(dog, forest).
+habitat(wolf, forest).
+habitat(basilisk, cave).
+habitat(basilisk, swamp).
+habitat(phoenix, volcano).
+habitat(shadow_panther, cave).
+habitat(_, _).

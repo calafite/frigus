@@ -1,20 +1,36 @@
 :- module(ai, [step_ai/4]).
 
 :- use_module(library(random)).
+:- use_module(library(lists)).
 :- use_module(config).
 :- use_module(entity).
 :- use_module(world).
 :- use_module(move).
 :- use_module(combat).
 :- use_module(npc).
+:- use_module(status).
+:- use_module(stealth).
 
+step_ai(W, Id, NW, Evts) :-
+    world:entity(W, Id, M),
+    \+ status:can_act(M),
+    NW = W, Evts = [], !.
 step_ai(W, Id, NW, Evts) :- ai_flee(W, Id, NW, Evts), !.
 step_ai(W, Id, NW, Evts) :- ai_attack(W, Id, NW, Evts), !.
+step_ai(W, Id, NW, Evts) :- ai_hide(W, Id, NW, Evts), !.
 step_ai(W, Id, NW, Evts) :- ai_steal(W, Id, NW, Evts), !.
 step_ai(W, Id, NW, Evts) :- ai_chase(W, Id, NW, Evts), !.
 step_ai(W, Id, NW, Evts) :- ai_patrol(W, Id, NW, Evts), !.
 step_ai(W, Id, NW, Evts) :- ai_wander(W, Id, NW, Evts), !.
 step_ai(W, _, W, []).
+
+should_attack(M, T) :-
+    get_dict(tag, M, Tag), config:aggression(Tag, aggressive), !,
+    combat:dynamic_enemy(M, T).
+should_attack(M, T) :-
+    get_dict(tag, M, Tag), config:aggression(Tag, neutral),
+    hp(M, Hp), get_dict(max_hp, M, Max), Hp < Max, !,
+    combat:dynamic_enemy(M, T).
 
 ai_flee(W, Id, NW, Evts) :-
     world:entity(W, Id, M),
@@ -32,10 +48,17 @@ ai_attack(W, Id, NW, Evts) :-
     world:room_entities(W, RId, Ents),
     member(T, Ents),
     alive(T),
-    combat:dynamic_enemy(M, T),
+    should_attack(M, T),
     combat:valid_target(W, M, T),
     !,
     step_kill(W, Id, T.id, NW, Evts).
+
+ai_hide(W, Id, NW, Evts) :-
+    world:entity(W, Id, M),
+    get_dict(tag, M, shadow_panther),
+    \+ (affs(M, Affs), member(aff{type: hidden, val: _, dur: _}, Affs)),
+    !,
+    stealth:step_hide(W, Id, NW, Evts).
 
 ai_steal(W, Id, NW, Evts) :-
     world:entity(W, Id, M),
@@ -56,6 +79,7 @@ ai_steal(W, Id, NW, Evts) :-
 
 ai_chase(W, Id, NW, Evts) :-
     world:entity(W, Id, M),
+    should_attack(M, T),
     room(M, RId), world:node(W, RId, N),
     get_dict(Dir, N.exits, NRId),
     world:room_entities(W, NRId, Ents),
@@ -82,6 +106,14 @@ ai_wander(W, Id, NW, Evts) :-
     get_dict(wander, M, true),
     room(M, RId), world:node(W, RId, N),
     dict_keys(N.exits, Exits),
-    Exits \= [],
-    random_member(Dir, Exits),
+    get_dict(tag, M, Tag),
+
+    findall(Dir, (
+        member(Dir, Exits),
+        get_dict(Dir, N.exits, NRId),
+        world:node(W, NRId, Next),
+        config:habitat(Tag, Next.type)
+    ), ValidExits),
+    ValidExits \= [],
+    random_member(Dir, ValidExits),
     step_move(W, Id, Dir, NW, Evts).

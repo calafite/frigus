@@ -71,6 +71,8 @@ roll_double(A, IsDouble) :-
     random_between(1, 100, Roll),
     ( Roll <= Chance -> IsDouble = true ; IsDouble = false ).
 
+is_wolf(M) :- is_dict(M, mob), get_dict(tag, M, wolf), alive(M).
+
 step_kill(W, AId, TId, NW, Evts) :-
     world:entity(W, AId, A),
     status:can_act(A),
@@ -81,13 +83,26 @@ step_kill(W, AId, TId, NW, Evts) :-
     ( roll_hit(CleanA, T) ->
         wpn(CleanA, Wpn),
         calc_dmg(CleanA, Wpn, BaseDmg),
+
+        % Wolf Pack Hunter Ability
+        ( get_dict(tag, CleanA, wolf) ->
+            room(CleanA, RId),
+            world:room_entities(W, RId, Ents),
+            include(is_wolf, Ents, Wolves),
+            length(Wolves, Count),
+            DmgBoost is (Count - 1) * 2,
+            Dmg1 is BaseDmg + DmgBoost
+        ;
+            Dmg1 = BaseDmg
+        ),
+
         total_armor(T, Arm),
-        NetDmg is max(1, BaseDmg - Arm),
+        NetDmg is max(1, Dmg1 - Arm),
         roll_crit(CleanA, IsCrit),
-        ( IsCrit == true -> Dmg1 is NetDmg * 2 ; Dmg1 = NetDmg ),
+        ( IsCrit == true -> Dmg2 is NetDmg * 2 ; Dmg2 = NetDmg ),
         roll_double(CleanA, IsDouble),
-        ( IsDouble == true -> Dmg is Dmg1 * 2, Evt = double_hit(AId, TId, Dmg)
-        ; Dmg = Dmg1, ( IsCrit == true -> Evt = crit(AId, TId, Dmg) ; Evt = hit(AId, TId, Dmg) ) ),
+        ( IsDouble == true -> Dmg is Dmg2 * 2, Evt = double_hit(AId, TId, Dmg)
+        ; Dmg = Dmg2, ( IsCrit == true -> Evt = crit(AId, TId, Dmg) ; Evt = hit(AId, TId, Dmg) ) ),
         get_aff(Wpn, Aff),
         apply_dmg(W, CleanA, T, Dmg, Aff, NW, Evts, Evt)
     ;
@@ -95,12 +110,69 @@ step_kill(W, AId, TId, NW, Evts) :-
         Evts = [miss(AId, TId)]
     ).
 
+step_cast(W, AId, Sp, TId, NW, Evts) :-
+    world:entity(W, AId, A),
+    status:can_act(A),
+    cds(A, Cds),
+    \+ get_dict(Sp, Cds, _),
+    world:entity(W, TId, T),
+    valid_target(W, A, T),
+    config:req(Sp, ReqStat, ReqVal),
+    stat(A, ReqStat, Val),
+    Val >= ReqVal,
+    crime_check(A, T, MidA),
+    stealth:strip_stealth(MidA, CleanA),
+    cost(Sp, Cost),
+    mp(CleanA, Mp),
+    Mp >= Cost,
+    NMp is Mp - Cost,
+    mp(CleanA, NMp, CastA),
+    ( config:cooldown(Sp, CD) -> cds(CastA, Cds.put(Sp, CD), FinalA) ; FinalA = CastA ),
+    ( roll_hit(FinalA, T) ->
+        calc_dmg(FinalA, Sp, BaseDmg),
+        total_armor(T, Arm),
+        NetDmg is max(1, BaseDmg - Arm),
+        roll_crit(FinalA, IsCrit),
+        ( IsCrit == true -> Dmg is NetDmg * 2, Evt = cast_crit(AId, Sp, TId, Dmg) ; Dmg = NetDmg, Evt = cast(AId, Sp, TId, Dmg) ),
+        get_aff(Sp, Aff),
+        apply_dmg(W, FinalA, T, Dmg, Aff, NW, Evts, Evt)
+    ;
+        world:update(W, FinalA, NW),
+        Evts = [cast_miss(AId, Sp, TId)]
+    ).
+
+apply_dmg(W, A, T, Dmg, _, NW, [HitEvt, reborn(TId) | REvts], HitEvt) :-
+    get_dict(tag, T, phoenix),
+    get_dict(rebirth, T, true),
+    hp(T, THp), NTHp is THp - Dmg, NTHp =< 0, !,
+    get_dict(max_hp, T, Max),
+    NHp is floor(Max * 0.5),
+    TId = T.id,
+    T1 = T.put(hp, NHp).put(rebirth, false),
+    world:update(W, A, TW),
+    world:update(TW, T1, NW),
+    REvts = [].
+
 apply_dmg(W, A, T, Dmg, _, NW, [HitEvt, dead(TId) | REvts], HitEvt) :-
     hp(T, THp), NTHp is THp - Dmg, NTHp =< 0, !,
     hp(T, 0, NT), TId = NT.id, reward(W, A, NT, NW, REvts).
+
 apply_dmg(W, A, T, Dmg, Aff, NW, [HitEvt | AffEvts], HitEvt) :-
     hp(T, THp), NTHp is THp - Dmg, hp(T, NTHp, NT1),
-    status:apply_aff(NT1, Aff, NT, AffEvts),
+    status:apply_aff(NT1, Aff, NT2, BaseAffEvts),
+
+    % Basilisk Gaze Petrifying Ability
+    ( get_dict(tag, A, basilisk), alive(NT2) ->
+        random_between(1, 100, Roll),
+        ( Roll <= 30 ->
+            status:apply_aff(NT2, aff{type: stun, val: 0, dur: 1}, NT, GazeEvts),
+            append(BaseAffEvts, [gaze_stun(A.id, T.id) | GazeEvts], AffEvts)
+        ;
+            NT = NT2, AffEvts = BaseAffEvts
+        )
+    ;
+        NT = NT2, AffEvts = BaseAffEvts
+    ),
     world:update(W, A, TW), world:update(TW, NT, NW).
 
 reward(W, A, mob{id: MId, tag: Tag} = M, NW, [xp(AId, Xp) | Evts]) :-
