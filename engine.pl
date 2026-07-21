@@ -17,6 +17,7 @@ step(W, Id, use(Tag), NW, Evts) :- step_use(W, Id, Tag, NW, Evts).
 step(W, Id, talk(TId), NW, Evts) :- step_talk(W, Id, TId, NW, Evts).
 step(W, Id, buy(TId, T, Q), NW, Evts) :- step_buy(W, Id, TId, T, Q, NW, Evts).
 step(W, Id, sell(TId, T, Q), NW, Evts) :- step_sell(W, Id, TId, T, Q, NW, Evts).
+step(W, Id, steal(TId, T, Q), NW, Evts) :- step_steal(W, Id, TId, T, Q, NW, Evts).
 step(W, Id, ai_tick, NW, Evts) :- step_ai(W, Id, NW, Evts).
 
 step(W, Id, look, W, [look(RId, Desc, Props, Exits, OIds, MIds, IData)]) :-
@@ -42,6 +43,7 @@ to_act(D, use(I))    :- D.type == "use", atom_string(I, D.item).
 to_act(D, talk(T))   :- D.type == "talk", atom_string(T, D.target).
 to_act(D, buy(T, I, Q)) :- D.type == "buy", atom_string(T, D.target), atom_string(I, D.item), Q = D.qty.
 to_act(D, sell(T, I, Q)):- D.type == "sell", atom_string(T, D.target), atom_string(I, D.item), Q = D.qty.
+to_act(D, steal(T, I, Q)):- D.type == "steal", atom_string(T, D.target), atom_string(I, D.item), Q = D.qty.
 to_act(D, ai_tick)   :- D.type == "ai_tick".
 
 api_step(Req, Res) :-

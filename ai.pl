@@ -6,9 +6,11 @@
 :- use_module(world).
 :- use_module(move).
 :- use_module(combat).
+:- use_module(npc).
 
 step_ai(W, Id, NW, Evts) :- ai_flee(W, Id, NW, Evts), !.
 step_ai(W, Id, NW, Evts) :- ai_attack(W, Id, NW, Evts), !.
+step_ai(W, Id, NW, Evts) :- ai_steal(W, Id, NW, Evts), !.
 step_ai(W, Id, NW, Evts) :- ai_chase(W, Id, NW, Evts), !.
 step_ai(W, Id, NW, Evts) :- ai_patrol(W, Id, NW, Evts), !.
 step_ai(W, Id, NW, Evts) :- ai_wander(W, Id, NW, Evts), !.
@@ -35,6 +37,23 @@ ai_attack(W, Id, NW, Evts) :-
     combat:valid_target(W, M, T),
     !,
     step_kill(W, Id, T.id, NW, Evts).
+
+ai_steal(W, Id, NW, Evts) :-
+    world:entity(W, Id, M),
+    get_dict(props, M, Props),
+    member(thief, Props),
+    room(M, RId),
+    world:room_entities(W, RId, Ents),
+    member(T, Ents),
+    get_dict(props, T, TProps),
+    member(merchant, TProps),
+    inv(T, TInv),
+    member(stack{tag: Tag, qty: Qty}, TInv),
+    Tag \== gold,
+    Q is min(Qty, 1),
+    Q > 0,
+    !,
+    npc:step_steal(W, Id, T.id, Tag, Q, NW, Evts).
 
 ai_chase(W, Id, NW, Evts) :-
     world:entity(W, Id, M),
