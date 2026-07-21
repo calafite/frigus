@@ -1,9 +1,11 @@
 :- module(combat, [step_kill/5, step_cast/6, valid_target/3]).
 
+:- use_module(library(lists)).
 :- use_module(config).
 :- use_module(entity).
 :- use_module(world).
 :- use_module(prog).
+:- use_module(drop).
 
 is_crime(FA, FB) :- \+ config:enemy(FA, FB), FA \== criminal.
 
@@ -57,11 +59,13 @@ apply_dmg(W, A, T, Dmg, NW, [HitEvt], HitEvt) :-
     hp(T, THp), NTHp is THp - Dmg, hp(T, NTHp, NT),
     world:update(W, A, TW), world:update(TW, NT, NW).
 
-reward(W, A, mob{id: MId, tag: Tag}, NW, [xp(AId, Xp) | ProgEvts]) :-
+reward(W, A, mob{id: MId, tag: Tag} = M, NW, [xp(AId, Xp) | Evts]) :-
     config:mob_xp(Tag, Xp),
     AId = A.id,
     prog:add_xp(A, Xp, NA, ProgEvts),
-    world:remove(W, MId, TW),
-    world:update(TW, NA, NW).
+    world:remove(W, MId, W1),
+    world:update(W1, NA, W2),
+    drop:gen_drops(W2, M, NW, DropEvts),
+    append(ProgEvts, DropEvts, Evts).
 reward(W, A, plyr{id: PId} = NT, NW, []) :-
     world:update(W, A, TW), world:update(TW, NT, NW).

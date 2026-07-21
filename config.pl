@@ -3,7 +3,8 @@
     weight/2, desc/2,
     consumable/2, val/2,
     enemy/2, req/3, scale/3,
-    growth/3, mob_xp/2
+    growth/3, mob_xp/2,
+    loot_table/5
 ]).
 
 dmg(fists, 3).
@@ -61,3 +62,10 @@ growth(wizard, int, 3).
 
 mob_xp(goblin, 120).
 mob_xp(_, 100).
+
+loot_table(goblin, gold, 1.0, 5, 20).
+loot_table(goblin, potion, 0.4, 1, 2).
+loot_table(goblin, sword, 0.05, 1, 1).
+loot_table(orc, gold, 1.0, 15, 45).
+loot_table(orc, shield, 0.1, 1, 1).
+loot_table(slime, potion, 0.25, 1, 1).
