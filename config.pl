@@ -2,7 +2,7 @@
     dmg/2, cost/2, slot/2, weight/2, desc/2,
     consumable/2, val/2, rarity/2, inflicts/4,
     enemy/2, req/3, scale/3, growth/3, mob_xp/2,
-    loot_table/5
+    loot_table/5, armor_val/2, cooldown/2
 ]).
 
 dmg(fists, 3).
@@ -87,3 +87,11 @@ mob_xp(_, 100).
 loot_table(goblin, gold, 1.0, 5, 20).
 loot_table(goblin, potion, 0.4, 1, 2).
 loot_table(goblin, sword, 0.05, 1, 1).
+
+armor_val(robe, 2).
+armor_val(shield, 5).
+armor_val(_, 0).
+
+cooldown(fireball, 3).
+cooldown(iceblast, 4).
+cooldown(bash, 2).

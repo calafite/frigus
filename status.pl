@@ -23,7 +23,10 @@ step_tick(W, Id, NW, Evts) :-
     hp(E, Hp),
     NHp is max(0, Hp - Dmg),
     hp(E, NHp, E1),
-    affs(E1, NA, NE),
+    affs(E1, NA, E2),
+    cds(E2, Cds),
+    dec_cds(Cds, NCds),
+    cds(E2, NCds, NE),
     ( NHp =:= 0 ->
         Evts = [dead(Id)|TEvts],
         world:remove(W, Id, NW)
@@ -31,6 +34,15 @@ step_tick(W, Id, NW, Evts) :-
         Evts = TEvts,
         world:update(W, NE, NW)
     ).
+
+dec_cds(Cds, NCds) :-
+    dict_pairs(Cds, cds, Pairs),
+    dec_pairs(Pairs, NPairs),
+    dict_pairs(NCds, cds, NPairs).
+
+dec_pairs([], []).
+dec_pairs([_-V|T], NT) :- V =< 1, !, dec_pairs(T, NT).
+dec_pairs([K-V|T], [K-NV|NT]) :- NV is V - 1, dec_pairs(T, NT).
 
 tick_affs([], [], 0, []).
 tick_affs([A|T], NT, Dmg, Evts) :-

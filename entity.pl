@@ -5,6 +5,7 @@
     inv/2, inv/3, equip/2, equip/3, stat/3,
     fac/2, fac/3, affs/2, affs/3, wpn/2, alive/1,
     reps/2, reps/3, rep_val/3, rep_mod/4,
+    cds/2, cds/3, total_armor/2,
     inv_add/4, inv_rem/4, inv_wt/2, max_wt/2
 ]).
 
@@ -30,6 +31,10 @@ reps(E, R) :- get_dict(reps, E, R), !.
 reps(_, reps{}).
 reps(E, V, E.put(reps, V)).
 
+cds(E, R) :- get_dict(cds, E, R), !.
+cds(_, cds{}).
+cds(E, V, E.put(cds, V)).
+
 rep_val(E, Fac, Val) :-
     is_dict(E, plyr),
     reps(E, Reps),
@@ -43,6 +48,19 @@ rep_mod(E, Fac, Val, NE) :-
     NReps = Reps.put(Fac, NVal),
     reps(E, NReps, NE), !.
 rep_mod(E, _, _, E).
+
+armor_val(none, 0).
+armor_val(fists, 0).
+armor_val(Tag, Val) :- config:armor_val(Tag, Val), !.
+armor_val(_, 0).
+
+total_armor(E, Armor) :-
+    is_dict(E, plyr), !,
+    equip(E, Eq),
+    get_dict(shield, Eq, Shield), armor_val(Shield, SVal),
+    get_dict(body, Eq, Body), armor_val(Body, BVal),
+    Armor is SVal + BVal.
+total_armor(_, 0).
 
 buff_mod([], _, 0).
 buff_mod([aff{type: buff, stat: S, val: V, dur: _}|T], S, Out) :- buff_mod(T, S, R), Out is R + V, !.
