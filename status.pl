@@ -73,5 +73,6 @@ tick_affs(E, [A|T], [NA|NT], Dmg, Evts) :-
 
 aff_dmg(aff{type: poison, val: V, dur: _}, V, tick(poison, V)) :- !.
 aff_dmg(aff{type: burn, val: V, dur: _}, V, tick(burn, V)) :- !.
+aff_dmg(aff{type: bloodline_curse, val: V, dur: _}, V, tick(bloodline_curse, V)) :- !.
 aff_dmg(aff{type: buff, stat: S, val: V, dur: _}, 0, tick(buff(S), V)) :- !.
 aff_dmg(aff{type: T, val: _, dur: _}, 0, tick(T, 0)).

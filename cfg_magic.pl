@@ -19,6 +19,7 @@ cost(fireblast, 10).
 cost(holy_light, 6).
 cost(earthquake, 18).
 cost(chain_lightning, 8).
+cost(bloodline_curse, 30).
 
 cooldown(fireball, 3).
 cooldown(iceblast, 4).
@@ -34,6 +35,7 @@ cooldown(fireblast, 5).
 cooldown(holy_light, 4).
 cooldown(earthquake, 8).
 cooldown(chain_lightning, 4).
+cooldown(bloodline_curse, 12).
 
 spell_nature(fireball, damage).
 spell_nature(iceblast, damage).
@@ -48,7 +50,9 @@ spell_nature(fireblast, damage).
 spell_nature(holy_light, healing).
 spell_nature(earthquake, cataclysm).
 spell_nature(chain_lightning, damage).
+spell_nature(bloodline_curse, damage).
 
 req_race(meteor_storm, demigod).
 req_race(earthquake, demigod).
 req_race(judgment, angel).
+req_race(bloodline_curse, demigod).

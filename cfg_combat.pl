@@ -39,6 +39,7 @@ dmg(fireblast, 22).
 dmg(holy_light, 20).
 dmg(earthquake, 35).
 dmg(chain_lightning, 16).
+dmg(bloodline_curse, 15).
 
 inflicts(fireball, burn, 3, 5).
 inflicts(iceblast, freeze, 2, 0).
@@ -57,6 +58,7 @@ inflicts(snake, poison, 2, 2).
 inflicts(shadowfang, poison, 5, 5).
 inflicts(mjolnir, stun, 2, 0).
 inflicts(solaris, burn, 4, 12).
+inflicts(bloodline_curse, bloodline_curse, 10, 8).
 
 enemy(guard, monster).
 enemy(guard, criminal).
@@ -97,6 +99,7 @@ req(shadowfang, dex, 25).
 req(gungnir, dex, 24).
 req(mjolnir, str, 40).
 req(solaris, int, 40).
+req(bloodline_curse, int, 35).
 req(_, _, 0).
 
 scale(sword, str, 1.2).
@@ -130,4 +133,5 @@ scale(shadowfang, dex, 2.2).
 scale(gungnir, dex, 2.0).
 scale(mjolnir, str, 3.0).
 scale(solaris, int, 3.0).
+scale(bloodline_curse, int, 2.5).
 scale(_, str, 1.0).

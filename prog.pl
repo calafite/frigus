@@ -62,15 +62,25 @@ step_train(W, Id, Stat, NW, Evts) :-
 keep_stack(S) :-
     get_dict(tag, S, Tag),
     ( config:soulbound(Tag) -> true
-    ; get_dict(enchanted, S, Enc), member(permanent, E) -> true
+    ; get_dict(enchanted, S, Enc), member(permanent, Enc) -> true
+    ).
+
+rebirth_affs(P, NAffs) :-
+    affs(P, Affs),
+    ( member(aff{type: bloodline_curse, val: Val, dur: Dur}, Affs) ->
+        NDur is Dur - 1,
+        ( NDur > 0 -> NAffs = [aff{type: bloodline_curse, val: Val, dur: NDur}] ; NAffs = [] )
+    ;
+        NAffs = []
     ).
 
 rebirth_player(P, NP, SpawnRId) :-
     SpawnRId = temple,
     get_dict(max_hp, P, MaxHp),
     get_dict(max_mp, P, MaxMp),
+    rebirth_affs(P, NAffs),
     ( is_special(P) ->
-        NP = P.put(hp, MaxHp).put(mp, MaxMp).put(room, SpawnRId).put(affs, []).put(cds, cds{})
+        NP = P.put(hp, MaxHp).put(mp, MaxMp).put(room, SpawnRId).put(affs, NAffs).put(cds, cds{})
     ;
         inv(P, Inv),
         include(keep_stack, Inv, NInv),
@@ -87,6 +97,6 @@ rebirth_player(P, NP, SpawnRId) :-
                .put(inv, NInv)
                .put(room, SpawnRId)
                .put(equip, equip{wpn: fists, shield: none, body: none})
-               .put(affs, [])
+               .put(affs, NAffs)
                .put(cds, cds{})
     ).
