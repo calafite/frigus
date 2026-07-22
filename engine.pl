@@ -24,6 +24,9 @@
 :- use_module(religion).
 :- use_module(enchant).
 :- use_module(law).
+:- use_module(gather).
+:- use_module(build).
+:- use_module(alchemy).
 
 step(W, Id, move(Dir), NW, Evts) :- step_move(W, Id, Dir, NW, Evts).
 step(W, Id, kill(TId), NW, Evts) :- step_kill(W, Id, TId, NW, Evts).
@@ -86,6 +89,11 @@ step(W, Id, repair(Slot, Kit), NW, Evts) :- enchant:step_repair(W, Id, Slot, Kit
 step(W, Id, pay_bounty, NW, Evts) :- law:step_pay_bounty(W, Id, NW, Evts).
 step(W, Id, jailbreak, NW, Evts) :- law:step_jailbreak(W, Id, NW, Evts).
 step(W, Id, bribe(GuardId), NW, Evts) :- law:step_bribe_guard(W, Id, GuardId, NW, Evts).
+step(W, Id, gather(NodeId), NW, Evts) :- gather:step_gather(W, Id, NodeId, NW, Evts).
+step(W, Id, skin(CorpseId), NW, Evts) :- gather:step_skin(W, Id, CorpseId, NW, Evts).
+step(W, Id, build(StructTag), NW, Evts) :- build:step_build(W, Id, StructTag, NW, Evts).
+step(W, Id, demolish(Prop), NW, Evts) :- build:step_demolish(W, Id, Prop, NW, Evts).
+step(W, Id, brew(Ingreds), NW, Evts) :- alchemy:step_brew(W, Id, Ingreds, NW, Evts).
 
 step(W, Id, look, W, [look(RId, Desc, Props, Exits, OIds, MIds, IData)]) :-
     world:entity(W, Id, A), room(A, RId), world:node(W, RId, Node),
@@ -176,6 +184,14 @@ to_act(D, repair(Slot, Kit)) :- D.type == "repair", atom_string(Slot, D.slot), a
 to_act(D, pay_bounty) :- D.type == "pay_bounty".
 to_act(D, jailbreak) :- D.type == "jailbreak".
 to_act(D, bribe(GuardId)) :- D.type == "bribe", atom_string(GuardId, D.target).
+to_act(D, gather(NodeId)) :- D.type == "gather", atom_string(NodeId, D.node).
+to_act(D, skin(CorpseId)) :- D.type == "skin", atom_string(CorpseId, D.corpse).
+to_act(D, build(StructTag)) :- D.type == "build", atom_string(StructTag, D.structure).
+to_act(D, demolish(Prop)) :- D.type == "demolish", atom_string(Prop, D.prop).
+to_act(D, brew(Ingreds)) :- D.type == "brew", get_ingreds(D.ingredients, Ingreds).
+
+get_ingreds([], []).
+get_ingreds([H|T], [Str|Rest]) :- atom_string(Str, H), get_ingreds(T, Rest).
 
 cmd_parse("stay", stay).
 cmd_parse("follow", follow).
