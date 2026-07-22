@@ -4,6 +4,7 @@
 :- use_module(entity).
 :- use_module(map).
 :- use_module(visibility).
+:- use_module(cfg_zone).
 
 step_move(W, Id, Dir, NW, [moved(Id, Dir, NRId) | SideEvts]) :-
     world:entity(W, Id, A),
@@ -13,7 +14,11 @@ step_move(W, Id, Dir, NW, [moved(Id, Dir, NRId) | SideEvts]) :-
     world:node(W, NRId, NextNode),
     map:can_enter(W, A, CurNode, NextNode, Dir),
     map:on_exit(W, A, CurNode, MidA, ExitEvts),
-    entity:room(MidA, NRId, MovedA),
+    get_dict(terrain, NextNode, Terrain),
+    cfg_zone:terrain_fatigue(Terrain, FCost),
+    get_dict(fatigue, MidA, F),
+    NF is min(100, F + FCost),
+    entity:room(MidA.put(fatigue, NF), NRId, MovedA),
     climb_state(MovedA, false, LandedA),
     map:on_enter(W, LandedA, NextNode, FinalA, EnterEvts),
     append(ExitEvts, EnterEvts, SideEvts),
@@ -55,7 +60,10 @@ step_travel(W, Id, DestId, NW, [fast_traveled(Id, DestId)]) :-
     member(safe, DestNode.props),
     member(landmark, DestNode.props),
     get_dict(landmarks, A, Known), member(DestId, Known),
-    inv(A, Inv), inv_rem(Inv, gold, 50, NInv),
-    get_dict(fatigue, A, F), NF is min(100, F + 20),
+    cfg_zone:region_of(CurNode.region, R1),
+    cfg_zone:region_of(DestNode.region, R2),
+    ( R1 == R2 -> Cost = 50, Fat = 20 ; Cost = 150, Fat = 50 ),
+    inv(A, Inv), inv_rem(Inv, gold, Cost, NInv),
+    get_dict(fatigue, A, F), NF is min(100, F + Fat),
     A1 = A.put(inv, NInv).put(fatigue, NF).put(room, DestId),
     world:update(W, A1, NW).

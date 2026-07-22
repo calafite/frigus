@@ -11,8 +11,9 @@ tick_simulation(W, NW, Evts) :-
     spread_fire(W, W1, Evts1),
     apply_currents(W1, W2, Evts2),
     spread_diseases(W2, W3, Evts3),
-    trigger_disasters(W3, NW, Evts4),
-    append([Evts1, Evts2, Evts3, Evts4], Evts).
+    trigger_disasters(W3, W4, Evts4),
+    tick_campfires(W4, NW, Evts5),
+    append([Evts1, Evts2, Evts3, Evts4, Evts5], Evts).
 
 update_room(W, R, NW) :-
     select(O, W.rooms, Rest), O.id == R.id, !,
@@ -211,4 +212,29 @@ freeze_entities(W, [E|T], NW, Evts) :-
     world:update(W, NE, W1),
     ( NHp =:= 0 -> Evt = [frostbite(E.id, 10), dead(E.id) | AEvts] ; Evt = [frostbite(E.id, 10) | AEvts] ),
     freeze_entities(W1, T, NW, REvts),
-    appen
+    append(Evt, REvts, Evts).
+
+tick_campfires(W, NW, Evts) :-
+    findall(RId-T, (member(R, W.rooms), member(campfire(T), R.props)), Camps),
+    do_campfires(W, Camps, NW, Evts).
+
+do_campfires(W, [], W, []).
+do_campfires(W, [RId-T|Ts], NW, Evts) :-
+    world:node(W, RId, R),
+    NT is T - 1,
+    ( NT =:= 0 ->
+        select(campfire(_), R.props, NProps),
+        ( member(originally_dark, R.props) ->
+            select(originally_dark, NProps, Rest),
+            NRProps = [dark|Rest]
+        ; NRProps = NProps ),
+        NR = R.put(props, NRProps),
+        Evt = [campfire_out(RId)]
+    ;
+        select(campfire(_), R.props, Rest),
+        NR = R.put(props, [campfire(NT)|Rest]),
+        Evt = []
+    ),
+    update_room(W, NR, W1),
+    do_campfires(W1, Ts, NW, REvts),
+    append(Evt, REvts, Evts).

@@ -10,7 +10,7 @@
     skills/2, skills/3, skill_val/3, skill_mod/4,
     quests/2, quests/3,
     altitude/2, altitude/3, climb_state/2, climb_state/3,
-    stance/2, stance/3, mount/2, mount/3,
+    stance/2, stance/3, mount/2, mount/3, torch_life/2, torch_life/3,
     inv_add/4, inv_rem/4, inv_wt/2, max_wt/2,
     allowed_race/2
 ]).
@@ -74,6 +74,10 @@ stance(E, V, E.put(stance, V)).
 mount(E, M) :- get_dict(mount, E, M), !.
 mount(_, none).
 mount(E, V, E.put(mount, V)).
+
+torch_life(E, L) :- get_dict(torch_life, E, L), !.
+torch_life(_, 100).
+torch_life(E, V, E.put(torch_life, V)).
 
 get_ceil(E, Stat, Val) :-
     ( race(E, demigod) -> Val = 9999

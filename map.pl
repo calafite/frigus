@@ -44,6 +44,19 @@ cannot_enter(_W, A, C, _N, Dir) :-
     get_dict(req_portal_key, C, Portals), get_dict(Dir, Portals, Key),
     inv(A, Inv), \+ member(stack{tag: Key, qty: _}, Inv).
 
+cannot_enter(_W, A, _C, N, _Dir) :-
+    get_dict(locked_exits, N, Locked), member(locked, Locked),
+    \+ get_dict(owner, N, A.id).
+
+cannot_enter(W, _A, _C, N, _Dir) :-
+    get_dict(cap, N, Cap),
+    world:room_entities(W, N.id, Ents),
+    include(is_plyr, Ents, Players),
+    length(Players, Count),
+    Count >= Cap.
+
+is_plyr(E) :- is_dict(E, plyr).
+
 can_enter(W, A, C, N, Dir) :- \+ cannot_enter(W, A, C, N, Dir).
 
 on_exit(_W, A, _N, A, []) :- !.
@@ -57,17 +70,25 @@ on_enter(W, A, N, NA, [discovered_landmark(A.id, N.id) | Evts]) :-
 on_enter(W, A, N, NA, Evts) :-
     on_enter_normal(W, A, N, NA, Evts).
 
-on_enter_normal(_W, A, N, NA, [teleported(A.id, TargetId)]) :-
+on_enter_normal(W, A, N, NA, Evts) :-
+    get_dict(owner, N, Owner), Owner \== none, Owner \== A.id, !,
+    rep_mod(A, town, -10, A1),
+    on_enter_trespass(W, A1, N, NA, Evts1),
+    Evts = [trespassed(A.id, N.id) | Evts1].
+on_enter_normal(W, A, N, NA, Evts) :-
+    on_enter_trespass(W, A, N, NA, Evts).
+
+on_enter_trespass(_W, A, N, NA, [teleported(A.id, TargetId)]) :-
     get_dict(teleport_target, N, TargetId), !,
     entity:room(A, TargetId, NA).
 
-on_enter_normal(W, A, N, NA, [teleported(A.id, TargetId)]) :-
+on_enter_trespass(W, A, N, NA, [teleported(A.id, TargetId)]) :-
     get_dict(type, N, teleporter), !,
     findall(R.id, member(R, W.rooms), RIds),
     random_member(TargetId, RIds),
     entity:room(A, TargetId, NA).
 
-on_enter_normal(_W, A, N, NA, [trap(A.id, Dmg) | AffEvts]) :-
+on_enter_trespass(_W, A, N, NA, [trap(A.id, Dmg) | AffEvts]) :-
     get_dict(trap, N, Dmg),
     \+ altitude(A, air),
     hp(A, Hp),
@@ -79,4 +100,4 @@ on_enter_normal(_W, A, N, NA, [trap(A.id, Dmg) | AffEvts]) :-
         NA = A1, AffEvts = []
     ), !.
 
-on_enter_normal(_W, A, _N, A, []).
+on_enter_trespass(_W, A, _N, A, []).

@@ -15,9 +15,11 @@
 can_see(W, A, RId) :-
     world:node(W, RId, N),
     ( \+ member(dark, N.props) -> true
+    ; member(campfire(_), N.props) -> true
+    ; member(brazier_lit, N.props) -> true
     ; props(A, P), member(night_vision, P) -> true
-    ; inv(A, Inv), member(stack{tag: torch, qty: _}, Inv) -> true
-    ; equip(A, Eq), get_dict(shield, Eq, torch) -> true
+    ; inv(A, Inv), member(stack{tag: lit_torch, qty: _}, Inv) -> true
+    ; equip(A, Eq), get_dict(shield, Eq, lit_torch) -> true
     ).
 
 can_see_target(W, A, T) :-
@@ -59,6 +61,7 @@ resolve_exit(_W, A, Node, Dir, NRId) :-
     get_dict(Dir, Secrets, NRId).
 
 reveal_details(A, Node, FullDesc) :-
+    ( \+ member(dark, Node.props) ; props(A, P), member(night_vision, P) ), !,
     Base = Node.desc,
     ( get_dict(details, Node, Details) ->
         stat(A, int, Int),
@@ -72,6 +75,12 @@ reveal_details(A, Node, FullDesc) :-
     ;
         FullDesc = Base
     ).
+reveal_details(A, Node, FullDesc) :-
+    get_dict(ambience, Node, Amb), !,
+    get_dict(sound, Amb, Sound),
+    get_dict(smell, Amb, Smell),
+    atomic_list_concat(["It is dark. You hear ", Sound, " and smell ", Smell, "."], "", FullDesc).
+reveal_details(_, _, "It is dark. You hear nothing.").
 
 step_search(W, Id, W, Evts) :-
     world:entity(W, Id, A), room(A, RId),

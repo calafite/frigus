@@ -18,6 +18,8 @@
 :- use_module(trade).
 :- use_module(quest).
 :- use_module(survival).
+:- use_module(zone).
+:- use_module(cooking).
 
 step(W, Id, move(Dir), NW, Evts) :- step_move(W, Id, Dir, NW, Evts).
 step(W, Id, kill(TId), NW, Evts) :- step_kill(W, Id, TId, NW, Evts).
@@ -56,6 +58,15 @@ step(W, Id, dismount, NW, Evts) :- survival:step_dismount(W, Id, NW, Evts).
 step(W, Id, stance(Stance), NW, Evts) :- survival:step_stance(W, Id, Stance, NW, Evts).
 step(W, Id, search, NW, Evts) :- visibility:step_search(W, Id, NW, Evts).
 step(W, Id, travel(Dest), NW, Evts) :- move:step_travel(W, Id, Dest, NW, Evts).
+step(W, Id, break(ObjId), NW, Evts) :- zone:step_break(W, Id, ObjId, NW, Evts).
+step(W, Id, lock(Dir), NW, Evts) :- zone:step_lock(W, Id, Dir, NW, Evts).
+step(W, Id, unlock(Dir), NW, Evts) :- zone:step_unlock(W, Id, Dir, NW, Evts).
+step(W, Id, buy_property, NW, Evts) :- zone:step_buy(W, Id, NW, Evts).
+step(W, Id, furniture(FurnId, Act), NW, Evts) :- zone:step_furn(W, Id, FurnId, Act, NW, Evts).
+step(W, Id, pick(Dir), NW, Evts) :- zone:step_pick(W, Id, Dir, NW, Evts).
+step(W, Id, ignite, NW, Evts) :- interact:step_ignite(W, Id, NW, Evts).
+step(W, Id, cook(Output), NW, Evts) :- cooking:step_cook(W, Id, Output, NW, Evts).
+step(W, Id, poison(Food, Poison), NW, Evts) :- cooking:step_poison(W, Id, Food, Poison, NW, Evts).
 
 step(W, Id, look, W, [look(RId, Desc, Props, Exits, OIds, MIds, IData)]) :-
     world:entity(W, Id, A), room(A, RId), world:node(W, RId, Node),
@@ -128,6 +139,15 @@ to_act(D, dismount) :- D.type == "dismount".
 to_act(D, stance(Stance)) :- D.type == "stance", atom_string(Stance, D.stance).
 to_act(D, search) :- D.type == "search".
 to_act(D, travel(Dest)) :- D.type == "travel", atom_string(Dest, D.destination).
+to_act(D, break(ObjId)) :- D.type == "break", atom_string(ObjId, D.object).
+to_act(D, lock(Dir)) :- D.type == "lock", atom_string(Dir, D.dir).
+to_act(D, unlock(Dir)) :- D.type == "unlock", atom_string(Dir, D.dir).
+to_act(D, buy_property) :- D.type == "buy_property".
+to_act(D, furniture(FurnId, Act)) :- D.type == "furniture", atom_string(FurnId, D.furniture), atom_string(Act, D.action).
+to_act(D, pick(Dir)) :- D.type == "pick", atom_string(Dir, D.dir).
+to_act(D, ignite) :- D.type == "ignite".
+to_act(D, cook(Output)) :- D.type == "cook", atom_string(Output, D.item).
+to_act(D, poison(Food, Poison)) :- D.type == "poison", atom_string(Food, D.item), atom_string(Poison, D.poison).
 
 api_step(Req, Res) :-
     to_act(Req.action, Act),

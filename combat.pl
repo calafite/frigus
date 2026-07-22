@@ -84,7 +84,9 @@ step_kill(W, AId, TId, NW, Evts) :-
         total_armor(T, Arm), NetDmg is max(1, Dmg1 - Arm),
         roll_crit(CleanA, IsCrit), ( IsCrit == true -> Dmg2 is NetDmg * 2 ; Dmg2 = NetDmg ),
         roll_double(CleanA, IsDouble),
+        affs(CleanA, AAffs),
         ( IsDouble == true -> Dmg is Dmg2 * 2, Evt = double_hit(AId, TId, Dmg)
+        ; member(aff{type: hidden, val: _, dur: _}, AAffs) -> Dmg is Dmg2 * 3, Evt = backstab(AId, TId, Dmg)
         ; Dmg = Dmg2, ( IsCrit == true -> Evt = crit(AId, TId, Dmg) ; Evt = hit(AId, TId, Dmg) ) ),
         ( is_dict(CleanA, mob) -> get_aff(CleanA.tag, Aff) ; get_aff(Wpn, Aff) ),
         apply_dmg(W, CleanA, T, Dmg, Aff, NW, Evts, Evt)
