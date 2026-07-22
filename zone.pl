@@ -20,10 +20,9 @@ step_break(W, Id, ObjId, NW, Evts) :-
     world:entity(W, Id, A), alive(A),
     room(A, RId), world:node(W, RId, N),
     get_dict(breakables, N, B), get_dict(ObjId, B, Obj),
-    wpn(A, Wpn),
-    config:dmg(Wpn, BaseDmg),
-    stat(A, str, Str),
-    Dmg is BaseDmg + floor(Str * 0.5),
+    wpn(A, Wpn), config:dmg(Wpn, BaseDmg),
+    stat(A, str, Str), stat(A, con, Con),
+    Dmg is BaseDmg + floor(Str * 0.5) + floor(Con * 0.2),
     NHp is Obj.hp - Dmg,
     ( NHp =< 0 ->
         del_dict(ObjId, B, _, NB),
@@ -35,10 +34,8 @@ step_break(W, Id, ObjId, NW, Evts) :-
         update_room(W2, NN, NW),
         append([broken_obj(ObjId), damage_obj(ObjId, Dmg) | XpEvts], DropEvts, Evts)
     ;
-        NObj = Obj.put(hp, NHp),
-        NB = B.put(ObjId, NObj),
-        NN = N.put(breakables, NB),
-        update_room(W, NN, NW),
+        NObj = Obj.put(hp, NHp), NB = B.put(ObjId, NObj),
+        NN = N.put(breakables, NB), update_room(W, NN, NW),
         Evts = [damage_obj(ObjId, Dmg)]
     ).
 
@@ -56,8 +53,7 @@ step_lock(W, Id, Dir, NW, [locked_exit(Id, Dir)]) :-
     ( N.owner == Id ; member(Id, N.officers) ; N.owner == none ),
     get_dict(locked_exits, N, Ls), \+ member(Dir, Ls),
     inv(A, Inv), member(stack{tag: Key, qty: _}, Inv),
-    NN = N.put(locked_exits, [Dir|Ls]),
-    update_room(W, NN, NW).
+    NN = N.put(locked_exits, [Dir|Ls]), update_room(W, NN, NW).
 
 step_unlock(W, Id, Dir, NW, [unlocked_exit(Id, Dir)]) :-
     world:entity(W, Id, A), alive(A),
@@ -65,8 +61,7 @@ step_unlock(W, Id, Dir, NW, [unlocked_exit(Id, Dir)]) :-
     get_dict(locks, N, Locks), get_dict(Dir, Locks, Key),
     get_dict(locked_exits, N, Ls), member(Dir, Ls),
     inv(A, Inv), member(stack{tag: Key, qty: _}, Inv),
-    select(Dir, Ls, NLs),
-    NN = N.put(locked_exits, NLs),
+    select(Dir, Ls, NLs), NN = N.put(locked_exits, NLs),
     update_room(W, NN, NW).
 
 step_buy(W, Id, NW, [property_bought(Id, RId)]) :-
@@ -80,25 +75,17 @@ step_buy(W, Id, NW, [property_bought(Id, RId)]) :-
     update_room(W1, NN, NW).
 
 step_furn(W, Id, FurnId, sit, NW, [sat_down(Id, FurnId)]) :-
-    world:entity(W, Id, A), alive(A),
-    room(A, RId), world:node(W, RId, N),
+    world:entity(W, Id, A), alive(A), room(A, RId), world:node(W, RId, N),
     get_dict(furniture, N, F), get_dict(FurnId, F, Furn),
     Furn.type == chair, Furn.user == none,
-    NFurn = Furn.put(user, Id),
-    NF = F.put(FurnId, NFurn),
-    NN = N.put(furniture, NF),
-    world:update(W, A.put(state, resting), W1),
-    update_room(W1, NN, NW).
+    NFurn = Furn.put(user, Id), NF = F.put(FurnId, NFurn), NN = N.put(furniture, NF),
+    world:update(W, A.put(state, resting), W1), update_room(W1, NN, NW).
 
 step_furn(W, Id, FurnId, stand, NW, [stood_up(Id, FurnId)]) :-
-    world:entity(W, Id, A), alive(A),
-    room(A, RId), world:node(W, RId, N),
+    world:entity(W, Id, A), alive(A), room(A, RId), world:node(W, RId, N),
     get_dict(furniture, N, F), get_dict(FurnId, F, Furn),
-    Furn.user == Id,
-    NFurn = Furn.put(user, none),
-    NF = F.put(FurnId, NFurn),
-    NN = N.put(furniture, NF),
-    world:update(W, A.put(state, normal), W1),
+    Furn.user == Id, NFurn = Furn.put(user, none), NF = F.put(FurnId, NFurn),
+    NN = N.put(furniture, NF), world:update(W, A.put(state, normal), W1),
     update_room(W1, NN, NW).
 
 lock_difficulty(bronze_key, 12).
@@ -114,25 +101,17 @@ step_pick(W, Id, Dir, NW, Evts) :-
     get_dict(locked_exits, N, Ls), member(Dir, Ls),
     get_dict(locks, N, Locks), get_dict(Dir, Locks, Key),
     inv(A, Inv), inv_rem(Inv, lockpick, 1, NInv),
-    stat(A, dex, Dex),
-    skill_val(A, lockpicking, Lvl),
-    lock_difficulty(Key, DC),
+    stat(A, dex, Dex), stat(A, luk, Luk),
+    skill_val(A, lockpicking, Lvl), lock_difficulty(Key, DC),
     random_between(1, 20, Roll),
-    ( Roll + Dex + floor(Lvl * 0.1) >= DC ->
-        select(Dir, Ls, NLs),
-        NN = N.put(locked_exits, NLs),
+    ( Roll + Dex + floor(Lvl * 0.1) + floor(Luk * 0.3) >= DC ->
+        select(Dir, Ls, NLs), NN = N.put(locked_exits, NLs),
         skill_mod(A, lockpicking, 1, NA),
-        world:update(W, NA.put(inv, NInv), W1),
-        update_room(W1, NN, NW),
-        NLvl is Lvl + 1,
-        Evts = [picked_lock(Id, Dir), skill_up(Id, lockpicking, NLvl)]
+        world:update(W, NA.put(inv, NInv), W1), update_room(W1, NN, NW),
+        NLvl is Lvl + 1, Evts = [picked_lock(Id, Dir), skill_up(Id, lockpicking, NLvl)]
     ;
-        random_between(1, 100, BreakRoll),
-        ( BreakRoll =< 50 ->
-            world:update(W, A.put(inv, NInv), NW),
-            Evts = [pick_failed(Id, Dir), pick_broken(Id)]
-        ;
-            NW = W,
-            Evts = [pick_failed(Id, Dir)]
-        )
+        BreakChance is max(10, 50 - floor(Luk * 0.5)), random_between(1, 100, BreakRoll),
+        ( BreakRoll =< BreakChance ->
+            world:update(W, A.put(inv, NInv), NW), Evts = [pick_failed(Id, Dir), pick_broken(Id)]
+        ; NW = W, Evts = [pick_failed(Id, Dir)] )
     ).

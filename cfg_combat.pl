@@ -35,8 +35,8 @@ wpn_dmg(fireball, [dmg(fire, 12)]).
 wpn_dmg(iceblast, [dmg(ice, 8)]).
 wpn_dmg(bash, [dmg(blunt, 5)]).
 wpn_dmg(poison_dagger, [dmg(pierce, 4), dmg(poison, 2)]).
-wpn_dmg(mend, [dmg(magic, 0)]).
-wpn_dmg(rejuvenate, [dmg(magic, 0)]).
+wpn_dmg(mend, [dmg(holy, 0)]).
+wpn_dmg(rejuvenate, [dmg(nature, 0)]).
 wpn_dmg(meteor_storm, [dmg(fire, 30), dmg(blunt, 20)]).
 wpn_dmg(judgment, [dmg(holy, 40)]).
 wpn_dmg(fireblast, [dmg(fire, 22)]).
@@ -177,19 +177,19 @@ inflicts(_, none, 0, 0).
 req(sword, str, 10).
 req(staff, int, 10).
 req(fireball, int, 15).
-req(mend, int, 10).
-req(rejuvenate, int, 12).
+req(mend, wis, 10).
+req(rejuvenate, wis, 12).
 req(meteor_storm, int, 30).
-req(judgment, int, 25).
+req(judgment, wis, 25).
 req(greatsword, str, 25).
 req(battleaxe, str, 18).
 req(longbow, dex, 15).
 req(dagger, dex, 8).
-req(plate_mail, str, 22).
-req(tower_shield, str, 20).
+req(plate_mail, con, 22).
+req(tower_shield, con, 20).
 req(leather_armor, dex, 12).
 req(fireblast, int, 24).
-req(earthquake, int, 28).
+req(earthquake, wis, 28).
 req(chain_lightning, int, 18).
 req(wooden_club, str, 8).
 req(bronze_dagger, dex, 8).
@@ -204,7 +204,7 @@ req(shadowfang, dex, 25).
 req(gungnir, dex, 24).
 req(mjolnir, str, 40).
 req(solaris, int, 40).
-req(bloodline_curse, int, 35).
+req(bloodline_curse, cha, 35).
 req(_, _, 0).
 
 scale(sword, str, 1.2).
@@ -212,19 +212,19 @@ scale(poison_dagger, dex, 1.5).
 scale(fists, str, 1.0).
 scale(staff, int, 1.2).
 scale(fireball, int, 1.5).
-scale(mend, int, 1.0).
-scale(rejuvenate, int, 0.5).
+scale(mend, wis, 1.5).
+scale(rejuvenate, wis, 1.2).
 scale(meteor_storm, int, 2.0).
-scale(judgment, int, 1.5).
+scale(judgment, wis, 1.8).
 scale(dagger, dex, 1.2).
 scale(greatsword, str, 1.8).
-scale(battleaxe, str, 1.4).
-scale(longbow, dex, 1.3).
-scale(magic_wand, int, 1.0).
+scale(battleaxe, str, 1.6).
+scale(longbow, dex, 1.5).
+scale(magic_wand, int, 1.2).
 scale(fireblast, int, 1.8).
-scale(holy_light, int, 1.2).
-scale(earthquake, int, 2.2).
-scale(chain_lightning, int, 1.4).
+scale(holy_light, wis, 1.5).
+scale(earthquake, wis, 2.2).
+scale(chain_lightning, int, 1.6).
 scale(wooden_club, str, 1.0).
 scale(bronze_dagger, dex, 1.1).
 scale(bronze_sword, str, 1.1).
@@ -236,7 +236,7 @@ scale(composite_bow, dex, 1.4).
 scale(excalibur, str, 2.0).
 scale(shadowfang, dex, 2.2).
 scale(gungnir, dex, 2.0).
-scale(mjolnir, str, 3.0).
-scale(solaris, int, 3.0).
-scale(bloodline_curse, int, 2.5).
+scale(mjolnir, str, 2.5).
+scale(solaris, int, 2.5).
+scale(bloodline_curse, cha, 2.5).
 scale(_, str, 1.0).
