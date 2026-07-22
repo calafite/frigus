@@ -48,7 +48,7 @@ step_tick(W, Id, NW, Evts) :-
         TmpHp is min(MaxHp, Hp + Regen)
     ; TmpHp = Hp ),
     room(E1, RId), world:node(W, RId, N),
-    ( member(burning(I), N.props) ->
+    ( member(burning(I), N.props), \+ is_immune(E1, burn) ->
         FDmg is I * 4,
         NHp is max(0, TmpHp - FDmg - Dmg),
         FEvt = [fire_burn(Id, FDmg)]
@@ -80,7 +80,10 @@ dec_pairs([_-V|T], NT) :- V =< 1, !, dec_pairs(T, NT).
 dec_pairs([K-V|T], [K-NV|NT]) :- NV is V - 1, dec_pairs(T, NT).
 
 is_immune(E, burn) :- props(E, P), member(fire_immune, P).
-is_immune(_, _).
+is_immune(E, poison) :- props(E, P), member(poison_immune, P).
+is_immune(E, bleed) :- props(E, P), member(bloodless, P).
+is_immune(E, freeze) :- props(E, P), member(cold_immune, P).
+is_immune(_, _) :- fail.
 
 tick_affs(_, [], [], 0, []).
 tick_affs(E, [A|T], NT, Dmg, Evts) :-

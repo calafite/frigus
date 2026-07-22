@@ -48,7 +48,8 @@ race(_, human).
 
 props(E, P) :-
     get_dict(props, E, Base), !,
-    ( race(E, Race), config:race_prop(Race, Prop) -> P1 = [Prop | Base] ; P1 = Base ),
+    ( race(E, Race) -> findall(Prop, config:race_prop(Race, Prop), RProps) ; RProps = [] ),
+    append(RProps, Base, P1),
     ( mount(E, Mount), Mount \== none -> P2 = [Mount | P1] ; P2 = P1 ),
     ( member(griffin, P2) -> P = [flight | P2] ; P = P2 ).
 props(_, []).
@@ -176,7 +177,7 @@ equip_stat_mod(E, Stat, Total) :-
 
 stat(E, S, V) :-
     get_dict(S, E, Base), affs(E, A), buff_mod(A, S, Mod),
-    ( race(E, Race) -> config:race_bonus(Race, S, Bonus) ; Bonus = 0 ),
+    ( race(E, Race), config:race_bonus(Race, S, Bonus) -> true ; Bonus = 0 ),
     ( stance(E, crawl) -> (S == dex -> StMod = -5 ; S == str -> StMod = -3 ; StMod = 0) ; StMod = 0 ),
     ( is_dict(E, plyr) -> equip_stat_mod(E, S, EqMod) ; EqMod = 0 ),
     V is Base + Mod + Bonus + StMod + EqMod, !.
