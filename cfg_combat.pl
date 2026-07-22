@@ -1,79 +1,184 @@
 :- module(cfg_combat, [
-    dmg/2,
-    inflicts/4,
-    enemy/2,
-    req/3,
-    scale/3
+    wpn_dmg/2, ar_pen/2, reach/2,
+    inflicts/4, req/3, scale/3,
+    weakness/3, resist/3, immune/2,
+    shield_block/3, physical_type/1
 ]).
 
-dmg(fists, 3).
-dmg(staff, 5).
-dmg(sword, 10).
-dmg(dagger, 5).
-dmg(greatsword, 18).
-dmg(battleaxe, 14).
-dmg(longbow, 11).
-dmg(magic_wand, 4).
-dmg(wooden_club, 4).
-dmg(bronze_dagger, 5).
-dmg(bronze_sword, 7).
-dmg(iron_mace, 10).
-dmg(iron_spear, 9).
-dmg(steel_claymore, 15).
-dmg(steel_halberd, 16).
-dmg(composite_bow, 12).
-dmg(excalibur, 25).
-dmg(shadowfang, 20).
-dmg(gungnir, 24).
-dmg(mjolnir, 40).
-dmg(solaris, 35).
-dmg(fireball, 12).
-dmg(iceblast, 8).
-dmg(bash, 5).
-dmg(poison_dagger, 6).
-dmg(mend, 15).
-dmg(rejuvenate, 10).
-dmg(meteor_storm, 50).
-dmg(judgment, 40).
-dmg(fireblast, 22).
-dmg(holy_light, 20).
-dmg(earthquake, 35).
-dmg(chain_lightning, 16).
-dmg(bloodline_curse, 15).
+physical_type(slash).
+physical_type(pierce).
+physical_type(blunt).
 
-inflicts(fireball, burn, 3, 5).
-inflicts(iceblast, freeze, 2, 0).
-inflicts(bash, stun, 1, 0).
+wpn_dmg(fists, [dmg(blunt, 3)]).
+wpn_dmg(staff, [dmg(blunt, 5)]).
+wpn_dmg(sword, [dmg(slash, 8), dmg(pierce, 2)]).
+wpn_dmg(dagger, [dmg(pierce, 5)]).
+wpn_dmg(greatsword, [dmg(slash, 18)]).
+wpn_dmg(battleaxe, [dmg(slash, 14)]).
+wpn_dmg(longbow, [dmg(pierce, 11)]).
+wpn_dmg(magic_wand, [dmg(magic, 4)]).
+wpn_dmg(wooden_club, [dmg(blunt, 4)]).
+wpn_dmg(bronze_dagger, [dmg(pierce, 5)]).
+wpn_dmg(bronze_sword, [dmg(slash, 6), dmg(pierce, 1)]).
+wpn_dmg(iron_mace, [dmg(blunt, 10)]).
+wpn_dmg(iron_spear, [dmg(pierce, 9)]).
+wpn_dmg(steel_claymore, [dmg(slash, 15)]).
+wpn_dmg(steel_halberd, [dmg(slash, 12), dmg(pierce, 4)]).
+wpn_dmg(composite_bow, [dmg(pierce, 12)]).
+wpn_dmg(excalibur, [dmg(slash, 15), dmg(holy, 10)]).
+wpn_dmg(shadowfang, [dmg(pierce, 10), dmg(dark, 10)]).
+wpn_dmg(gungnir, [dmg(pierce, 14), dmg(lightning, 10)]).
+wpn_dmg(mjolnir, [dmg(blunt, 20), dmg(lightning, 20)]).
+wpn_dmg(solaris, [dmg(slash, 15), dmg(fire, 20)]).
+
+wpn_dmg(fireball, [dmg(fire, 12)]).
+wpn_dmg(iceblast, [dmg(ice, 8)]).
+wpn_dmg(bash, [dmg(blunt, 5)]).
+wpn_dmg(poison_dagger, [dmg(pierce, 4), dmg(poison, 2)]).
+wpn_dmg(mend, [dmg(magic, 0)]).
+wpn_dmg(rejuvenate, [dmg(magic, 0)]).
+wpn_dmg(meteor_storm, [dmg(fire, 30), dmg(blunt, 20)]).
+wpn_dmg(judgment, [dmg(holy, 40)]).
+wpn_dmg(fireblast, [dmg(fire, 22)]).
+wpn_dmg(holy_light, [dmg(holy, 20)]).
+wpn_dmg(earthquake, [dmg(blunt, 35)]).
+wpn_dmg(chain_lightning, [dmg(lightning, 16)]).
+wpn_dmg(bloodline_curse, [dmg(dark, 15)]).
+
+wpn_dmg(wolf, [dmg(slash, 4), dmg(pierce, 2)]).
+wpn_dmg(bear, [dmg(slash, 8), dmg(blunt, 4)]).
+wpn_dmg(giant_spider, [dmg(pierce, 4), dmg(poison, 4)]).
+wpn_dmg(shadow_panther, [dmg(slash, 8), dmg(dark, 4)]).
+wpn_dmg(griffin, [dmg(slash, 10), dmg(pierce, 6)]).
+wpn_dmg(dragon, [dmg(slash, 20), dmg(fire, 20)]).
+wpn_dmg(skeleton, [dmg(blunt, 4), dmg(slash, 2)]).
+wpn_dmg(zombie, [dmg(blunt, 6)]).
+wpn_dmg(wraith, [dmg(dark, 10), dmg(ice, 4)]).
+wpn_dmg(vampire, [dmg(pierce, 8), dmg(dark, 8)]).
+wpn_dmg(demon, [dmg(slash, 12), dmg(fire, 8)]).
+wpn_dmg(imp, [dmg(pierce, 3), dmg(fire, 3)]).
+wpn_dmg(golem, [dmg(blunt, 15)]).
+wpn_dmg(slime, [dmg(blunt, 2), dmg(poison, 2)]).
+wpn_dmg(basilisk, [dmg(pierce, 8), dmg(poison, 8)]).
+
+ar_pen(iron_mace, 0.3).
+ar_pen(mjolnir, 0.5).
+ar_pen(dagger, 0.2).
+ar_pen(bronze_dagger, 0.2).
+ar_pen(shadowfang, 0.4).
+ar_pen(steel_halberd, 0.2).
+ar_pen(greatsword, 0.1).
+ar_pen(battleaxe, 0.1).
+ar_pen(wooden_club, 0.1).
+ar_pen(_, 0.0).
+
+reach(longbow, 10).
+reach(composite_bow, 12).
+reach(shortbow, 8).
+reach(crossbow, 10).
+reach(iron_spear, 2).
+reach(steel_halberd, 2).
+reach(pike, 3).
+reach(glaive, 2).
+reach(gungnir, 3).
+reach(magic_wand, 5).
+reach(staff, 2).
+reach(fireball, 15).
+reach(iceblast, 10).
+reach(meteor_storm, 20).
+reach(chain_lightning, 15).
+reach(fireblast, 12).
+reach(bloodline_curse, 15).
+reach(holy_light, 15).
+reach(_, 1).
+
+shield_block(wooden_shield, 15, 5).
+shield_block(iron_shield, 20, 10).
+shield_block(steel_shield, 25, 15).
+shield_block(tower_shield, 35, 25).
+shield_block(aegis, 40, 40).
+shield_block(_, 0, 0).
+
+weakness(skeleton, blunt, 2.0).
+weakness(skeleton, holy, 2.0).
+weakness(zombie, fire, 1.5).
+weakness(zombie, slash, 1.5).
+weakness(zombie, holy, 2.0).
+weakness(wraith, holy, 2.0).
+weakness(wraith, magic, 1.5).
+weakness(vampire, holy, 2.0).
+weakness(vampire, fire, 1.5).
+weakness(demon, holy, 2.0).
+weakness(demon, ice, 1.5).
+weakness(imp, holy, 1.5).
+weakness(imp, ice, 1.5).
+weakness(golem, blunt, 1.5).
+weakness(golem, magic, 1.5).
+weakness(slime, fire, 2.0).
+weakness(slime, ice, 2.0).
+weakness(giant_spider, fire, 1.5).
+weakness(ent, fire, 2.0).
+weakness(dryad, fire, 1.5).
+weakness(dryad, dark, 1.5).
+weakness(angel, dark, 2.0).
+weakness(angel, void, 1.5).
+weakness(ice_wolf, fire, 2.0).
+weakness(_, _, 1.0).
+
+resist(skeleton, pierce, 0.5).
+resist(skeleton, poison, 0.0).
+resist(zombie, blunt, 0.5).
+resist(zombie, poison, 0.0).
+resist(wraith, phys, 0.1).
+resist(wraith, poison, 0.0).
+resist(vampire, dark, 0.5).
+resist(vampire, poison, 0.5).
+resist(demon, fire, 0.2).
+resist(demon, dark, 0.5).
+resist(imp, fire, 0.0).
+resist(golem, slash, 0.2).
+resist(golem, pierce, 0.2).
+resist(golem, poison, 0.0).
+resist(slime, phys, 0.5).
+resist(slime, poison, 0.0).
+resist(dragon, fire, 0.1).
+resist(dragon, magic, 0.5).
+resist(shadow_panther, dark, 0.2).
+resist(angel, holy, 0.0).
+resist(ice_wolf, ice, 0.0).
+resist(_, _, 1.0).
+
+immune(skeleton, poison).
+immune(zombie, poison).
+immune(wraith, poison).
+immune(golem, poison).
+immune(slime, poison).
+immune(demon, fire).
+immune(imp, fire).
+immune(dragon, fire).
+immune(angel, holy).
+immune(ice_wolf, ice).
+immune(fire_sprite, fire).
+immune(salamander, fire).
+immune(_, none).
+
 inflicts(poison_dagger, poison, 4, 3).
-inflicts(rejuvenate, regen, 3, 0).
 inflicts(haste, haste, 3, 25).
 inflicts(stoneskin, buff, 5, 5).
 inflicts(meteor_storm, burn, 5, 10).
-inflicts(judgment, stun, 1, 0).
 inflicts(fireblast, burn, 4, 8).
-inflicts(earthquake, stun, 2, 0).
-inflicts(chain_lightning, stun, 1, 0).
 inflicts(giant_spider, poison, 3, 4).
 inflicts(snake, poison, 2, 2).
 inflicts(shadowfang, poison, 5, 5).
-inflicts(mjolnir, stun, 2, 0).
 inflicts(solaris, burn, 4, 12).
 inflicts(bloodline_curse, bloodline_curse, 10, 8).
-
-enemy(guard, monster).
-enemy(guard, criminal).
-enemy(citizen, monster).
-enemy(citizen, criminal).
-enemy(player, monster).
+inflicts(_, none, 0, 0).
 
 req(sword, str, 10).
 req(staff, int, 10).
 req(fireball, int, 15).
 req(mend, int, 10).
 req(rejuvenate, int, 12).
-req(raise_dead, int, 14).
-req(haste, dex, 12).
-req(stoneskin, str, 12).
 req(meteor_storm, int, 30).
 req(judgment, int, 25).
 req(greatsword, str, 25).

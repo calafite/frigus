@@ -8,11 +8,11 @@
     cds/2, cds/3, total_armor/2, props/2,
     ceils/2, ceils/3, get_ceil/3, is_special/1,
     skills/2, skills/3, skill_val/3, skill_mod/4,
-    quests/2, quests/3,
+    quests/2, quests/3, threats/2, threats/3,
     altitude/2, altitude/3, climb_state/2, climb_state/3,
     stance/2, stance/3, mount/2, mount/3, torch_life/2, torch_life/3,
     job/2, job/3, home/2, home/3, work/2, work/3,
-    act_state/2, act_state/3, mems/2, mems/3,
+    act_state/2, act_state/3, mems/2, mems/3, bounty/2, bounty/3,
     inv_add/4, inv_rem/4, inv_wt/2, max_wt/2,
     allowed_race/2
 ]).
@@ -34,6 +34,14 @@ fac(E, E.fac).       fac(E, V, E.put(fac, V)).
 affs(E, A) :- get_dict(affs, E, A), !.
 affs(_, []).
 affs(E, V, E.put(affs, V)).
+
+threats(E, T) :- get_dict(threats, E, T), !.
+threats(_, dict{}).
+threats(E, V, E.put(threats, V)).
+
+bounty(E, B) :- get_dict(bounty, E, B), !.
+bounty(_, 0).
+bounty(E, V, E.put(bounty, V)).
 
 race(E, E.race) :- get_dict(race, E, _), !.
 race(_, human).
@@ -132,15 +140,18 @@ rep_mod(E, Fac, Val, NE) :-
     NReps = Reps.put(Fac, NVal), reps(E, NReps, NE), !.
 rep_mod(E, _, _, E).
 
-armor_val(none, 0).
-armor_val(fists, 0).
-armor_val(Tag, Val) :- config:armor_val(Tag, Val), !.
-armor_val(_, 0).
+item_armor(none, 0) :- !.
+item_armor(Item, Val) :-
+    is_dict(Item, item), get_dict(tag, Item, Tag), !,
+    config:armor_val(Tag, Base),
+    ( get_dict(props, Item, Props), member(prop(armor, M), Props) -> Val is Base + M ; Val = Base ).
+item_armor(Tag, Val) :- config:armor_val(Tag, Val), !.
+item_armor(_, 0).
 
 total_armor(E, Armor) :-
     is_dict(E, plyr), !, equip(E, Eq),
-    get_dict(shield, Eq, Shield), armor_val(Shield, SVal),
-    get_dict(body, Eq, Body), armor_val(Body, BVal),
+    get_dict(shield, Eq, Shield), item_armor(Shield, SVal),
+    get_dict(body, Eq, Body), item_armor(Body, BVal),
     affs(E, Affs),
     ( stance(E, crawl) -> StBonus = 10 ; StBonus = 0 ),
     ( member(aff{type: buff, stat: body, val: BMod, dur: _}, Affs) ->
@@ -155,28 +166,46 @@ buff_mod([aff{type: fever, val: _, dur: _}|T], S, Out) :- (S == int -> buff_mod(
 buff_mod([aff{type: blight, val: _, dur: _}|T], S, Out) :- ((S == str ; S == dex) -> buff_mod(T, S, R), Out is R - 5, ! ; buff_mod(T, S, Out)).
 buff_mod([_|T], S, Out) :- buff_mod(T, S, Out).
 
+equip_stat_mod(E, Stat, Total) :-
+    equip(E, Eq), dict_values(Eq, Items),
+    findall(Val, (
+        member(Item, Items), is_dict(Item, item),
+        get_dict(props, Item, Props), member(prop(Stat, Val), Props)
+    ), Vals),
+    sum_list(Vals, Total).
+
 stat(E, S, V) :-
     get_dict(S, E, Base), affs(E, A), buff_mod(A, S, Mod),
     ( race(E, Race) -> config:race_bonus(Race, S, Bonus) ; Bonus = 0 ),
     ( stance(E, crawl) -> (S == dex -> StMod = -5 ; S == str -> StMod = -3 ; StMod = 0) ; StMod = 0 ),
-    V is Base + Mod + Bonus + StMod, !.
+    ( is_dict(E, plyr) -> equip_stat_mod(E, S, EqMod) ; EqMod = 0 ),
+    V is Base + Mod + Bonus + StMod + EqMod, !.
 stat(_, _, 1).
 
-wpn(E, W) :- is_dict(E, plyr), get_dict(wpn, E.equip, W), W \== none, !.
+wpn(E, W) :-
+    is_dict(E, plyr), get_dict(wpn, E.equip, WObj), WObj \== none,
+    (is_dict(WObj, item) -> get_dict(tag, WObj, W) ; W = WObj), !.
 wpn(_, fists).
 
 alive(E) :- hp(E, Hp), Hp > 0.
 
+inv_add(Inv, Item, Qty, [Item | Inv]) :-
+    is_dict(Item, item), !.
 inv_add(Inv, Tag, Qty, [stack{tag: Tag, qty: NQ} | R]) :-
     select(stack{tag: Tag, qty: OQ}, Inv, R), !, NQ is OQ + Qty.
 inv_add(Inv, Tag, Qty, [stack{tag: Tag, qty: Qty} | Inv]).
 
+inv_rem(Inv, ItemId, 1, NInv) :-
+    atom(ItemId), select(Item, Inv, NInv), is_dict(Item, item), Item.id == ItemId, !.
 inv_rem(Inv, Tag, Qty, NInv) :-
     select(stack{tag: Tag, qty: OQ}, Inv, R),
     OQ >= Qty, NQ is OQ - Qty,
     ( NQ =:= 0 -> NInv = R ; NInv = [stack{tag: Tag, qty: NQ} | R] ).
 
 inv_wt([], 0).
+inv_wt([Item | T], W) :-
+    is_dict(Item, item), config:weight(Item.tag, UW), !,
+    inv_wt(T, RW), W is RW + UW.
 inv_wt([stack{tag: Tag, qty: Q} | T], W) :-
     config:weight(Tag, UW), inv_wt(T, RW), W is RW + (UW * Q).
 

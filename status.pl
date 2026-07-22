@@ -1,16 +1,24 @@
-:- module(status, [step_tick/4, can_act/1, apply_aff/4]).
+:- module(status, [step_tick/4, can_act/1, can_cast/1, apply_aff/4]).
 
 :- use_module(entity).
 :- use_module(world).
 :- use_module(env).
 :- use_module(survival).
 :- use_module(simulation).
+:- use_module(library(random)).
+:- use_module(library(lists)).
 
 can_act(E) :-
     affs(E, A),
     \+ member(aff{type: stun, dur: _, val: _}, A),
     \+ member(aff{type: freeze, dur: _, val: _}, A),
-    get_dict(state, E, State), State \== sleeping.
+    get_dict(state, E, State), State \== sleeping,
+    ( member(aff{type: confusion, dur: _, val: _}, A) -> random_between(1, 100, R), R > 50 ; true ).
+
+can_cast(E) :-
+    can_act(E),
+    affs(E, A),
+    \+ member(aff{type: silence, dur: _, val: _}, A).
 
 apply_aff(E, none, E, []) :- !.
 apply_aff(E, Aff, NE, [inflicted(E.id, Aff.type)]) :-
@@ -92,6 +100,7 @@ tick_affs(E, [A|T], [NA|NT], Dmg, Evts) :-
 
 aff_dmg(aff{type: poison, val: V, dur: _}, V, tick(poison, V)) :- !.
 aff_dmg(aff{type: burn, val: V, dur: _}, V, tick(burn, V)) :- !.
+aff_dmg(aff{type: bleed, val: V, dur: _}, V, tick(bleed, V)) :- !.
 aff_dmg(aff{type: bloodline_curse, val: V, dur: _}, V, tick(bloodline_curse, V)) :- !.
 aff_dmg(aff{type: plague, val: _, dur: _}, 2, tick(plague, 2)) :- !.
 aff_dmg(aff{type: fever, val: _, dur: _}, 3, tick(fever, 3)) :- !.

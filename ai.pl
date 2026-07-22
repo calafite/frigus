@@ -137,9 +137,7 @@ ai_murder(W, Id, NW, Evts) :-
     room(M, RId), world:room_entities(W, RId, Ents),
     member(T, Ents), alive(T), hates(M, T), combat:valid_target(W, M, T), !,
     stealth:strip_stealth(M, CleanM),
-    combat:calc_dmg(W, CleanM, CleanM.tag, Base), Dmg is Base * 6,
-    combat:apply_dmg(W, CleanM, T, Dmg, none, NW, CEvts, assassinate(Id, T.id, Dmg)),
-    Evts = CEvts.
+    combat:step_kill(W, Id, T.id, NW, Evts).
 
 ai_murder(W, Id, NW, Evts) :-
     world:entity(W, Id, M), cfg_ai:mania(M.tag, murderer),
@@ -180,8 +178,7 @@ ai_mania_act(cannibal, W, Id, M, NW, Evts) :-
     (T.tag == M.tag ; is_humanoid(T)),
     combat:valid_target(W, M, T),
     hp(T, Hp), get_dict(max_hp, T, Max), Hp =< Max * 0.3, !,
-    combat:apply_dmg(W, M, T, 35, none, NW, DEvts, eat_flesh(Id, T.id, 35)),
-    Evts = DEvts.
+    combat:step_kill(W, M.id, T.id, NW, Evts).
 
 ai_mania_act(hoarder, W, Id, M, NW, Evts) :-
     room(M, RId), world:room_entities(W, RId, Ents),
@@ -199,8 +196,7 @@ ai_mania_act(martyr, W, Id, M, NW, Evts) :-
     room(M, RId), world:room_entities(W, RId, Ents),
     findall(T, (member(T, Ents), alive(T), T.id \== Id, hates(M, T)), Tgts),
     Tgts \= [], !,
-    magic:apply_cataclysm(W, M, holy_light, Tgts, none, W1, CEvts),
-    hp(M, 0, M1), world:update(W1, M1, NW),
+    combat:step_cast(W, Id, holy_light, M.id, NW, CEvts),
     Evts = [martyr_explosion(Id) | CEvts].
 
 ai_mania_act(sadist, W, Id, M, NW, Evts) :-
@@ -217,7 +213,7 @@ ai_mania_act(pyromaniac, W, Id, M, NW, Evts) :-
     room(M, RId), world:room_entities(W, RId, Ents),
     member(T, Ents), alive(T), M.id \== T.id,
     random_between(1, 100, R), R =< 10, !,
-    magic:step_cast(W, Id, fireball, T.id, NW, Evts).
+    combat:step_cast(W, Id, fireball, T.id, NW, Evts).
 
 ai_role(W, Id, NW, Evts) :-
     world:entity(W, Id, M),
@@ -233,7 +229,7 @@ ai_role_act(healer, W, Id, M, NW, Evts) :-
     room(M, RId), world:room_entities(W, RId, Ents),
     member(T, Ents), alive(T), M.id \== T.id, \+ hates(M, T),
     hp(T, Hp), get_dict(max_hp, T, Max), Hp < Max * 0.5, !,
-    magic:step_cast(W, Id, heal, T.id, NW, Evts).
+    combat:step_cast(W, Id, mend, T.id, NW, Evts).
 
 ai_role_act(worker, W, Id, M, NW, Evts) :-
     room(M, RId), world:room_entities(W, RId, Ents),
@@ -243,8 +239,13 @@ ai_role_act(worker, W, Id, M, NW, Evts) :-
 ai_attack(W, Id, NW, Evts) :-
     world:entity(W, Id, M),
     room(M, RId), world:room_entities(W, RId, Ents),
-    member(T, Ents), alive(T), should_attack(M, T), combat:valid_target(W, M, T), !,
-    combat:step_kill(W, Id, T.id, NW, Evts).
+    combat:get_highest_threat(M, BestId),
+    ( BestId \== none, member(T, Ents), T.id == BestId ->
+        Tgt = T
+    ;
+        member(T, Ents), alive(T), should_attack(M, T), combat:valid_target(W, M, T) -> Tgt = T
+    ), !,
+    combat:step_kill(W, Id, Tgt.id, NW, Evts).
 
 ai_group_up(W, Id, NW, Evts) :-
     world:entity(W, Id, M), cfg_ai:herd(M.tag),
@@ -270,11 +271,11 @@ ai_hide(W, Id, NW, Evts) :-
     stealth:step_hide(W, Id, NW, Evts).
 
 ai_chase(W, Id, NW, Evts) :-
-    world:entity(W, Id, M), should_attack(M, T),
-    room(M, RId), world:node(W, RId, N), get_dict(Dir, N.exits, NRId),
-    world:room_entities(W, NRId, Ents), member(T, Ents), alive(T),
-    combat:dynamic_enemy(M, T), !,
-    move:step_move(W, Id, Dir, NW, Evts).
+    world:entity(W, Id, M),
+    combat:get_highest_threat(M, BestId),
+    ( BestId \== none -> TgtId = BestId
+    ; should_attack(M, T), TgtId = T.id ), !,
+    ai_path:step_towards(W, Id, TgtId, NW, Evts).
 
 ai_patrol(W, Id, NW, Evts) :-
     world:entity(W, Id, M), get_dict(route, M, Route), get_dict(route_idx, M, Idx),

@@ -22,12 +22,15 @@
 :- use_module(cooking).
 :- use_module(nature).
 :- use_module(religion).
+:- use_module(enchant).
+:- use_module(law).
 
 step(W, Id, move(Dir), NW, Evts) :- step_move(W, Id, Dir, NW, Evts).
 step(W, Id, kill(TId), NW, Evts) :- step_kill(W, Id, TId, NW, Evts).
 step(W, Id, cast(Sp, TId), NW, Evts) :- step_cast(W, Id, Sp, TId, NW, Evts).
 step(W, Id, loot(IId), NW, Evts) :- step_loot(W, Id, IId, NW, Evts).
 step(W, Id, equip(Tag), NW, Evts) :- step_equip(W, Id, Tag, NW, Evts).
+step(W, Id, unequip(Slot), NW, Evts) :- step_unequip(W, Id, Slot, NW, Evts).
 step(W, Id, use(Tag), NW, Evts) :- step_use(W, Id, Tag, NW, Evts).
 step(W, Id, talk(TId), NW, Evts) :- step_talk(W, Id, TId, NW, Evts).
 step(W, Id, buy(TId, T, Q), NW, Evts) :- step_buy(W, Id, TId, T, Q, NW, Evts).
@@ -77,6 +80,12 @@ step(W, Id, pet_command(PetId, Cmd), NW, Evts) :- nature:step_command(W, Id, Pet
 step(W, Id, pet_feed(PetId), NW, Evts) :- nature:step_feed(W, Id, PetId, NW, Evts).
 step(W, Id, pray, NW, Evts) :- religion:step_pray(W, Id, NW, Evts).
 step(W, Id, sacrifice(Item), NW, Evts) :- religion:step_sacrifice(W, Id, Item, NW, Evts).
+step(W, Id, enchant(Item, Rune), NW, Evts) :- enchant:step_enchant(W, Id, Item, Rune, NW, Evts).
+step(W, Id, identify(Item), NW, Evts) :- enchant:step_identify(W, Id, Item, NW, Evts).
+step(W, Id, repair(Slot, Kit), NW, Evts) :- enchant:step_repair(W, Id, Slot, Kit, NW, Evts).
+step(W, Id, pay_bounty, NW, Evts) :- law:step_pay_bounty(W, Id, NW, Evts).
+step(W, Id, jailbreak, NW, Evts) :- law:step_jailbreak(W, Id, NW, Evts).
+step(W, Id, bribe(GuardId), NW, Evts) :- law:step_bribe_guard(W, Id, GuardId, NW, Evts).
 
 step(W, Id, look, W, [look(RId, Desc, Props, Exits, OIds, MIds, IData)]) :-
     world:entity(W, Id, A), room(A, RId), world:node(W, RId, Node),
@@ -92,6 +101,7 @@ to_act(D, kill(T))   :- D.type == "kill", atom_string(T, D.target).
 to_act(D, cast(S, T)):- D.type == "cast", atom_string(S, D.spell), atom_string(T, D.target).
 to_act(D, loot(T))   :- D.type == "loot", atom_string(T, D.target).
 to_act(D, equip(I))  :- D.type == "equip", atom_string(I, D.item).
+to_act(D, unequip(S)) :- D.type == "unequip", atom_string(S, D.slot).
 to_act(D, use(I))    :- D.type == "use", atom_string(I, D.item).
 to_act(D, talk(T))   :- D.type == "talk", atom_string(T, D.target).
 to_act(D, buy(T, I, Q)) :- D.type == "buy", atom_string(T, D.target), atom_string(I, D.item), Q = D.qty.
@@ -160,6 +170,12 @@ to_act(D, pet_command(PetId, Cmd)) :- D.type == "pet_command", atom_string(PetId
 to_act(D, pet_feed(PetId)) :- D.type == "pet_feed", atom_string(PetId, D.pet).
 to_act(D, pray) :- D.type == "pray".
 to_act(D, sacrifice(Item)) :- D.type == "sacrifice", atom_string(Item, D.item).
+to_act(D, enchant(Item, Rune)) :- D.type == "enchant", atom_string(Item, D.item), atom_string(Rune, D.rune).
+to_act(D, identify(Item)) :- D.type == "identify", atom_string(Item, D.item).
+to_act(D, repair(Slot, Kit)) :- D.type == "repair", atom_string(Slot, D.slot), atom_string(Kit, D.kit).
+to_act(D, pay_bounty) :- D.type == "pay_bounty".
+to_act(D, jailbreak) :- D.type == "jailbreak".
+to_act(D, bribe(GuardId)) :- D.type == "bribe", atom_string(GuardId, D.target).
 
 cmd_parse("stay", stay).
 cmd_parse("follow", follow).
