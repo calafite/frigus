@@ -26,9 +26,9 @@ can_see_target(W, A, T) :-
     room(A, R1), room(T, R2),
     ( R1 == R2 ->
         ( affs(T, Affs), member(aff{type: hidden, val: HidePower, dur: _}, Affs) ->
-            stat(A, int, Int),
+            stat(A, wis, Wis), stat(A, luk, Luk),
             random_between(1, 20, Roll),
-            Roll + Int >= HidePower
+            Roll + floor(Wis * 0.8) + floor(Luk * 0.2) >= HidePower
         ; true
         )
     ;
@@ -41,10 +41,10 @@ can_see_target(W, A, T) :-
 revealed_exits(_W, A, Node, Exits) :-
     dict_keys(Node.exits, NormalExits),
     ( get_dict(secrets, Node, Secrets) ->
-        stat(A, int, Int),
+        stat(A, wis, Wis), stat(A, luk, Luk),
         get_dict(reqs, Node, Reqs),
         dict_keys(Secrets, SecKeys),
-        findall(K, (member(K, SecKeys), get_dict(K, Reqs, ReqVal), Int >= ReqVal), FoundSecrets),
+        findall(K, (member(K, SecKeys), get_dict(K, Reqs, ReqVal), Wis + floor(Luk * 0.3) >= ReqVal), FoundSecrets),
         append(NormalExits, FoundSecrets, Exits)
     ;
         Exits = NormalExits
@@ -56,20 +56,21 @@ resolve_exit(_W, A, Node, Dir, NRId) :-
     get_dict(secrets, Node, Secrets),
     get_dict(reqs, Node, Reqs),
     get_dict(Dir, Reqs, ReqVal),
-    stat(A, int, Int),
-    Int >= ReqVal,
+    stat(A, wis, Wis), stat(A, luk, Luk),
+    Wis + floor(Luk * 0.3) >= ReqVal,
     get_dict(Dir, Secrets, NRId).
 
 reveal_details(A, Node, FullDesc) :-
     ( \+ member(dark, Node.props) ; props(A, P), member(night_vision, P) ), !,
     Base = Node.desc,
     ( get_dict(details, Node, Details) ->
-        stat(A, int, Int),
+        stat(A, wis, Wis), stat(A, luk, Luk),
+        EffInt is Wis + floor(Luk * 0.2),
         dict_pairs(Details, _, Pairs),
         findall(Txt, (
             member(K-Txt, Pairs),
             atom_number(K, ReqVal),
-            Int >= ReqVal
+            EffInt >= ReqVal
         ), Extras),
         atomic_list_concat([Base | Extras], " ", FullDesc)
     ;
@@ -86,13 +87,13 @@ step_search(W, Id, W, Evts) :-
     world:entity(W, Id, A), room(A, RId),
     world:node(W, RId, N),
     ( get_dict(secrets, N, Secrets) ->
-        stat(A, int, Int),
+        stat(A, wis, Wis), stat(A, luk, Luk),
         get_dict(reqs, N, Reqs),
         dict_keys(Secrets, SecKeys),
         findall(Dir, (
             member(Dir, SecKeys),
             get_dict(Dir, Reqs, ReqVal),
-            Int + 5 >= ReqVal
+            Wis + floor(Luk * 0.5) + 5 >= ReqVal
         ), Found),
         ( Found \== [] -> Evts = [searched(Id, RId, Found)] ; Evts = [searched_nothing(Id, RId)] )
     ;

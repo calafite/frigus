@@ -77,33 +77,34 @@ get_aff(Tag, aff{type: Type, val: Val, dur: Dur}) :- cfg_combat:inflicts(Tag, Ty
 get_aff(_, none).
 
 roll_hit(A, T) :-
-    stat(A, dex, DexA), stat(T, dex, DexT), random_between(1, 100, Roll),
-    Chance is 90 + floor(DexA * 0.5) - floor(DexT * 0.5),
+    stat(A, dex, DexA), stat(A, luk, LukA),
+    stat(T, dex, DexT), stat(T, luk, LukT), random_between(1, 100, Roll),
+    Chance is 85 + floor(DexA * 0.4) + floor(LukA * 0.2) - floor(DexT * 0.4) - floor(LukT * 0.2),
     ( affs(A, Affs), member(aff{type: blind, dur: _, val: _}, Affs) -> FinalChance is floor(Chance * 0.5) ; FinalChance = Chance ),
     HitChance is max(20, min(95, FinalChance)), Roll =< HitChance.
 
 roll_dodge(T, IsDodge) :-
-    stat(T, dex, Dex), random_between(1, 100, Roll),
-    Chance is min(50, floor(Dex * 0.5)), Roll =< Chance, IsDodge = true.
+    stat(T, dex, Dex), stat(T, luk, Luk), random_between(1, 100, Roll),
+    Chance is min(50, floor(Dex * 0.4) + floor(Luk * 0.2)), Roll =< Chance, IsDodge = true.
 roll_dodge(_, false).
 
 roll_block(T, BlockMit) :-
     equip(T, Eq), get_dict(shield, Eq, Sh), Sh \== none,
     cfg_combat:shield_block(Sh, Chance, Mit),
-    stat(T, str, Str), random_between(1, 100, Roll),
-    TotalC is Chance + floor(Str * 0.2),
+    stat(T, str, Str), stat(T, con, Con), random_between(1, 100, Roll),
+    TotalC is Chance + floor(Str * 0.15) + floor(Con * 0.1),
     ( Roll =< TotalC -> BlockMit = Mit ; BlockMit = 0 ), !.
 roll_block(_, 0).
 
 roll_crit(A, IsCrit) :-
-    stat(A, dex, Dex), random_between(1, 100, Roll),
-    Chance is 5 + floor(Dex * 0.5), Roll =< Chance, IsCrit = true.
+    stat(A, dex, Dex), stat(A, luk, Luk), random_between(1, 100, Roll),
+    Chance is 5 + floor(Dex * 0.3) + floor(Luk * 0.3), Roll =< Chance, IsCrit = true.
 roll_crit(_, false).
 
 roll_double(A, IsDouble) :-
-    stat(A, dex, Dex), affs(A, Affs),
+    stat(A, dex, Dex), stat(A, luk, Luk), affs(A, Affs),
     ( member(aff{type: haste, val: _, dur: _}, Affs) -> HMod = 25 ; HMod = 0 ),
-    Chance is floor(Dex * 0.5) + HMod, random_between(1, 100, Roll),
+    Chance is floor(Dex * 0.3) + floor(Luk * 0.2) + HMod, random_between(1, 100, Roll),
     Roll =< Chance, IsDouble = true.
 roll_double(_, false).
 
@@ -160,8 +161,8 @@ step_kill(W, AId, TId, NW, Evts) :-
     ; world:update(W, CleanA, NW), Evts = [out_of_ammo(AId, Wpn)] ).
 
 try_counter(W, T, A, NW, Evts) :-
-    stat(T, dex, Dex), random_between(1, 100, Roll),
-    Chance is floor(Dex * 0.3),
+    stat(T, dex, Dex), stat(T, luk, Luk), random_between(1, 100, Roll),
+    Chance is floor(Dex * 0.2) + floor(Luk * 0.1),
     ( Roll =< Chance ->
         wpn(T, TWpn), calc_dmg(W, T, A, TWpn, Dmg),
         apply_dmg(W, T, A, Dmg, none, NW, CEvts, counterattack(T.id, A.id, Dmg)),

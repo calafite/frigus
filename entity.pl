@@ -1,7 +1,8 @@
 :- module(entity, [
     hp/2, hp/3, room/2, room/3, mp/2, mp/3,
     lvl/2, lvl/3, xp/2, xp/3, class/2, race/2,
-    str/2, str/3, dex/2, dex/3, int/2, int/3,
+    str/2, str/3, dex/2, dex/3, con/2, con/3,
+    int/2, int/3, wis/2, wis/3, cha/2, cha/3, luk/2, luk/3,
     inv/2, inv/3, equip/2, equip/3, stat/3,
     fac/2, fac/3, affs/2, affs/3, wpn/2, alive/1,
     reps/2, reps/3, rep_val/3, rep_mod/4,
@@ -25,9 +26,15 @@ mp(E, E.mp).         mp(E, V, E.put(mp, V)).
 lvl(E, E.lvl).       lvl(E, V, E.put(lvl, V)).
 xp(E, E.xp).         xp(E, V, E.put(xp, V)).
 class(E, E.class).
+
 str(E, E.str).       str(E, V, E.put(str, V)).
 dex(E, E.dex).       dex(E, V, E.put(dex, V)).
+con(E, E.con).       con(E, V, E.put(con, V)).
 int(E, E.int).       int(E, V, E.put(int, V)).
+wis(E, E.wis).       wis(E, V, E.put(wis, V)).
+cha(E, E.cha).       cha(E, V, E.put(cha, V)).
+luk(E, E.luk).       luk(E, V, E.put(luk, V)).
+
 inv(E, E.inv).       inv(E, V, E.put(inv, V)).
 equip(E, E.equip).   equip(E, V, E.put(equip, V)).
 fac(E, E.fac).       fac(E, V, E.put(fac, V)).
@@ -164,7 +171,7 @@ buff_mod([], _, 0).
 buff_mod([aff{type: buff, stat: S, val: V, dur: _}|T], S, Out) :- buff_mod(T, S, R), Out is R + V, !.
 buff_mod([aff{type: plague, val: _, dur: _}|T], S, Out) :- buff_mod(T, S, R), Out is R - 5, !.
 buff_mod([aff{type: fever, val: _, dur: _}|T], S, Out) :- (S == int -> buff_mod(T, S, R), Out is R - 10, ! ; buff_mod(T, S, Out)).
-buff_mod([aff{type: blight, val: _, dur: _}|T], S, Out) :- ((S == str ; S == dex) -> buff_mod(T, S, R), Out is R - 5, ! ; buff_mod(T, S, Out)).
+buff_mod([aff{type: blight, val: _, dur: _}|T], S, Out) :- ((S == str ; S == dex ; S == con) -> buff_mod(T, S, R), Out is R - 5, ! ; buff_mod(T, S, Out)).
 buff_mod([_|T], S, Out) :- buff_mod(T, S, Out).
 
 equip_stat_mod(E, Stat, Total) :-
@@ -211,10 +218,10 @@ inv_wt([stack{tag: Tag, qty: Q} | T], W) :-
     config:weight(Tag, UW), inv_wt(T, RW), W is RW + (UW * Q).
 
 max_wt(E, W) :-
-    stat(E, str, S),
+    stat(E, str, S), stat(E, con, C),
     mount(E, Mount),
     ( Mount == horse -> Extra = 200 ; Mount == griffin -> Extra = 300 ; Extra = 0 ),
-    W is (S * 10) + Extra.
+    W is (S * 7) + (C * 3) + Extra.
 
 allowed_race(E, Race) :- \+ config:restricted_race(Race), !.
 allowed_race(E, Race) :- config:restricted_race(Race), config:special_player(E.id).
