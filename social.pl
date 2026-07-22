@@ -1,6 +1,6 @@
 :- module(social, [
     step_chat/6, step_party/5, step_guild/5,
-    party_reward/7, soc/2, soc/3
+    party_reward/7, soc/2, soc/3, db_social/1
 ]).
 
 :- use_module(library(random)).
@@ -10,14 +10,18 @@
 :- use_module(prog).
 :- use_module(quest).
 
-soc(W, S) :- get_dict(social, W, S), !.
+:- dynamic db_social/1.
+
+soc(_, S) :- db_social(S), !.
 soc(_, dict{parties: dict{}, guilds: dict{}, trades: dict{}}).
-soc(W, S, W.put(social, S)).
+soc(_, S, db) :-
+    retractall(db_social(_)),
+    assertz(db_social(S)).
 
 chat_tgts(W, local, Id, Tgts) :-
     world:entity(W, Id, A), room(A, RId), world:room_entities(W, RId, Ents),
     findall(E.id, (member(E, Ents), is_dict(E, plyr)), Tgts).
-chat_tgts(W, global, _, Tgts) :- findall(P.id, member(P, W.plyrs), Tgts).
+chat_tgts(W, global, _, Tgts) :- findall(P.id, world:db_entity(plyr, _, P), Tgts).
 chat_tgts(W, party, Id, Tgts) :-
     world:entity(W, Id, A), get_dict(party, A, PId), PId \== none,
     soc(W, S), get_dict(PId, S.parties, P), Tgts = P.members.

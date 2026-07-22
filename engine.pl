@@ -27,6 +27,7 @@
 :- use_module(gather).
 :- use_module(build).
 :- use_module(alchemy).
+:- use_module(quest_gen).
 
 step(W, Id, move(Dir), NW, Evts) :- step_move(W, Id, Dir, NW, Evts).
 step(W, Id, kill(TId), NW, Evts) :- step_kill(W, Id, TId, NW, Evts).
@@ -94,6 +95,14 @@ step(W, Id, skin(CorpseId), NW, Evts) :- gather:step_skin(W, Id, CorpseId, NW, E
 step(W, Id, build(StructTag), NW, Evts) :- build:step_build(W, Id, StructTag, NW, Evts).
 step(W, Id, demolish(Prop), NW, Evts) :- build:step_demolish(W, Id, Prop, NW, Evts).
 step(W, Id, brew(Ingreds), NW, Evts) :- alchemy:step_brew(W, Id, Ingreds, NW, Evts).
+step(W, Id, ask_quest(NpcId), NW, Evts) :- quest_gen:step_ask_quest(W, Id, NpcId, NW, Evts).
+
+step(W, Id, load_state(State), db, [state_loaded]) :- !,
+    world:load_db(State).
+step(W, Id, dump_state, db, [state_dump(Dump)]) :- !,
+    world:dump_db(Dump).
+step(W, Id, clear_state, db, [state_cleared]) :- !,
+    world:clear_db.
 
 step(W, Id, look, W, [look(RId, Desc, Props, Exits, OIds, MIds, IData)]) :-
     world:entity(W, Id, A), room(A, RId), world:node(W, RId, Node),
@@ -189,6 +198,10 @@ to_act(D, skin(CorpseId)) :- D.type == "skin", atom_string(CorpseId, D.corpse).
 to_act(D, build(StructTag)) :- D.type == "build", atom_string(StructTag, D.structure).
 to_act(D, demolish(Prop)) :- D.type == "demolish", atom_string(Prop, D.prop).
 to_act(D, brew(Ingreds)) :- D.type == "brew", get_ingreds(D.ingredients, Ingreds).
+to_act(D, ask_quest(NpcId)) :- D.type == "ask_quest", atom_string(NpcId, D.target).
+to_act(D, load_state(State)) :- D.type == "load_state", State = D.state.
+to_act(D, dump_state) :- D.type == "dump_state".
+to_act(D, clear_state) :- D.type == "clear_state".
 
 get_ingreds([], []).
 get_ingreds([H|T], [Str|Rest]) :- atom_string(Str, H), get_ingreds(T, Rest).
@@ -199,5 +212,5 @@ cmd_parse(C, attack(Tgt)) :- sub_string(C, 0, 7, _, "attack "), sub_string(C, 7,
 
 api_step(Req, Res) :-
     to_act(Req.action, Act),
-    step(Req.state, Req.actor, Act, NW, Evts),
-    Res = json{state: NW, events: Evts}.
+    step(db, Req.actor, Act, _, Evts),
+    Res = json{events: Evts}.

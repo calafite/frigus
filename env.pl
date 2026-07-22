@@ -1,8 +1,10 @@
-:- module(env, [tick_env/3]).
+:- module(env, [tick_env/3, db_env/1]).
 
 :- use_module(library(random)).
 
-tick_env(W, NW, [time_passed(NHr, NMin), weather_changed(NWeath), moon_shifted(NMoon)]) :-
+:- dynamic db_env/1.
+
+tick_env(W, db, [time_passed(NHr, NMin), weather_changed(NWeath), moon_shifted(NMoon)]) :-
     get_env(W, Env),
     Min = Env.min, Hr = Env.hr, Day = Env.day, Mon = Env.mon,
     NMin is (Min + 10) mod 60,
@@ -14,9 +16,10 @@ tick_env(W, NW, [time_passed(NHr, NMin), weather_changed(NWeath), moon_shifted(N
     MDay is NDay mod 8,
     get_moon(MDay, NMoon),
     NEnv = env{hr: NHr, min: NMin, day: NDay, mon: NMon, seas: NSeas, weath: NWeath, moon: NMoon},
-    NW = W.put(env, NEnv).
+    retractall(db_env(_)),
+    assertz(db_env(NEnv)).
 
-get_env(W, Env) :- get_dict(env, W, Env), !.
+get_env(_, Env) :- db_env(Env), !.
 get_env(_, env{hr: 12, min: 0, day: 1, mon: 1, seas: spring, weath: clear, moon: new_moon}).
 
 get_season(M, spring) :- M >= 1, M =< 3, !.

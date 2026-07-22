@@ -58,7 +58,7 @@ calc_dmg(W, A, T, Tag, Final) :-
     scale_comps(Comps, Scale, ScaledComps),
     total_armor(T, Ar), cfg_combat:ar_pen(Tag, Pen),
     calc_comp(T, ScaledComps, Ar, Pen, Tmp),
-    ( get_dict(env, W, Env) -> apply_env_dmg(Env, Tag, Tmp, Final) ; Final = Tmp ).
+    ( env:db_env(Env) -> apply_env_dmg(Env, Tag, Tmp, Final) ; Final = Tmp ).
 
 scale_comps([], _, []).
 scale_comps([dmg(T, V)|Rest], S, [dmg(T, NV)|NRest]) :-

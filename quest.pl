@@ -1,6 +1,7 @@
 :- module(quest, [step_accept/5, step_turn_in/5, update_kill/4, update_talk/4]).
 
 :- use_module(cfg_quest).
+:- use_module(quest_gen).
 :- use_module(entity).
 :- use_module(world).
 :- use_module(prog).
@@ -14,7 +15,8 @@ step_accept(W, Id, QId, NW, [quest_accepted(Id, QId)]) :-
 step_turn_in(W, Id, QId, NW, [quest_done(Id, QId) | REvts]) :-
     world:entity(W, Id, A), quests(A, Qs),
     get_dict(QId, Qs, QS), QS.status == active,
-    cfg_quest:quest_data(QId, Objs, Rews),
+    ( cfg_quest:quest_data(QId, Objs, Rews) -> true
+    ; quest_gen:db_generated_quest(_, QId, Objs, Rews) -> true ),
     check_objs(A, QS, Objs, NA),
     NQs = Qs.put(QId, QS.put(status, done)),
     A1 = NA.put(quests, NQs),
@@ -56,7 +58,7 @@ do_kill(T, [QId-QS|Ts], [QId-NQS|NTs], Evts) :-
     Ks = QS.kills, ( get_dict(T, Ks, C) -> NC is C + 1 ; NC = 1 ),
     NQS = QS.put(kills, Ks.put(T, NC)),
     do_kill(T, Ts, NTs, REvts),
-    ( cfg_quest:quest_data(QId, Objs, _), member(kill(T, Req), Objs), NC == Req ->
+    ( (cfg_quest:quest_data(QId, Objs, _) ; quest_gen:db_generated_quest(_, QId, Objs, _)), member(kill(T, Req), Objs), NC == Req ->
         Evts = [quest_obj(QId, kill(T, NC)) | REvts]
     ; Evts = REvts ).
 do_kill(T, [P|Ts], [P|NTs], Evts) :- do_kill(T, Ts, NTs, Evts).
@@ -72,7 +74,7 @@ do_talk(T, [QId-QS|Ts], [QId-NQS|NTs], Evts) :-
     QS.status == active, \+ member(T, QS.talks), !,
     NQS = QS.put(talks, [T|QS.talks]),
     do_talk(T, Ts, NTs, REvts),
-    ( cfg_quest:quest_data(QId, Objs, _), member(talk(T), Objs) ->
+    ( (cfg_quest:quest_data(QId, Objs, _) ; quest_gen:db_generated_quest(_, QId, Objs, _)), member(talk(T), Objs) ->
         Evts = [quest_obj(QId, talk(T)) | REvts]
     ; Evts = REvts ).
 do_talk(T, [P|Ts], [P|NTs], Evts) :- do_talk(T, Ts, NTs, Evts).

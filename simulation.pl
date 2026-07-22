@@ -7,6 +7,7 @@
 :- use_module(status).
 :- use_module(move).
 :- use_module(nature).
+:- use_module(economy).
 
 tick_simulation(W, NW, Evts) :-
     spread_fire(W, W1, Evts1),
@@ -14,8 +15,9 @@ tick_simulation(W, NW, Evts) :-
     spread_diseases(W2, W3, Evts3),
     trigger_disasters(W3, W4, Evts4),
     tick_campfires(W4, W5, Evts5),
-    nature:tick_crops(W5, NW, Evts6),
-    append([Evts1, Evts2, Evts3, Evts4, Evts5, Evts6], Evts).
+    nature:tick_crops(W5, W6, Evts6),
+    economy:tick_economy(W6, NW, Evts7),
+    append([Evts1, Evts2, Evts3, Evts4, Evts5, Evts6, Evts7], Evts).
 
 update_room(W, R, NW) :-
     select(O, W.rooms, Rest), O.id == R.id, !,
@@ -26,8 +28,8 @@ flammable(R) :-
     member(Theme, [grove, forest, village, keep, swamp, ruins, mine]).
 
 spread_fire(W, NW, Evts) :-
-    findall(RId-I, (member(R, W.rooms), member(burning(I), R.props)), Burning),
-    get_dict(env, W, Env),
+    findall(RId-I, (world:db_node(_, R), member(burning(I), R.props)), Burning),
+    env:db_env(Env),
     do_fire(W, Burning, Env.weath, NW, Evts).
 
 do_fire(W, [], _, W, []).
@@ -73,7 +75,7 @@ spread_neighbors(W, [_|Exits], ExitDict, RId, NW, Evts) :-
 
 apply_currents(W, NW, Evts) :-
     findall(E, (
-        (member(E, W.plyrs) ; member(E, W.mobs)),
+        world:db_entity(_, _, E),
         alive(E), room(E, RId), world:node(W, RId, N),
         (member(current(Dir), N.props) ; member(flood_current(Dir), N.props))
     ), Ents),
@@ -98,7 +100,7 @@ do_currents(W, [_|T], NW, Evts) :- do_currents(W, T, NW, Evts).
 
 spread_diseases(W, NW, Evts) :-
     findall(RId-Dis, (
-        (member(E, W.plyrs) ; member(E, W.mobs)),
+        world:db_entity(_, _, E),
         alive(E), room(E, RId), affs(E, Affs),
         member(aff{type: Dis, val: _, dur: _}, Affs),
         member(Dis, [plague, fever, blight])
@@ -138,7 +140,7 @@ trigger_disasters(W, NW, Evts) :-
     ; NW = W, Evts = [] ).
 
 apply_disaster(earthquake, W, NW, [disaster(earthquake) | Evts]) :-
-    findall(R.id, (member(R, W.rooms), \+ member(safe, R.props)), NonSafe),
+    findall(R.id, (world:db_node(_, R), \+ member(safe, R.props)), NonSafe),
     apply_quake(W, NonSafe, NW, Evts).
 
 apply_quake(W, [], W, []).
@@ -162,7 +164,7 @@ stun_entities(W, [E|T], NW, Evts) :-
     append(Evt, REvts, Evts).
 
 apply_disaster(flood, W, NW, [disaster(flood)]) :-
-    findall(R.id, (member(R, W.rooms), R.type == outdoor), Outdoor),
+    findall(R.id, (world:db_node(_, R), R.type == outdoor), Outdoor),
     apply_flood(W, Outdoor, NW).
 
 apply_flood(W, [], W).
@@ -173,7 +175,7 @@ apply_flood(W, [RId|T], NW) :-
     apply_flood(W1, T, NW).
 
 apply_disaster(meteor, W, NW, [disaster(meteor, RId) | Evts]) :-
-    findall(R.id, (member(R, W.rooms), R.type == outdoor), Outdoor),
+    findall(R.id, (world:db_node(_, R), R.type == outdoor), Outdoor),
     random_member(RId, Outdoor),
     world:node(W, RId, R),
     ( member(burning(_), R.props) -> select(burning(_), R.props, RestProps) ; RestProps = R.props ),
@@ -195,15 +197,15 @@ scorch_entities(W, [E|T], NW, Evts) :-
     append(Evt, REvts, Evts).
 
 apply_disaster(blizzard, W, NW, [disaster(blizzard) | Evts]) :-
-    get_dict(env, W, Env),
+    env:db_env(Env),
     ( Env.seas == winter ->
         NEnv = Env.put(weath, blizzard),
-        W1 = W.put(env, NEnv),
+        retractall(env:db_env(_)), assertz(env:db_env(NEnv)),
         findall(E, (
-            (member(E, W1.plyrs) ; member(E, W1.mobs)),
-            alive(E), room(E, RId), world:node(W1, RId, N), N.type == outdoor
+            world:db_entity(_, _, E),
+            alive(E), room(E, RId), world:node(W, RId, N), N.type == outdoor
         ), Ents),
-        freeze_entities(W1, Ents, NW, Evts)
+        freeze_entities(W, Ents, NW, Evts)
     ; NW = W, Evts = [] ).
 
 freeze_entities(W, [], W, []).
@@ -217,7 +219,7 @@ freeze_entities(W, [E|T], NW, Evts) :-
     append(Evt, REvts, Evts).
 
 tick_campfires(W, NW, Evts) :-
-    findall(RId-T, (member(R, W.rooms), member(campfire(T), R.props)), Camps),
+    findall(RId-T, (world:db_node(_, R), member(campfire(T), R.props)), Camps),
     do_campfires(W, Camps, NW, Evts).
 
 do_campfires(W, [], W, []).
