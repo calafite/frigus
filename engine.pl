@@ -29,6 +29,7 @@
 :- use_module(alchemy).
 :- use_module(quest_gen).
 :- use_module(ritual).
+:- use_module(socket).
 
 step(W, Id, move(Dir), NW, Evts) :- step_move(W, Id, Dir, NW, Evts).
 step(W, Id, kill(TId), NW, Evts) :- step_kill(W, Id, TId, NW, Evts).
@@ -104,6 +105,7 @@ step(W, Id, brew(Ingreds), NW, Evts) :- alchemy:step_brew(W, Id, Ingreds, NW, Ev
 step(W, Id, ask_quest(NpcId), NW, Evts) :- quest_gen:step_ask_quest(W, Id, NpcId, NW, Evts).
 step(W, Id, disguise, NW, Evts) :- stealth:step_disguise(W, Id, NW, Evts).
 step(W, Id, ritual(Type), NW, Evts) :- ritual:step_ritual(W, Id, Type, NW, Evts).
+step(W, Id, socket(Item, Gem), NW, Evts) :- socket:step_socket(W, Id, Item, Gem, NW, Evts).
 
 step(W, Id, load_state(State), db, [state_loaded]) :- !,
     world:load_db(State).
@@ -211,6 +213,7 @@ to_act(D, load_state(State)) :- D.type == "load_state", State = D.state.
 to_act(D, dump_state) :- D.type == "dump_state".
 to_act(D, clear_state) :- D.type == "clear_state".
 to_act(D, ritual(Type)) :- D.type == "ritual", atom_string(Type, D.ritual).
+to_act(D, socket(Item, Gem)) :- D.type == "socket", atom_string(Item, D.item), atom_string(Gem, D.gem).
 
 get_ingreds([], []).
 get_ingreds([H|T], [Str|Rest]) :- atom_string(Str, H), get_ingreds(T, Rest).

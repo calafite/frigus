@@ -30,8 +30,53 @@ chat_tgts(W, guild, Id, Tgts) :-
     soc(W, S), get_dict(GId, S.guilds, G), Tgts = G.members.
 chat_tgts(_, whisper(Tgt), _, [Tgt]).
 
-step_chat(W, Id, Chan, Msg, W, [chat(Chan, Id, Msg, Tgts)]) :- chat_tgts(W, Chan, Id, Tgts), !.
+step_chat(W, Id, Chan, Msg, NW, Evts) :-
+    chat_tgts(W, Chan, Id, Tgts), !,
+    check_cursed_words(W, Id, Msg, W1, WordEvts),
+    ( world:entity(W1, Id, _) ->
+        NW = W1, Evts = [chat(Chan, Id, Msg, Tgts) | WordEvts]
+    ;
+        NW = W1, Evts = WordEvts
+    ).
 step_chat(W, _, _, _, W, []).
+
+check_cursed_words(W, Id, Msg, NW, Evts) :-
+    world:flags(W, Fs),
+    ( get_dict(cursed_words, Fs, CursedDict) ->
+        dict_keys(CursedDict, Words),
+        string_lower(Msg, LMsg),
+        scan_words(W, Id, LMsg, Words, NW, Evts)
+    ;
+        NW = W, Evts = []
+    ).
+
+scan_words(W, _, _, [], W, []).
+scan_words(W, Id, LMsg, [Word|T], NW, Evts) :-
+    string_lower(Word, LWord),
+    ( sub_string(LMsg, _, _, _, LWord) ->
+        damage_speaker(W, Id, Word, W1, Evt),
+        ( world:entity(W1, Id, _) ->
+            scan_words(W1, Id, LMsg, T, NW, REvts),
+            append(Evt, REvts, Evts)
+        ;
+            NW = W1, Evts = Evt
+        )
+    ;
+        scan_words(W, Id, LMsg, T, NW, Evts)
+    ).
+
+damage_speaker(W, Id, Word, NW, [cursed_word_burn(Id, Word, 25) | REvts]) :-
+    world:entity(W, Id, A),
+    hp(A, Hp),
+    NHp is max(0, Hp - 25),
+    ( NHp =:= 0 ->
+        prog:rebirth_player(A, Reborn, temple),
+        world:update(W, Reborn, NW),
+        REvts = [respawn(Id, temple)]
+    ;
+        world:update(W, A.put(hp, NHp), NW),
+        REvts = []
+    ).
 
 step_party(W, Id, create, NW, [party_created(Id, PId)]) :-
     world:entity(W, Id, A), \+ get_dict(party, A, _),

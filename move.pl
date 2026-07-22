@@ -15,7 +15,8 @@ step_move(W, Id, Dir, NW, [moved(Id, Dir, NRId) | SideEvts]) :-
     map:can_enter(W, A, CurNode, NextNode, Dir),
     map:on_exit(W, A, CurNode, MidA, ExitEvts),
     get_dict(terrain, NextNode, Terrain),
-    cfg_zone:terrain_fatigue(Terrain, FCost),
+    cfg_zone:terrain_fatigue(Terrain, BaseFCost),
+    ( is_encumbered(MidA) -> FCost is BaseFCost * 2 ; FCost = BaseFCost ),
     get_dict(fatigue, MidA, F),
     NF is min(100, F + FCost),
     entity:room(MidA.put(fatigue, NF), NRId, MovedA),
@@ -31,9 +32,9 @@ step_jump(W, Id, Dir, NW, Evts) :-
     get_dict(chasm_exits, CurNode, Chasms), member(Dir, Chasms),
     visibility:resolve_exit(W, A, CurNode, Dir, NRId),
     world:node(W, NRId, NextNode),
-    stat(A, dex, Dex),
+    stat(A, dex, Dex), stat(A, luk, Luk),
     random_between(1, 20, Roll),
-    ( Roll + Dex >= 14 ->
+    ( Roll + Dex + floor(Luk * 0.2) >= 14 ->
         map:on_exit(W, A, CurNode, MidA, ExitEvts),
         entity:room(MidA, NRId, MovedA),
         map:on_enter(W, MovedA, NextNode, FinalA, EnterEvts),

@@ -14,6 +14,7 @@
     stance/2, stance/3, mount/2, mount/3, torch_life/2, torch_life/3,
     job/2, job/3, home/2, home/3, work/2, work/3,
     act_state/2, act_state/3, mems/2, mems/3, bounty/2, bounty/3,
+    gender/2, gender/3, is_encumbered/1,
     inv_add/4, inv_rem/4, inv_wt/2, max_wt/2,
     allowed_race/2
 ]).
@@ -26,7 +27,6 @@ mp(E, E.mp).         mp(E, V, E.put(mp, V)).
 lvl(E, E.lvl).       lvl(E, V, E.put(lvl, V)).
 xp(E, E.xp).         xp(E, V, E.put(xp, V)).
 class(E, E.class).
-
 str(E, E.str).       str(E, V, E.put(str, V)).
 dex(E, E.dex).       dex(E, V, E.put(dex, V)).
 con(E, E.con).       con(E, V, E.put(con, V)).
@@ -117,6 +117,14 @@ mems(E, M) :- get_dict(mems, E, M), !.
 mems(_, mems{}).
 mems(E, V, E.put(mems, V)).
 
+gender(E, G) :- get_dict(gender, E, G), !.
+gender(_, male).
+gender(E, G, E.put(gender, G)).
+
+is_encumbered(E) :-
+    inv(E, Inv), inv_wt(Inv, Wt), max_wt(E, Max),
+    Wt > Max * 0.7.
+
 get_ceil(E, Stat, Val) :-
     ( race(E, demigod) -> Val = 9999
     ; race(E, angel) -> Val = 9999
@@ -187,7 +195,8 @@ stat(E, S, V) :-
     ( race(E, Race), config:race_bonus(Race, S, Bonus) -> true ; Bonus = 0 ),
     ( stance(E, crawl) -> (S == dex -> StMod = -5 ; S == str -> StMod = -3 ; StMod = 0) ; StMod = 0 ),
     ( is_dict(E, plyr) -> equip_stat_mod(E, S, EqMod) ; EqMod = 0 ),
-    V is Base + Mod + Bonus + StMod + EqMod, !.
+    ( is_encumbered(E) -> (S == dex -> EncMod = -8 ; S == str -> EncMod = -4 ; EncMod = 0) ; EncMod = 0 ),
+    V is Base + Mod + Bonus + StMod + EqMod + EncMod, !.
 stat(_, _, 1).
 
 wpn(E, W) :-

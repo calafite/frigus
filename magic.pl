@@ -102,3 +102,22 @@ cast_utility(planar_gate, W, Id, A, _, NW, [rift_opened(RId, void_prison)]) :-
     ritual:ensure_void_prison(W, W1),
     NN = N.put(exits, N.exits.put(rift, void_prison)),
     zone:update_room(W1, NN, NW).
+
+cast_utility(gender_shift, W, Id, A, TId, NW, [gender_swapped(TId, Old, New)]) :-
+    world:entity(W, TId, T), alive(T),
+    room(A, RId), room(T, RId),
+    gender(T, Old),
+    ( Old == male -> New = female ; New = male ),
+    world:update(W, T.put(gender, New), NW).
+
+cast_utility(curse_word, W, Id, A, Word, NW, [word_cursed(Id, Word)]) :-
+    atom(Word),
+    world:flags(W, Fs),
+    ( get_dict(cursed_words, Fs, CursedDict) ->
+        NCursed = CursedDict.put(Word, Id)
+    ;
+        NCursed = dict{}.put(Word, Id)
+    ),
+    NFs = Fs.put(cursed_words, NCursed),
+    world:flags(W, NFs, W1),
+    world:update(W1, A, NW).

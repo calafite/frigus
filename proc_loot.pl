@@ -1,6 +1,7 @@
 :- module(proc_loot, [gen_item/4, gen_chest/3]).
 
 :- use_module(library(random)).
+:- use_module(library(lists)).
 :- use_module(cfg_proc_loot).
 
 id_gen(Prefix, Id) :- random_between(1000000, 9999999, R), atomic_list_concat([Prefix, '_', R], Id).
@@ -26,7 +27,14 @@ gen_item(Lvl, Tier, Type, Item) :-
     ( Tier >= 2 -> findall(P, cfg_proc_loot:pref(P, _, _, _), Ps), random_member(Pref, Ps) ; Pref = none ),
     ( Tier >= 3 -> findall(S, cfg_proc_loot:suff(S, _, _, _), Ss), random_member(Suff, Ss) ; Suff = none ),
     build_name(Pref, Base, Suff, Name),
-    build_props(Pref, Suff, Lvl, Mult, Props),
+    ( Tier >= 3 ->
+        random_between(1, 100, SockRoll),
+        ( SockRoll <= 15 -> SockProp = [prop(sockets, 2)]
+        ; SockRoll <= 45 -> SockProp = [prop(sockets, 1)]
+        ; SockProp = [] )
+    ; SockProp = [] ),
+    build_props(Pref, Suff, Lvl, Mult, BaseProps),
+    append(SockProp, BaseProps, Props),
     Item = item{id: Id, tag: Base, name: Name, tier: Tier, qty: 1, props: Props}.
 
 build_name(none, Base, none, Base).

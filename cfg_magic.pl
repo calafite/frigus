@@ -31,6 +31,8 @@ cost(identify_spell, 20).
 cost(remove_curse, 25).
 cost(banish, 40).
 cost(planar_gate, 50).
+cost(gender_shift, 20).
+cost(curse_word, 50).
 
 cooldown(fireball, 3).
 cooldown(iceblast, 3).
@@ -60,6 +62,8 @@ cooldown(identify_spell, 5).
 cooldown(remove_curse, 8).
 cooldown(banish, 15).
 cooldown(planar_gate, 30).
+cooldown(gender_shift, 15).
+cooldown(curse_word, 30).
 
 spell_nature(fireball, fire).
 spell_nature(iceblast, ice).
@@ -89,6 +93,8 @@ spell_nature(identify_spell, utility).
 spell_nature(remove_curse, utility).
 spell_nature(banish, utility).
 spell_nature(planar_gate, utility).
+spell_nature(gender_shift, utility).
+spell_nature(curse_word, utility).
 
 is_utility_spell(Sp) :- spell_nature(Sp, utility).
 
@@ -100,6 +106,7 @@ req_race(bloodline_curse, demon).
 req_race(summon_demon, demon).
 req_race(banish, angel).
 req_race(planar_gate, demigod).
+req_race(curse_word, demigod).
 req_race(_, none).
 
 aoe(meteor_storm).

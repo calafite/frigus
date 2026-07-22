@@ -43,12 +43,33 @@ reach_check(A, T, Wpn) :-
     ( AltA == AltT -> true
     ; cfg_combat:reach(Wpn, Reach), Reach >= 2 ).
 
+get_resistance(T, Type, Res) :-
+    TTag = T.tag, ( cfg_combat:resist(TTag, Type, BaseRes) -> true ; BaseRes = 1.0 ),
+    ( is_dict(T, plyr) ->
+        equip(T, Eq), dict_values(Eq, Items),
+        findall(RVal, (
+            member(Item, Items), is_dict(Item, item),
+            get_dict(props, Item, Props),
+            member(prop(ResistProp, RVal), Props),
+            resist_prop_map(Type, ResistProp)
+        ), Vals),
+        sum_list(Vals, TotalMod),
+        Res is max(0.0, BaseRes - (TotalMod * 0.01))
+    ; Res = BaseRes ).
+
+resist_prop_map(fire, fire_resist).
+resist_prop_map(ice, ice_resist).
+resist_prop_map(lightning, lightning_resist).
+resist_prop_map(poison, poison_resist).
+resist_prop_map(dark, dark_resist).
+resist_prop_map(holy, holy_resist).
+
 calc_comp(_, [], _, _, 0).
 calc_comp(T, [dmg(Type, Amt)|Rest], Ar, Pen, Total) :-
     ( cfg_combat:physical_type(Type) -> EffAr is max(0, Ar * (1 - Pen)), Net is max(1, Amt - EffAr) ; Net = Amt ),
     TTag = T.tag,
     cfg_combat:weakness(TTag, Type, Wk),
-    cfg_combat:resist(TTag, Type, Res),
+    get_resistance(T, Type, Res),
     ( cfg_combat:immune(TTag, Type) -> Final = 0 ; Final is Net * Wk * Res ),
     calc_comp(T, Rest, Ar, Pen, RestTotal), Total is Final + RestTotal.
 
@@ -56,9 +77,13 @@ calc_dmg(W, A, T, Tag, Final) :-
     cfg_combat:wpn_dmg(Tag, Comps), config:scale(Tag, Stat, Mult),
     stat(A, Stat, Val), Scale is 1 + (Val * Mult * 0.05),
     scale_comps(Comps, Scale, ScaledComps),
+    ( equip(A, Eq), get_dict(wpn, Eq, WObj), is_dict(WObj, item), get_dict(props, WObj, Props) ->
+        findall(dmg(Type, DV), member(prop(dmg(Type), DV), Props), BonusComps),
+        append(ScaledComps, BonusComps, FinalComps)
+    ; FinalComps = ScaledComps ),
     total_armor(T, Ar), cfg_combat:ar_pen(Tag, Pen),
-    calc_comp(T, ScaledComps, Ar, Pen, Tmp),
-    ( env:db_env(Env) -> apply_env_dmg(Env, Tag, Tmp, Final) ; Final = Tmp ).
+    calc_comp(T, FinalComps, Ar, Pen, Tmp),
+    ( get_dict(env, W, Env) -> apply_env_dmg(Env, Tag, Tmp, Final) ; Final = Tmp ).
 
 scale_comps([], _, []).
 scale_comps([dmg(T, V)|Rest], S, [dmg(T, NV)|NRest]) :-
