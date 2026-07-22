@@ -207,7 +207,7 @@ wpn(_, fists).
 
 alive(E) :- hp(E, Hp), Hp > 0.
 
-inv_add(Inv, Item, Qty, [Item | Inv]) :-
+inv_add(Inv, Item, _Qty, [Item | Inv]) :-
     is_dict(Item, item), !.
 inv_add(Inv, Tag, Qty, [stack{tag: Tag, qty: NQ} | R]) :-
     select(stack{tag: Tag, qty: OQ}, Inv, R), !, NQ is OQ + Qty.
@@ -235,7 +235,7 @@ max_wt(E, W) :-
     ( Mount == horse -> Extra = 200 ; Mount == griffin -> Extra = 300 ; Extra = 0 ),
     W is (S * 7) + (C * 3) + Extra.
 
-allowed_race(E, Race) :- \+ config:restricted_race(Race), !.
+allowed_race(_E, Race) :- \+ config:restricted_race(Race), !.
 allowed_race(E, Race) :- config:restricted_race(Race), config:special_player(E.id).
 
 is_special(E) :- get_dict(race, E, Race), config:restricted_race(Race), !.

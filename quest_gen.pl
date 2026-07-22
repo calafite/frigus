@@ -1,6 +1,6 @@
 :- module(quest_gen, [
     db_generated_quest/4,
-    step_ask_quest/4,
+    step_ask_quest/5,
     gen_quest/3
 ]).
 
@@ -39,7 +39,7 @@ gen_quest(NpcTag, QId, db) :-
     random_member(Obj-Rews, Pool),
     assertz(db_generated_quest(NpcTag, QId, [Obj], Rews)).
 
-step_ask_quest(W, Id, NpcId, Evts) :-
+step_ask_quest(W, Id, NpcId, NW, Evts) :-
     world:entity(W, Id, A),
     world:entity(W, NpcId, Npc),
     quests(A, Qs),

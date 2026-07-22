@@ -21,7 +21,7 @@ soc(_, S, db) :-
 chat_tgts(W, local, Id, Tgts) :-
     world:entity(W, Id, A), room(A, RId), world:room_entities(W, RId, Ents),
     findall(E.id, (member(E, Ents), is_dict(E, plyr)), Tgts).
-chat_tgts(W, global, _, Tgts) :- findall(P.id, world:db_entity(plyr, _, P), Tgts).
+chat_tgts(_W, global, _, Tgts) :- findall(P.id, world:db_entity(plyr, _, P), Tgts).
 chat_tgts(W, party, Id, Tgts) :-
     world:entity(W, Id, A), get_dict(party, A, PId), PId \== none,
     soc(W, S), get_dict(PId, S.parties, P), Tgts = P.members.

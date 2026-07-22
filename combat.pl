@@ -149,7 +149,7 @@ step_kill(W, AId, TId, NW, Evts) :-
     world:entity(W, AId, A), status:can_act(A), world:entity(W, TId, T),
     valid_target(W, A, T), crime_check(A, T, MidA), stealth:strip_stealth(MidA, CleanA),
     wpn(CleanA, Wpn),
-    ( cfg_combat:ammo(Wpn, AmmoTag) ->
+    ( config:ammo(Wpn, AmmoTag) ->
         inv(CleanA, Inv),
         ( member(stack{tag: AmmoTag, qty: Qty}, Inv), Qty >= 1 ->
             inv_rem(Inv, AmmoTag, 1, NInv), A1 = CleanA.put(inv, NInv), AmmoOK = true

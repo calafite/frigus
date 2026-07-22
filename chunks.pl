@@ -87,7 +87,7 @@ roll_cell_props(_, S, [], NS) :-
 
 roll_cell_nodes(Biome, Lvl, S, Nodes, NS) :-
     names:lcg_range(S, 1, 100, R, S1),
-    ( R <= 30, theme_node(Biome, Lvl, Tag) ->
+    ( R =< 30, theme_node(Biome, Lvl, Tag) ->
         names:lcg_range(S1, 3, 8, Qty, NS),
         random_between(100000, 999999, Rnd),
         atomic_list_concat([node_, Tag, '_', Rnd], NodeId),
@@ -119,7 +119,7 @@ spawn_cell_mobs(W, Count, Biome, Lvl, RId, S, NW, NS) :-
 
 roll_cell_chests(W, Lvl, RId, S, NW, NS) :-
     names:lcg_range(S, 1, 100, R, S1),
-    ( R <= 10 ->
+    ( R =< 10 ->
         proc_loot:gen_chest(Lvl, RId, Items),
         forall(member(I, Items), assertz(world:db_entity(item, I.id, I))),
         NW = W, NS = S1

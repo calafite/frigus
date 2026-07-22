@@ -29,7 +29,7 @@ flammable(R) :-
     member(Theme, [grove, forest, village, keep, swamp, ruins, mine]).
 
 spread_fire(W, NW, Evts) :-
-    findall(RId-I, (world:db_node(_, R), member(burning(I), R.props)), Burning),
+    findall(RId-I, (world:db_node(RId, R), member(burning(I), R.props)), Burning),
     env:db_env(Env),
     do_fire(W, Burning, Env.weath, NW, Evts).
 
@@ -120,7 +120,7 @@ infect_room(W, [], _, W, []).
 infect_room(W, [E|T], Dis, NW, Evts) :-
     ( (is_dict(E, plyr) ; is_dict(E, mob)), alive(E), \+ (affs(E, Affs), member(aff{type: Dis, val: _, dur: _}, Affs)) ->
         disease_chance(Dis, Chance), random_between(1, 100, Roll),
-        ( Roll <= Chance ->
+        ( Roll =< Chance ->
             status:apply_aff(E, aff{type: Dis, val: 5, dur: 10}, NE, AEvts),
             world:update(W, NE, W1),
             Evt = [infected(E.id, Dis) | AEvts]
@@ -144,6 +144,33 @@ apply_disaster(earthquake, W, NW, [disaster(earthquake) | Evts]) :-
     findall(R.id, (world:db_node(_, R), \+ member(safe, R.props)), NonSafe),
     apply_quake(W, NonSafe, NW, Evts).
 
+apply_disaster(flood, W, NW, [disaster(flood)]) :-
+    findall(R.id, (world:db_node(_, R), R.type == outdoor), Outdoor),
+    apply_flood(W, Outdoor, NW).
+
+apply_disaster(meteor, W, NW, [disaster(meteor, RId) | Evts]) :-
+    findall(R.id, (world:db_node(_, R), R.type == outdoor), Outdoor),
+    random_member(RId, Outdoor),
+    world:node(W, RId, R),
+    ( member(burning(_), R.props) -> select(burning(_), R.props, RestProps) ; RestProps = R.props ),
+    NR = R.put(props, [burning(4)|RestProps]),
+    update_room(W, NR, W1),
+    world:room_entities(W1, RId, Ents),
+    scorch_entities(W1, Ents, W2, Evts),
+    NW = W2.
+
+apply_disaster(blizzard, W, NW, [disaster(blizzard) | Evts]) :-
+    env:db_env(Env),
+    ( Env.seas == winter ->
+        NEnv = Env.put(weath, blizzard),
+        retractall(env:db_env(_)), assertz(env:db_env(NEnv)),
+        findall(E, (
+            world:db_entity(_, _, E),
+            alive(E), room(E, RId), world:node(W, RId, N), N.type == outdoor
+        ), Ents),
+        freeze_entities(W, Ents, NW, Evts)
+    ; NW = W, Evts = [] ).
+
 apply_quake(W, [], W, []).
 apply_quake(W, [RId|T], NW, Evts) :-
     world:node(W, RId, R),
@@ -164,27 +191,12 @@ stun_entities(W, [E|T], NW, Evts) :-
     stun_entities(W1, T, NW, REvts),
     append(Evt, REvts, Evts).
 
-apply_disaster(flood, W, NW, [disaster(flood)]) :-
-    findall(R.id, (world:db_node(_, R), R.type == outdoor), Outdoor),
-    apply_flood(W, Outdoor, NW).
-
 apply_flood(W, [], W).
 apply_flood(W, [RId|T], NW) :-
     world:node(W, RId, R),
     NR = R.put(props, [flooded, flood_current(east) | R.props]),
     update_room(W, NR, W1),
     apply_flood(W1, T, NW).
-
-apply_disaster(meteor, W, NW, [disaster(meteor, RId) | Evts]) :-
-    findall(R.id, (world:db_node(_, R), R.type == outdoor), Outdoor),
-    random_member(RId, Outdoor),
-    world:node(W, RId, R),
-    ( member(burning(_), R.props) -> select(burning(_), R.props, RestProps) ; RestProps = R.props ),
-    NR = R.put(props, [burning(4)|RestProps]),
-    update_room(W, NR, W1),
-    world:room_entities(W1, RId, Ents),
-    scorch_entities(W1, Ents, W2, Evts),
-    NW = W2.
 
 scorch_entities(W, [], W, []).
 scorch_entities(W, [E|T], NW, Evts) :-
@@ -197,18 +209,6 @@ scorch_entities(W, [E|T], NW, Evts) :-
     scorch_entities(W1, T, NW, REvts),
     append(Evt, REvts, Evts).
 
-apply_disaster(blizzard, W, NW, [disaster(blizzard) | Evts]) :-
-    env:db_env(Env),
-    ( Env.seas == winter ->
-        NEnv = Env.put(weath, blizzard),
-        retractall(env:db_env(_)), assertz(env:db_env(NEnv)),
-        findall(E, (
-            world:db_entity(_, _, E),
-            alive(E), room(E, RId), world:node(W, RId, N), N.type == outdoor
-        ), Ents),
-        freeze_entities(W, Ents, NW, Evts)
-    ; NW = W, Evts = [] ).
-
 freeze_entities(W, [], W, []).
 freeze_entities(W, [E|T], NW, Evts) :-
     status:apply_aff(E, aff{type: freeze, val: 0, dur: 3}, E1, AEvts),
@@ -220,7 +220,7 @@ freeze_entities(W, [E|T], NW, Evts) :-
     append(Evt, REvts, Evts).
 
 tick_campfires(W, NW, Evts) :-
-    findall(RId-T, (world:db_node(_, R), member(campfire(T), R.props)), Camps),
+    findall(RId-T, (world:db_node(RId, R), member(campfire(T), R.props)), Camps),
     do_campfires(W, Camps, NW, Evts).
 
 do_campfires(W, [], W, []).
@@ -245,7 +245,7 @@ do_campfires(W, [RId-T|Ts], NW, Evts) :-
     append(Evt, REvts, Evts).
 
 tick_light_orbs(W, NW, Evts) :-
-    findall(RId-T, (world:db_node(_, R), member(light_orb(T), R.props)), Orbs),
+    findall(RId-T, (world:db_node(RId, R), member(light_orb(T), R.props)), Orbs),
     do_light_orbs(W, Orbs, NW, Evts).
 
 do_light_orbs(W, [], W, []).

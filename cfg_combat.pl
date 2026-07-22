@@ -2,7 +2,7 @@
     wpn_dmg/2, ar_pen/2, reach/2,
     inflicts/4, req/3, scale/3,
     weakness/3, resist/3, immune/2,
-    shield_block/3, physical_type/1
+    shield_block/3, physical_type/1, ammo/2
 ]).
 
 physical_type(slash).
@@ -240,3 +240,8 @@ scale(mjolnir, str, 2.5).
 scale(solaris, int, 2.5).
 scale(bloodline_curse, cha, 2.5).
 scale(_, str, 1.0).
+
+ammo(longbow, arrow).
+ammo(shortbow, arrow).
+ammo(composite_bow, arrow).
+ammo(crossbow, bolt).

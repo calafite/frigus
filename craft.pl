@@ -1,4 +1,4 @@
-:- module(craft, [step_craft/4]).
+:- module(craft, [step_craft/5]).
 
 :- use_module(library(lists)).
 :- use_module(library(random)).

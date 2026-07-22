@@ -8,10 +8,10 @@
 :- use_module(library(random)).
 :- use_module(library(lists)).
 
-get_val(K, E, D, V) :- get_dict(K, E, V), !.
+get_val(K, E, _D, V) :- get_dict(K, E, V), !.
 get_val(_, _, D, D).
 
-find_square(W, SqId) :-
+find_square(_W, SqId) :-
     findall(R.id, (world:db_node(R.id, R), member(square, R.props)), Cands),
     ( Cands = [SqId|_] -> true ; SqId = temple ).
 

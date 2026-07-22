@@ -129,7 +129,7 @@ merge_dungeon(Dun, Lvl) :-
     forall(member(M, Dun.mobs), assertz(world:db_entity(mob, M.id, M))),
     forall(member(I, Dun.items), assertz(world:db_entity(item, I.id, I))).
 
-assert_room(R, Lvl) :-
+assert_room(R, _Lvl) :-
     world:db_node(R.id, Existing), !,
     get_dict(exits, Existing, Ex1),
     get_dict(exits, R, Ex2),
@@ -153,7 +153,7 @@ roll_resource_nodes(R, Lvl, NR) :-
         random_between(3, 8, Qty),
         random_between(100000, 999999, Rnd),
         atomic_list_concat([node_, Tag, '_', Rnd], NodeId),
-        ( get_dict(nodes, R, Nodes) ->
+        (get_dict(nodes, R, Nodes) ->
             NNodes = Nodes.put(NodeId, dict{tag: Tag, qty: Qty})
         ;
             NNodes = dict{}.put(NodeId, dict{tag: Tag, qty: Qty})

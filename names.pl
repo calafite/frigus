@@ -8,6 +8,9 @@
 
 :- use_module(library(lists)).
 
+:- discontiguous adj/2.
+:- discontiguous noun/2.
+
 lcg(S, NS) :- NS is (S * 1103515245 + 12345) mod 2147483648.
 
 lcg_range(S, Min, Max, Val, NS) :-
@@ -49,7 +52,7 @@ gen_cell_name(Theme, S, Name, NS) :-
     lcg_member(S2, [" Void", " Pit", " Tomb", " Abyss", " Dungeon", " Hollow"], Suf, NS),
     atomic_list_concat([Pre, Mid, Suf], Name).
 
-gen_cell_name(Theme, S, Name, NS) :-
+gen_cell_name(_Theme, S, Name, NS) :-
     lcg_member(S, ["Black", "Wild", "Green", "White", "Gray", "Red", "Lost", "Great"], Pre, S1),
     lcg_member(S1, ["wood", "mount", "plain", "lake", "swamp", "vale", "dale", "forest"], Mid, S2),
     lcg_member(S2, [" Ridge", " Glade", " Path", " Meadow", " Wilderness"], Suf, NS),

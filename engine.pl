@@ -29,7 +29,7 @@
 :- use_module(alchemy).
 :- use_module(quest_gen).
 :- use_module(ritual).
-:- use_module(socket).
+:- use_module(mud_socket).
 
 step(W, Id, move(Dir), NW, Evts) :- step_move(W, Id, Dir, NW, Evts).
 step(W, Id, kill(TId), NW, Evts) :- step_kill(W, Id, TId, NW, Evts).
@@ -51,7 +51,7 @@ step(W, Id, hide, NW, Evts) :- step_hide(W, Id, NW, Evts).
 step(W, Id, train(S), NW, Evts) :- step_train(W, Id, S, NW, Evts).
 step(W, Id, pull(Sw), NW, Evts) :- step_pull(W, Id, Sw, NW, Evts).
 step(W, Id, disarm, NW, Evts) :- step_disarm(W, Id, NW, Evts).
-step(W, Id, craft(O), NW, Evts) :- step_craft(W, Id, O, NW, Evts).
+step(W, Id, craft(O), NW, Evts) :- craft:step_craft(W, Id, O, NW, Evts).
 step(W, Id, ai_tick, NW, Evts) :- step_ai(W, Id, NW, Evts).
 step(W, Id, tick, NW, Evts) :- step_tick(W, Id, NW, Evts).
 step(W, Id, chat(C, M), NW, Evts) :- social:step_chat(W, Id, C, M, NW, Evts).
@@ -105,13 +105,13 @@ step(W, Id, brew(Ingreds), NW, Evts) :- alchemy:step_brew(W, Id, Ingreds, NW, Ev
 step(W, Id, ask_quest(NpcId), NW, Evts) :- quest_gen:step_ask_quest(W, Id, NpcId, NW, Evts).
 step(W, Id, disguise, NW, Evts) :- stealth:step_disguise(W, Id, NW, Evts).
 step(W, Id, ritual(Type), NW, Evts) :- ritual:step_ritual(W, Id, Type, NW, Evts).
-step(W, Id, socket(Item, Gem), NW, Evts) :- socket:step_socket(W, Id, Item, Gem, NW, Evts).
+step(W, Id, socket(Item, Gem), NW, Evts) :- mud_socket:step_socket(W, Id, Item, Gem, NW, Evts).
 
-step(W, Id, load_state(State), db, [state_loaded]) :- !,
+step(_W, _Id, load_state(State), db, [state_loaded]) :- !,
     world:load_db(State).
-step(W, Id, dump_state, db, [state_dump(Dump)]) :- !,
+step(_W, _Id, dump_state, db, [state_dump(Dump)]) :- !,
     world:dump_db(Dump).
-step(W, Id, clear_state, db, [state_cleared]) :- !,
+step(_W, _Id, clear_state, db, [state_cleared]) :- !,
     world:clear_db.
 
 step(W, Id, look, W, [look(RId, Desc, Props, Exits, OIds, MIds, IData)]) :-
@@ -167,12 +167,12 @@ to_act(D, quest(turn_in(Q))) :- D.type == "quest_turn_in", atom_string(Q, D.ques
 to_act(D, rest) :- D.type == "rest".
 to_act(D, sleep) :- D.type == "sleep".
 to_act(D, wake) :- D.type == "wake".
-to_act(D, drink) :- D.type == "drink", \+ get_dict(item, D, _), S = room.
+to_act(D, drink) :- D.type == "drink", \+ get_dict(item, D, _).
 to_act(D, drink(S)) :- D.type == "drink", atom_string(S, D.item).
 to_act(D, fill) :- D.type == "fill".
 to_act(D, fish) :- D.type == "fish".
-to_act(D, fly) :- D.type == "fly", atom_string(A, D.altitude), A == "air", Alt = air.
-to_act(D, fly) :- D.type == "fly", atom_string(A, D.altitude), A == "ground", Alt = ground.
+to_act(D, fly(air)) :- D.type == "fly", atom_string(A, D.altitude), A == "air".
+to_act(D, fly(ground)) :- D.type == "fly", atom_string(A, D.altitude), A == "ground".
 to_act(D, climb) :- D.type == "climb".
 to_act(D, jump(Dir)) :- D.type == "jump", atom_string(Dir, D.dir).
 to_act(D, mount(Mount)) :- D.type == "mount", atom_string(Mount, D.mount_tag).

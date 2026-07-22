@@ -5,7 +5,7 @@
 :- use_module(world).
 :- use_module(status).
 
-get_val(K, E, D, V) :- get_dict(K, E, V), !.
+get_val(K, E, _D, V) :- get_dict(K, E, V), !.
 get_val(_, _, D, D).
 
 edible(cooked_fish, food(40)).

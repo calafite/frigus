@@ -1,4 +1,4 @@
-:- module(cooking, [step_cook/4, step_poison/5]).
+:- module(cooking, [step_cook/5, step_poison/6]).
 
 :- use_module(library(random)).
 :- use_module(library(lists)).

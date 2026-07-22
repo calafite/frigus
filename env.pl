@@ -38,13 +38,13 @@ get_moon(7, waning_crescent).
 
 roll_weather(spring, W) :-
     random_between(1, 100, R),
-    ( R <= 60 -> W = clear ; R <= 90 -> W = rain ; W = storm ).
+    ( R =< 60 -> W = clear ; R =< 90 -> W = rain ; W = storm ).
 roll_weather(summer, W) :-
     random_between(1, 100, R),
-    ( R <= 70 -> W = clear ; R <= 90 -> W = heatwave ; W = rain ).
+    ( R =< 70 -> W = clear ; R =< 90 -> W = heatwave ; W = rain ).
 roll_weather(autumn, W) :-
     random_between(1, 100, R),
-    ( R <= 40 -> W = clear ; R <= 80 -> W = rain ; W = storm ).
+    ( R =< 40 -> W = clear ; R =< 80 -> W = rain ; W = storm ).
 roll_weather(winter, W) :-
     random_between(1, 100, R),
-    ( R <= 40 -> W = clear ; R <= 80 -> W = snow ; W = blizzard ).
+    ( R =< 40 -> W = clear ; R =< 80 -> W = snow ; W = blizzard ).

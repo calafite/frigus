@@ -1,4 +1,4 @@
-:- module(ritual, [step_ritual/4]).
+:- module(ritual, [step_ritual/5]).
 
 :- use_module(library(random)).
 :- use_module(library(lists)).

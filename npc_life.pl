@@ -9,6 +9,8 @@
 :- use_module(survival).
 :- use_module(config).
 
+:- discontiguous exec_state/6.
+
 mod_mem(W, NpcId, PlyrId, Type, NW) :-
     world:entity(W, NpcId, M),
     mems(M, Mems),
@@ -34,13 +36,13 @@ step_life(W, Id, NW, Evts) :-
     ).
 step_life(W, _, W, []).
 
-trans_state(sleep, ExpState, W, Id, M, NW, Evts) :-
+trans_state(sleep, ExpState, W, Id, _M, NW, Evts) :-
     survival:step_wake(W, Id, W1, Evts1),
     world:entity(W1, Id, M1),
     M2 = M1.put(act_state, ExpState),
     world:update(W1, M2, NW),
     Evts = Evts1.
-trans_state(_, ExpState, W, Id, M, NW, []) :-
+trans_state(_, ExpState, W, _Id, M, NW, []) :-
     world:update(W, M.put(act_state, ExpState), NW).
 
 exec_state(sleep, W, Id, M, NW, Evts) :-

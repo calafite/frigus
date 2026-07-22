@@ -93,7 +93,7 @@ dump_db(State) :-
 
 build_market_dict(Supplies, Mkt) :-
     findall(RId, member(RId-_-_, Supplies), RIds),
-    sort(RId, UniqueRIds),
+    sort(RIds, UniqueRIds),
     build_market_rooms(UniqueRIds, Supplies, Pairs),
     dict_pairs(Mkt, market, Pairs).
 

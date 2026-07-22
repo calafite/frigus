@@ -158,7 +158,6 @@ ai_murder(W, Id, NW, Evts) :-
     affs(M, Affs), member(aff{type: hidden, val: _, dur: _}, Affs),
     room(M, RId), world:room_entities(W, RId, Ents),
     member(T, Ents), alive(T), hates(M, T), combat:valid_target(W, M, T), !,
-    stealth:strip_stealth(M, CleanM),
     combat:step_kill(W, Id, T.id, NW, Evts).
 
 ai_murder(W, Id, NW, Evts) :-
@@ -196,11 +195,11 @@ ai_mania_act(sanguivore, W, Id, M, NW, Evts) :-
 
 ai_mania_act(cannibal, W, Id, M, NW, Evts) :-
     room(M, RId), world:room_entities(W, RId, Ents),
-    member(T, Ents), alive(T), M.id \== T.id,
+    member(T, Ents), alive(T), Id \== T.id,
     (T.tag == M.tag ; is_humanoid(T)),
     combat:valid_target(W, M, T),
     hp(T, Hp), get_dict(max_hp, T, Max), Hp =< Max * 0.3, !,
-    combat:step_kill(W, M.id, T.id, NW, Evts).
+    combat:step_kill(W, Id, T.id, NW, Evts).
 
 ai_mania_act(hoarder, W, Id, M, NW, Evts) :-
     room(M, RId), world:room_entities(W, RId, Ents),
@@ -209,7 +208,7 @@ ai_mania_act(hoarder, W, Id, M, NW, Evts) :-
 
 ai_mania_act(kleptomaniac, W, Id, M, NW, Evts) :-
     room(M, RId), world:room_entities(W, RId, Ents),
-    member(T, Ents), alive(T), M.id \== T.id,
+    member(T, Ents), alive(T), Id \== T.id,
     inv(T, Inv), Inv \= [], random_member(Stack, Inv), Stack.tag \== gold, !,
     npc:step_steal(W, Id, T.id, Stack.tag, 1, NW, Evts).
 
@@ -223,7 +222,7 @@ ai_mania_act(martyr, W, Id, M, NW, Evts) :-
 
 ai_mania_act(sadist, W, Id, M, NW, Evts) :-
     room(M, RId), world:room_entities(W, RId, Ents),
-    member(T, Ents), alive(T), M.id \== T.id, hates(M, T),
+    member(T, Ents), alive(T), Id \== T.id, hates(M, T),
     combat:valid_target(W, M, T),
     \+ (affs(T, Affs), member(aff{type: bloodline_curse, dur: _, val: _}, Affs)),
     random_between(1, 100, R), R =< 20, !,
@@ -233,7 +232,7 @@ ai_mania_act(sadist, W, Id, M, NW, Evts) :-
 
 ai_mania_act(pyromaniac, W, Id, M, NW, Evts) :-
     room(M, RId), world:room_entities(W, RId, Ents),
-    member(T, Ents), alive(T), M.id \== T.id,
+    member(T, Ents), alive(T), Id \== T.id,
     random_between(1, 100, R), R =< 10, !,
     combat:step_cast(W, Id, fireball, T.id, NW, Evts).
 
@@ -249,7 +248,7 @@ ai_role_act(protector, W, Id, M, NW, Evts) :-
 
 ai_role_act(healer, W, Id, M, NW, Evts) :-
     room(M, RId), world:room_entities(W, RId, Ents),
-    member(T, Ents), alive(T), M.id \== T.id, \+ hates(M, T),
+    member(T, Ents), alive(T), Id \== T.id, \+ hates(M, T),
     hp(T, Hp), get_dict(max_hp, T, Max), Hp < Max * 0.5, !,
     combat:step_cast(W, Id, mend, T.id, NW, Evts).
 

@@ -51,7 +51,7 @@ revealed_exits(_W, A, Node, Exits) :-
         Exits = NormalExits
     ).
 
-resolve_exit(_W, A, Node, Dir, NRId) :-
+resolve_exit(_W, _A, Node, Dir, NRId) :-
     get_dict(Dir, Node.exits, NRId), !.
 resolve_exit(_W, A, Node, Dir, NRId) :-
     get_dict(secrets, Node, Secrets),
@@ -77,7 +77,7 @@ reveal_details(A, Node, FullDesc) :-
     ;
         FullDesc = Base
     ).
-reveal_details(A, Node, FullDesc) :-
+reveal_details(_A, Node, FullDesc) :-
     get_dict(ambience, Node, Amb), !,
     get_dict(sound, Amb, Sound),
     get_dict(smell, Amb, Smell),

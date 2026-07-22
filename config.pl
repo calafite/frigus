@@ -11,7 +11,8 @@
     repair_kit/2, scroll_type/1, deity/2, altar/2, sac_val/2,
     blessing/3, crop_data/3, tamable/2, pet_food/2, struct_data/4,
     ingredient_aspect/2, potion_recipe/2,
-    base_wpn/1, base_arm/1, base_acc/1, pref/4, suff/4, tier_mult/2
+    base_wpn/1, base_arm/1, base_acc/1, pref/4, suff/4, tier_mult/2,
+    ammo/2
 ]).
 
 :- reexport(cfg_combat).

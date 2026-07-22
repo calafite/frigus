@@ -7,6 +7,7 @@
 ]).
 
 theme_weight(grove, 100).
+theme_weight(forest, 100).
 theme_weight(keep, 100).
 theme_weight(cavern, 80).
 theme_weight(mine, 80).
@@ -34,6 +35,7 @@ theme_data(abyss, [void, dark]).
 theme_data(ruins, [humanoid, magic]).
 theme_data(keep, [humanoid, steel]).
 theme_data(grove, [beast, nature]).
+theme_data(forest, [beast, nature]).
 theme_data(tomb, [undead, magic]).
 theme_data(volcano, [demon, fire, earth]).
 theme_data(glacier, [beast, ice]).
@@ -48,47 +50,49 @@ theme_data(mine, [beast, earth, steel]).
 theme_data(temple, [humanoid, holy]).
 theme_data(sanctum, [void, holy, magic]).
 
-rm_adj(crypt, [dusty, crumbling, desecrated, silent, echoing, bloodstained]).
+rm_adj(crypt, [dusty, crumbling, desecrated, silent, echoing, 'blood-stained']).
 rm_adj(cavern, [damp, dark, winding, massive, claustrophobic, glowing]).
-rm_adj(inferno, [scorching, burning, ash-choked, blazing, molten, charred]).
-rm_adj(abyss, [pitch-black, endless, mind-bending, shifting, silent, crushing]).
+rm_adj(inferno, [scorching, burning, 'ash-choked', blazing, molten, charred]).
+rm_adj(abyss, ['pitch-black', endless, 'mind-bending', shifting, silent, crushing]).
 rm_adj(ruins, [overgrown, ancient, forgotten, shattered, majestic, cursed]).
-rm_adj(keep, [fortified, ruined, grand, imposing, heavily-armed, strategic]).
+rm_adj(keep, [fortified, ruined, grand, imposing, 'heavily-armed', strategic]).
 rm_adj(grove, [verdant, corrupted, whispering, dense, sacred, ancient]).
+rm_adj(forest, [verdant, shadowy, ancient, dense, whispering, overgrown]).
 rm_adj(tomb, [sealed, opulent, trapped, hollow, revered, haunted]).
 rm_adj(volcano, [magmatic, unstable, erupting, suffocating, heated, jagged]).
 rm_adj(glacier, [freezing, crystalline, slippery, reflective, howling, frozen]).
 rm_adj(swamp, [fetid, murky, bubbling, toxic, stagnant, overgrown]).
-rm_adj(desert, [sun-baked, arid, shifting, wind-swept, desolate, parched]).
+rm_adj(desert, ['sun-baked', arid, shifting, 'wind-swept', desolate, parched]).
 rm_adj(sewer, [foul, echoing, dripping, rancid, flooded, diseased]).
-rm_adj(sky, [cloud-obscured, floating, windy, blinding, ethereal, storm-tossed]).
+rm_adj(sky, ['cloud-obscured', floating, windy, blinding, ethereal, 'storm-tossed']).
 rm_adj(void, [formless, alien, distorted, empty, silent, unnatural]).
-rm_adj(prison, [bleak, iron-barred, despairing, secure, bloodied, inescapable]).
-rm_adj(asylum, [manic, blood-spattered, haunting, padded, forsaken, twisted]).
-rm_adj(mine, [excavated, abandoned, collapsed, resource-rich, echoing, dusty]).
+rm_adj(prison, [bleak, 'iron-barred', despairing, secure, bloodied, inescapable]).
+rm_adj(asylum, [manic, 'blood-spattered', haunting, padded, forsaken, twisted]).
+rm_adj(mine, [excavated, abandoned, collapsed, 'resource-rich', echoing, dusty]).
 rm_adj(temple, [holy, defiled, resplendent, ornate, towering, sacred]).
 rm_adj(sanctum, [pure, glowing, arcane, silent, forbidden, warded]).
 
-rm_noun(crypt, [tomb, catacomb, sepulcher, vault, mausoleum, burial chamber]).
-rm_noun(cavern, [cave, tunnel, grotto, chasm, hollow, stalactite hall]).
-rm_noun(inferno, [pit, caldera, lake of fire, forge, ash-waste, crater]).
+rm_noun(crypt, [tomb, catacomb, sepulcher, vault, mausoleum, 'burial chamber']).
+rm_noun(cavern, [cave, tunnel, grotto, chasm, hollow, 'stalactite hall']).
+rm_noun(inferno, [pit, caldera, 'lake of fire', forge, 'ash-waste', crater]).
 rm_noun(abyss, [void, chasm, nothingness, rift, anomaly, depth]).
-rm_noun(ruins, [courtyard, plaza, collapsed tower, remnants, rubble, hall]).
-rm_noun(keep, [armory, barracks, throne room, battlements, dungeon, gatehouse]).
-rm_noun(grove, [glade, thicket, clearing, den, canopy, root-chamber]).
-rm_noun(tomb, [sarcophagus room, burial hall, ritual chamber, antechamber, false tomb, treasury]).
-rm_noun(volcano, [magma chamber, vent, obsidian spire, lava tube, crater edge, forge]).
-rm_noun(glacier, [ice cave, frozen lake, crevasse, frost-hall, crystal spire, tundra]).
-rm_noun(swamp, [mire, bog, mud-pit, sunken ruin, rot-wood, hag-hut]).
-rm_noun(desert, [dune, oasis, canyon, dry-riverbed, sandstone cave, mirage]).
-rm_noun(sewer, [cistern, outflow, sludge-tunnel, maintenance shaft, rat-nest, drainage grate]).
-rm_noun(sky, [cloud-island, wind-tunnel, apex, floating bridge, storm-eye, peak]).
-rm_noun(void, [fracture, nexus, singularity, non-space, event horizon, paradox]).
-rm_noun(prison, [cellblock, interrogation room, warden office, execution yard, solitary, mess hall]).
-rm_noun(asylum, [ward, lobotomy room, straightjacket storage, isolation cell, common room, pharmacy]).
-rm_noun(mine, [shaft, lode, elevator, cart-track, excavation site, dead-end]).
+rm_noun(ruins, [courtyard, plaza, 'collapsed tower', remnants, rubble, hall]).
+rm_noun(keep, [armory, barracks, 'throne room', battlements, dungeon, gatehouse]).
+rm_noun(grove, [glade, thicket, clearing, den, canopy, 'root-chamber']).
+rm_noun(forest, [glade, thicket, clearing, den, canopy, woods]).
+rm_noun(tomb, ['sarcophagus room', 'burial hall', 'ritual chamber', antechamber, 'false tomb', treasury]).
+rm_noun(volcano, ['magma chamber', vent, 'obsidian spire', 'lava tube', 'crater edge', forge]).
+rm_noun(glacier, ['ice cave', 'frozen lake', crevasse, 'frost-hall', 'crystal spire', tundra]).
+rm_noun(swamp, [mire, bog, 'mud-pit', 'sunken ruin', 'rot-wood', 'hag-hut']).
+rm_noun(desert, [dune, oasis, canyon, 'dry-riverbed', 'sandstone cave', mirage]).
+rm_noun(sewer, [cistern, outflow, 'sludge-tunnel', 'maintenance shaft', 'rat-nest', 'drainage grate']).
+rm_noun(sky, ['cloud-island', 'wind-tunnel', apex, 'floating bridge', 'storm-eye', peak]).
+rm_noun(void, [fracture, nexus, singularity, 'non-space', 'event horizon', paradox]).
+rm_noun(prison, [cellblock, 'interrogation room', 'warden office', 'execution yard', solitary, 'mess hall']).
+rm_noun(asylum, [ward, 'lobotomy room', 'straightjacket storage', 'isolation cell', 'common room', pharmacy]).
+rm_noun(mine, [shaft, lode, elevator, 'cart-track', 'excavation site', 'dead-end']).
 rm_noun(temple, [altar, nave, sanctuary, choir, belfry, reliquary]).
-rm_noun(sanctum, [inner eye, mana pool, rune chamber, astrolabe, nexus, meditation room]).
+rm_noun(sanctum, ['inner eye', 'mana pool', 'rune chamber', astrolabe, nexus, 'meditation room']).
 
 base_wpn(dagger).
 base_wpn(shortsword).
@@ -239,6 +243,9 @@ mob_base(nature, ent).
 mob_base(nature, dryad).
 mob_base(holy, zealot).
 mob_base(holy, angel).
+mob_base(dark, shadow_panther).
+mob_base(dark, wraith).
+mob_base(lightning, elemental).
 
 elite_mod(armored, armor, 2.0).
 elite_mod(berserk, str, 2.5).

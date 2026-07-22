@@ -1,6 +1,6 @@
 :- module(nature, [
     step_till/4, step_plant/5, step_harvest/4, tick_crops/3,
-    step_tame/5, step_command/5, step_feed/5
+    step_tame/5, step_command/6, step_feed/5
 ]).
 
 :- use_module(library(random)).

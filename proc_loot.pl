@@ -29,8 +29,8 @@ gen_item(Lvl, Tier, Type, Item) :-
     build_name(Pref, Base, Suff, Name),
     ( Tier >= 3 ->
         random_between(1, 100, SockRoll),
-        ( SockRoll <= 15 -> SockProp = [prop(sockets, 2)]
-        ; SockRoll <= 45 -> SockProp = [prop(sockets, 1)]
+        ( SockRoll =< 15 -> SockProp = [prop(sockets, 2)]
+        ; SockRoll =< 45 -> SockProp = [prop(sockets, 1)]
         ; SockProp = [] )
     ; SockProp = [] ),
     build_props(Pref, Suff, Lvl, Mult, BaseProps),

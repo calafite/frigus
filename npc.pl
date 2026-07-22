@@ -31,7 +31,7 @@ step_talk(W, AId, TId, NW, Evts) :-
 
 step_buy(W, AId, TId, Tag, Qty, NW, [bought(AId, Tag, Qty, Cost)]) :-
     world:entity(W, AId, A), world:entity(W, TId, T), room(A, RId), room(T, RId),
-    member(merchant, T.props), fac(T, TFac), rep_val(A, TFac, Rep),
+    member(merchant, T.props), fac(T, TFac), rep_val(A, TFac, _Rep),
     economy:item_price(RId, Tag, buy, A, BaseCost),
     Cost is BaseCost * Qty,
     inv(A, AInv), inv(T, TInv), inv_rem(TInv, Tag, Qty, TInv1), inv_add(TInv1, gold, Cost, NTInv),
@@ -43,7 +43,7 @@ step_buy(W, AId, TId, Tag, Qty, NW, [bought(AId, Tag, Qty, Cost)]) :-
 
 step_sell(W, AId, TId, Tag, Qty, NW, [sold(AId, Tag, Qty, Earned)]) :-
     world:entity(W, AId, A), world:entity(W, TId, T), room(A, RId), room(T, RId),
-    member(merchant, T.props), fac(T, TFac), rep_val(A, TFac, Rep),
+    member(merchant, T.props), fac(T, TFac), rep_val(A, TFac, _Rep),
     economy:item_price(RId, Tag, sell, A, BaseEarned),
     Earned is BaseEarned * Qty,
     inv(A, AInv), inv(T, TInv), inv_rem(TInv, gold, Earned, TInv1), inv_add(TInv1, Tag, Qty, NTInv),

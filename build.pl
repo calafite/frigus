@@ -1,4 +1,4 @@
-:- module(build, [step_build/5, step_demolish/4]).
+:- module(build, [step_build/5, step_demolish/5]).
 
 :- use_module(library(random)).
 :- use_module(library(lists)).
