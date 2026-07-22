@@ -22,7 +22,7 @@ seed_hub :-
             theme: village,
             type: outdoor,
             desc: "The central town square. A cool mountain river rushes past a stone fountain here.",
-            exits: dict{north: tavern, south: temple, east: barracks, west: mine_entrance, forest: forest_trail, farm: farm_field},
+            exits: dict{north: tavern, south: temple, east: barracks, west: mine_entrance, forest: forest_trail, farm: farm_field, wild: cell(0, 0, 0)},
             props: [safe, landmark, square, river],
             region: shire
         },
@@ -318,6 +318,7 @@ seed_world_state :-
     retractall(world:db_flag(_, _)),
     assertz(world:db_flag(help_call_room, none)),
     assertz(world:db_flag(help_call_tag, none)),
+    assertz(world:db_flag(world_seed, 948123)),
     retractall(env:db_env(_)),
     assertz(env:db_env(env{hr: 12, min: 0, day: 1, mon: 1, seas: spring, weath: clear, moon: new_moon})),
     retractall(social:db_social(_)),

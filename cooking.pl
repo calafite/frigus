@@ -36,7 +36,9 @@ is_poison(nightshade).
 
 check_ingreds(_, []).
 check_ingreds(Inv, [Tag|T]) :-
-    member(stack{tag: Tag, qty: Q}, Inv), Q >= 1, check_ingreds(Inv, T).
+    ( member(stack{tag: Tag, qty: Q}, Inv), Q >= 1
+    ; member(Item, Inv), is_dict(Item, item), Item.tag == Tag ),
+    check_ingreds(Inv, T).
 
 consume_ingreds(Inv, [], Inv).
 consume_ingreds(Inv, [Tag|T], NInv) :- inv_rem(Inv, Tag, 1, Tmp), consume_ingreds(Tmp, T, NInv).

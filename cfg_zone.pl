@@ -11,6 +11,8 @@ terrain_fatigue(sand, 2).
 terrain_fatigue(shallow_water, 3).
 terrain_fatigue(mud, 4).
 terrain_fatigue(snow, 3).
+terrain_fatigue(ice, 3).
+terrain_fatigue(hot_ash, 3).
 terrain_fatigue(rubble, 3).
 
 region_of(shire, westland).

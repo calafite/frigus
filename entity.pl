@@ -27,6 +27,7 @@ mp(E, E.mp).         mp(E, V, E.put(mp, V)).
 lvl(E, E.lvl).       lvl(E, V, E.put(lvl, V)).
 xp(E, E.xp).         xp(E, V, E.put(xp, V)).
 class(E, E.class).
+
 str(E, E.str).       str(E, V, E.put(str, V)).
 dex(E, E.dex).       dex(E, V, E.put(dex, V)).
 con(E, E.con).       con(E, V, E.put(con, V)).
@@ -217,7 +218,9 @@ inv_rem(Inv, ItemId, 1, NInv) :-
 inv_rem(Inv, Tag, Qty, NInv) :-
     select(stack{tag: Tag, qty: OQ}, Inv, R),
     OQ >= Qty, NQ is OQ - Qty,
-    ( NQ =:= 0 -> NInv = R ; NInv = [stack{tag: Tag, qty: NQ} | R] ).
+    ( NQ =:= 0 -> NInv = R ; NInv = [stack{tag: Tag, qty: NQ} | R] ), !.
+inv_rem(Inv, Tag, 1, NInv) :-
+    select(Item, Inv, NInv), is_dict(Item, item), Item.tag == Tag.
 
 inv_wt([], 0).
 inv_wt([Item | T], W) :-
