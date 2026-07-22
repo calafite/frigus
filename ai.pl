@@ -273,7 +273,7 @@ ai_group_up(W, Id, NW, Evts) :-
     world:entity(W, Id, M), cfg_ai:herd(M.tag),
     \+ get_dict(party, M, _),
     room(M, RId), world:room_entities(W, RId, Ents),
-    member(T, Ents), T.id \== Id, T.tag == M.tag,
+    member(T, Ents), (is_dict(T, mob) ; is_dict(T, plyr)), T.id \== Id, T.tag == M.tag,
     get_dict(party, T, PId), PId \== none, !,
     social:step_party(W, Id, join(PId), NW, Evts).
 
@@ -281,7 +281,7 @@ ai_group_up(W, Id, NW, Evts) :-
     world:entity(W, Id, M), cfg_ai:herd(M.tag),
     \+ get_dict(party, M, _),
     room(M, RId), world:room_entities(W, RId, Ents),
-    member(T, Ents), T.id \== Id, T.tag == M.tag,
+    member(T, Ents), (is_dict(T, mob) ; is_dict(T, plyr)), T.id \== Id, T.tag == M.tag,
     \+ get_dict(party, T, _), !,
     social:step_party(W, Id, create, W1, [party_created(Id, PId)]),
     social:step_party(W1, T.id, join(PId), NW, Evts2),

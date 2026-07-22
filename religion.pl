@@ -26,11 +26,17 @@ step_pray(W, Id, NW, Evts) :-
 has_blessing(A, buff(Stat, Val, _)) :-
     affs(A, Affs), member(aff{type: buff, stat: Stat, val: Val, dur: 9999}, Affs).
 
-step_sacrifice(W, Id, Item, NW, Evts) :-
+step_sacrifice(W, Id, ItemId, NW, Evts) :-
     world:entity(W, Id, A), alive(A), room(A, RId), world:node(W, RId, N),
     get_dict(props, N, Props), member(Altar, Props), cfg_deity:altar(Altar, Deity),
-    inv(A, Inv), inv_rem(Inv, Item, 1, NInv),
+    inv(A, Inv),
+    ( select(Item, Inv, _) , is_dict(Item, item), Item.id == ItemId ->
+        Tag = Item.tag, CostItem = ItemId
+    ;
+        Tag = ItemId, CostItem = ItemId
+    ),
+    inv_rem(Inv, CostItem, 1, NInv),
     stat(A, cha, Cha), stat(A, luk, Luk),
-    cfg_deity:sac_val(Item, BaseVal), Val is BaseVal + floor(Cha * 0.2) + floor(Luk * 0.1),
+    cfg_deity:sac_val(Tag, BaseVal), Val is BaseVal + floor(Cha * 0.2) + floor(Luk * 0.1),
     add_piety(A, Deity, Val, NA), world:update(W, NA.put(inv, NInv), NW),
-    Evts = [sacrificed(Id, Item, Deity, Val)].
+    Evts = [sacrificed(Id, Tag, Deity, Val)].
