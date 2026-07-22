@@ -17,9 +17,11 @@
 :- use_module(social).
 :- use_module(ai_path).
 :- use_module(ai_pet).
+:- use_module(ai_dragon).
 
 step_ai(W, Id, NW, Evts) :- world:entity(W, Id, M), \+ status:can_act(M), NW = W, Evts = [], !.
 step_ai(W, Id, NW, Evts) :- world:entity(W, Id, M), props(M, P), member(surrendered, P), NW = W, Evts = [], !.
+step_ai(W, Id, NW, Evts) :- world:entity(W, Id, M), get_dict(tag, M, dragon), ai_dragon:ai_dragon_act(W, Id, NW, Evts), Evts \== [], !.
 step_ai(W, Id, NW, Evts) :- world:entity(W, Id, M), get_dict(master, M, _), ai_pet:ai_pet_act(W, Id, NW, Evts), Evts \== [], !.
 step_ai(W, Id, NW, Evts) :- ai_arrest(W, Id, NW, Evts), !.
 step_ai(W, Id, NW, Evts) :- ai_surrender(W, Id, NW, Evts), !.
@@ -69,13 +71,33 @@ is_humanoid(T) :- id_grp(T, human) ; id_grp(T, elf) ; id_grp(T, dwarf) ; id_grp(
 ai_arrest(W, Id, NW, Evts) :-
     world:entity(W, Id, M), cfg_ai:role(M.tag, protector),
     room(M, RId), world:room_entities(W, RId, Ents),
-    member(T, Ents), is_dict(T, plyr), fac(T, criminal), !,
+    member(T, Ents), is_dict(T, plyr),
+    can_spot_criminal(W, M, T, W1, BlowEvts), !,
     fac(T, citizen, T1),
-    ( find_prison(W, PrisonId) -> true ; PrisonId = RId ),
-    T2 = T1.put(room, PrisonId).put(hp, 1),
+    ( find_prison(W1, PrisonId) -> true ; PrisonId = RId ),
+    bounty(T, B),
+    JTime is min(120, max(10, floor(B / 5))),
+    T2 = T1.put(room, PrisonId).put(hp, 1).put(jail_time, JTime),
     inv(T2, Inv), inv_rem_all(Inv, gold, NInv), T3 = T2.put(inv, NInv),
-    world:update(W, T3, NW),
-    Evts = [arrested(Id, T.id, PrisonId)].
+    world:update(W1, T3, NW),
+    append(BlowEvts, [arrested(Id, T.id, PrisonId, JTime)], Evts).
+
+can_spot_criminal(W, Guard, T, NW, BlowEvts) :-
+    fac(T, criminal),
+    ( affs(T, Affs), member(aff{type: disguised, val: Score, dur: _}, Affs) ->
+        stat(Guard, wis, Wis),
+        random_between(1, 20, Roll),
+        ( Roll + Wis >= Score ->
+            select(aff{type: disguised, val: _, dur: _}, Affs, Rest),
+            T1 = T.put(affs, Rest),
+            world:update(W, T1, NW),
+            BlowEvts = [disguise_blown(Guard.id, T.id)]
+        ;
+            NW = W, BlowEvts = [], fail
+        )
+    ;
+        NW = W, BlowEvts = []
+    ).
 
 inv_rem_all(Inv, Tag, NInv) :-
     ( select(stack{tag: Tag, qty: _}, Inv, Rest) -> NInv = Rest ; NInv = Inv ).

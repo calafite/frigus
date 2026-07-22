@@ -1,119 +1,104 @@
-:- module(magic, [step_cast/6]).
+:- module(magic, [step_cast_utility/6]).
 
-:- use_module(library(lists)).
 :- use_module(library(random)).
-:- use_module(config).
+:- use_module(library(lists)).
+:- use_module(cfg_magic).
 :- use_module(entity).
 :- use_module(world).
-:- use_module(combat).
 :- use_module(status).
-:- use_module(stealth).
+:- use_module(move).
+:- use_module(zone).
 
-allowed_cast(A, Sp) :-
-    ( config:req_race(Sp, Race) ->
-        entity:race(A, Race)
-    ; true ).
+step_cast_utility(W, Id, Sp, TId, NW, Evts) :-
+    world:entity(W, Id, A), status:can_cast(A), cds(A, Cds), \+ get_dict(Sp, Cds, _),
+    config:req(Sp, ReqStat, ReqVal), stat(A, ReqStat, Val), Val >= ReqVal,
+    stealth:strip_stealth(A, CleanA), cost(Sp, Cost), mp(CleanA, Mp), Mp >= Cost,
+    NMp is Mp - Cost, mp(CleanA, NMp, CastA),
+    ( config:cooldown(Sp, CD) -> cds(CastA, Cds.put(Sp, CD), FinalA) ; FinalA = CastA ),
+    cast_utility(Sp, W, Id, FinalA, TId, NW, CastEvts),
+    Evts = [cast_utility(Id, Sp) | CastEvts].
 
-prepare_cast(A, Sp, CastA) :-
-    config:cost(Sp, Cost),
-    mp(A, Mp), Mp >= Cost,
-    NMp is Mp - Cost,
-    mp(A, NMp, A1),
-    cds(A1, Cds),
-    ( config:cooldown(Sp, CD) -> cds(A1, Cds.put(Sp, CD), CastA) ; CastA = A1 ).
+cast_utility(blink, W, Id, A, _, NW, [teleported(Id, NRId)]) :-
+    room(A, RId), world:node(W, RId, N),
+    dict_keys(N.exits, Exits), Exits \= [],
+    random_member(Dir, Exits), get_dict(Dir, N.exits, NRId),
+    world:update(W, A.put(room, NRId).put(state, normal).put(climb_state, false), NW).
 
-step_cast(W, Id, Sp, TId, NW, Evts) :-
-    world:entity(W, Id, A),
-    status:can_act(A),
-    allowed_cast(A, Sp),
-    config:req(Sp, ReqStat, ReqVal),
-    stat(A, ReqStat, Val), Val >= ReqVal,
-    cds(A, Cds), \+ get_dict(Sp, Cds, _),
-    prepare_cast(A, Sp, CastA),
-    config:spell_nature(Sp, Nature),
-    cast_nature(Nature, W, CastA, Sp, TId, NW, Evts).
+cast_utility(teleport, W, Id, A, DestId, NW, [teleported(Id, DestId)]) :-
+    atom(DestId),
+    get_dict(landmarks, A, Known), member(DestId, Known),
+    world:update(W, A.put(room, DestId).put(state, normal).put(climb_state, false), NW).
 
-cast_nature(damage, W, A, Sp, TId, NW, Evts) :-
-    world:entity(W, TId, T),
-    combat:valid_target(W, A, T),
-    combat:crime_check(A, T, MidA),
-    stealth:strip_stealth(MidA, CleanA),
-    ( combat:roll_hit(CleanA, T) ->
-        combat:calc_dmg(CleanA, Sp, BaseDmg),
-        total_armor(T, Arm),
-        NetDmg is max(1, BaseDmg - Arm),
-        combat:roll_crit(CleanA, IsCrit),
-        ( IsCrit == true -> Dmg is NetDmg * 2, Evt = cast_crit(A.id, Sp, TId, Dmg)
-        ; Dmg = NetDmg, Evt = cast(A.id, Sp, TId, Dmg) ),
-        combat:get_aff(Sp, Aff),
-        combat:apply_dmg(W, CleanA, T, Dmg, Aff, NW, Evts, Evt)
+cast_utility(invisibility, W, Id, A, _, NW, Evts) :-
+    stat(A, int, Int), stat(A, wis, Wis),
+    Power is floor(Int * 0.7) + floor(Wis * 0.3) + 10,
+    status:apply_aff(A, aff{type: hidden, val: Power, dur: 10}, NA, Evts),
+    world:update(W, NA, NW).
+
+cast_utility(light_spell, W, Id, A, _, NW, Evts) :-
+    room(A, RId), world:node(W, RId, N),
+    ( member(dark, N.props) ->
+        select(dark, N.props, Rest), NProps = [light_orb(30), originally_dark | Rest],
+        Evts = [room_lit_magically(RId)]
     ;
-        world:update(W, CleanA, NW),
-        Evts = [cast_miss(A.id, Sp, TId)]
+        \+ member(light_orb(_), N.props), NProps = [light_orb(30) | N.props],
+        Evts = [room_illuminated_magically(RId)]
+    ),
+    NN = N.put(props, NProps),
+    world:update(W, A, W1), zone:update_room(W1, NN, NW).
+
+cast_utility(dispel, W, Id, A, TId, NW, [dispelled(Id, TId)]) :-
+    world:entity(W, TId, T), alive(T), room(A, RId), room(T, RId),
+    affs(T, Affs),
+    findall(aff{type: Type, val: V, dur: D}, (
+        member(aff{type: Type, val: V, dur: D}, Affs),
+        \+ member(Type, [plague, fever, blight, poison, burn, bleed, bloodline_curse, stun, freeze])
+    ), PosAffs),
+    world:update(W, A, W1),
+    world:update(W1, T.put(affs, PosAffs), NW).
+
+cast_utility(identify_spell, W, Id, A, ItemId, NW, [identified(Id, ItemId, NItem.name)]) :-
+    atom(ItemId), inv(A, Inv),
+    select(Item, Inv, Inv1), is_dict(Item, item), Item.id == ItemId,
+    get_dict(props, Item, Props), member(unidentified, Props),
+    select(unidentified, Props, RestProps),
+    NItem = Item.put(props, RestProps),
+    world:update(W, A.put(inv, [NItem|Inv1]), NW).
+
+cast_utility(remove_curse, W, Id, A, ItemId, NW, [uncursed(Id, ItemId, NItem.name)]) :-
+    atom(ItemId), inv(A, Inv),
+    select(Item, Inv, Inv1), is_dict(Item, item), Item.id == ItemId,
+    get_dict(props, Item, Props), member(cursed, Props),
+    select(cursed, Props, RestProps),
+    NItem = Item.put(props, RestProps),
+    world:update(W, A.put(inv, [NItem|Inv1]), NW).
+
+cast_utility(remove_curse, W, Id, A, ItemId, NW, [uncursed(Id, ItemId, NItem.name)]) :-
+    atom(ItemId), equip(A, Eq), dict_pairs(Eq, _, Pairs),
+    member(Slot-Item, Pairs), is_dict(Item, item), Item.id == ItemId,
+    get_dict(props, Item, Props), member(cursed, Props), !,
+    select(cursed, Props, RestProps),
+    NItem = Item.put(props, RestProps),
+    NEq = Eq.put(Slot, NItem),
+    world:update(W, A.put(equip, NEq), NW).
+
+cast_utility(banish, W, Id, A, TId, NW, [banished(TId, VoidId)]) :-
+    world:entity(W, TId, T), alive(T), room(A, RId), room(T, RId),
+    stat(A, int, Int), stat(A, wis, Wis),
+    stat(T, int, TInt), stat(T, wis, TWis), stat(T, con, TCon),
+    random_between(1, 20, Roll),
+    Score is Roll + floor(Int * 0.5) + floor(Wis * 0.5),
+    Target is 10 + floor(TInt * 0.3) + floor(TWis * 0.3) + floor(TCon * 0.4),
+    ( Score >= Target ->
+        ritual:ensure_void_prison(W, W1),
+        VoidId = void_prison,
+        world:update(W1, T.put(room, VoidId).put(state, normal).put(climb_state, false), NW)
+    ;
+        NW = W
     ).
 
-cast_nature(healing, W, A, Sp, TId, NW, [healed(AId, TId, Amt) | AffEvts]) :-
-    AId = A.id,
-    world:entity(W, TId, T),
-    alive(T),
-    room(A, RId), room(T, RId),
-    combat:calc_dmg(A, Sp, Amt),
-    hp(T, Hp), get_dict(max_hp, T, MaxHp),
-    NHp is min(MaxHp, Hp + Amt),
-    hp(T, NHp, T1),
-    combat:get_aff(Sp, Aff),
-    status:apply_aff(T1, Aff, NT, AffEvts),
-    world:update(W, A, TW),
-    world:update(TW, NT, NW).
-
-cast_nature(buff, W, A, Sp, TId, NW, AffEvts) :-
-    world:entity(W, TId, T),
-    alive(T),
-    room(A, RId), room(T, RId),
-    combat:get_aff(Sp, Aff),
-    status:apply_aff(T, Aff, NT, AffEvts),
-    world:update(W, A, TW),
-    world:update(TW, NT, NW).
-
-cast_nature(necromancy, W, A, Sp, _, NW, [summoned(AId, MinionId)]) :-
-    AId = A.id,
-    room(A, RId),
-    random_between(10000, 99999, Rnd),
-    format(atom(MinionId), 'skeleton_~w', [Rnd]),
-    Minion = mob{
-        id: MinionId,
-        tag: skeleton,
-        fac: AId,
-        room: RId,
-        hp: 30,
-        max_hp: 30,
-        str: 10,
-        dex: 8,
-        int: 1,
-        props: [undead]
-    },
-    world:add(W, mob, Minion, TW),
-    world:update(TW, A, NW).
-
-cast_nature(cataclysm, W, A, Sp, _, NW, [cataclysm(AId, Sp) | AllEvts]) :-
-    AId = A.id,
-    room(A, RId),
-    world:room_entities(W, RId, Ents),
-    combat:get_aff(Sp, Aff),
-    select(A, Ents, Targets),
-    apply_cataclysm(W, A, Sp, Targets, Aff, NW, AllEvts).
-
-apply_cataclysm(W, _, _, [], _, W, []).
-apply_cataclysm(W, A, Sp, [T|Ts], Aff, NW, AllEvts) :-
-    ( (is_dict(T, plyr) ; is_dict(T, mob)), alive(T) ->
-        combat:calc_dmg(A, Sp, BaseDmg),
-        total_armor(T, Arm),
-        Dmg is max(1, BaseDmg - Arm),
-        HitEvt = cast(A.id, Sp, T.id, Dmg),
-        combat:apply_dmg(W, A, T, Dmg, Aff, TW, Evts, HitEvt),
-        world:entity(TW, A.id, NA),
-        apply_cataclysm(TW, NA, Sp, Ts, Aff, NW, RestEvts),
-        append(Evts, RestEvts, AllEvts)
-    ;
-        apply_cataclysm(W, A, Sp, Ts, Aff, NW, AllEvts)
-    ).
+cast_utility(planar_gate, W, Id, A, _, NW, [rift_opened(RId, void_prison)]) :-
+    room(A, RId), world:node(W, RId, N),
+    ritual:ensure_void_prison(W, W1),
+    NN = N.put(exits, N.exits.put(rift, void_prison)),
+    zone:update_room(W1, NN, NW).

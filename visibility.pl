@@ -16,6 +16,7 @@ can_see(W, A, RId) :-
     world:node(W, RId, N),
     ( \+ member(dark, N.props) -> true
     ; member(campfire(_), N.props) -> true
+    ; member(light_orb(_), N.props) -> true
     ; member(brazier_lit, N.props) -> true
     ; props(A, P), member(night_vision, P) -> true
     ; inv(A, Inv), member(stack{tag: lit_torch, qty: _}, Inv) -> true

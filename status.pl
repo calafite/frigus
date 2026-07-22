@@ -8,6 +8,13 @@
 :- use_module(library(random)).
 :- use_module(library(lists)).
 
+get_val(K, E, D, V) :- get_dict(K, E, V), !.
+get_val(_, _, D, D).
+
+find_square(W, SqId) :-
+    findall(R.id, (world:db_node(R.id, R), member(square, R.props)), Cands),
+    ( Cands = [SqId|_] -> true ; SqId = temple ).
+
 can_act(E) :-
     affs(E, A),
     \+ member(aff{type: stun, dur: _, val: _}, A),
@@ -38,17 +45,28 @@ step_tick(W, Id, NW, Evts) :-
     ( is_dict(E, plyr) ->
         survival:tick_srv(W, Id, E, E1, SEvts)
     ; E1 = E, SEvts = [] ),
-    affs(E1, A),
-    tick_affs(E1, A, NA, Dmg, TEvts),
-    hp(E1, Hp),
-    props(E1, P),
+    ( get_dict(jail_time, E1, JT), JT > 0 ->
+        NJT is JT - 1,
+        ( NJT == 0 ->
+            find_square(W, SqId),
+            E_Jail = E1.put(jail_time, 0).put(room, SqId).put(bounty, 0).put(fac, citizen),
+            JEvt = [released_from_jail(Id, SqId)]
+        ;
+            E_Jail = E1.put(jail_time, NJT),
+            JEvt = [jail_time_decay(Id, NJT)]
+        )
+    ; E_Jail = E1, JEvt = [] ),
+    affs(E_Jail, A),
+    tick_affs(E_Jail, A, NA, Dmg, TEvts),
+    hp(E_Jail, Hp),
+    props(E_Jail, P),
     ( member(regen, P) ->
-        get_dict(max_hp, E1, MaxHp),
+        get_dict(max_hp, E_Jail, MaxHp),
         Regen is floor(MaxHp * 0.1),
         TmpHp is min(MaxHp, Hp + Regen)
     ; TmpHp = Hp ),
-    room(E1, RId), world:node(W, RId, N),
-    ( member(burning(I), N.props), \+ is_immune(E1, burn) ->
+    room(E_Jail, RId), world:node(W, RId, N),
+    ( member(burning(I), N.props), \+ is_immune(E_Jail, burn) ->
         FDmg is I * 4,
         NHp is max(0, TmpHp - FDmg - Dmg),
         FEvt = [fire_burn(Id, FDmg)]
@@ -56,18 +74,20 @@ step_tick(W, Id, NW, Evts) :-
         NHp is max(0, TmpHp - Dmg),
         FEvt = []
     ),
-    hp(E1, NHp, E2),
+    hp(E_Jail, NHp, E2),
     affs(E2, NA, E3),
     cds(E3, Cds),
     dec_cds(Cds, NCds),
     cds(E3, NCds, NE),
     ( NHp =:= 0 ->
         append([dead(Id)|TEvts], SEvts, AllEvts1),
-        append(AllEvts1, FEvt, AllEvts),
+        append(AllEvts1, FEvt, AllEvts2),
+        append(AllEvts2, JEvt, AllEvts),
         Evts = AllEvts,
         world:remove(W, Id, NW)
     ; append(TEvts, SEvts, TmpEvts),
-      append(TmpEvts, FEvt, Evts),
+      append(TmpEvts, FEvt, TmpEvts2),
+      append(TmpEvts2, JEvt, Evts),
       world:update(W, NE, NW) ).
 
 dec_cds(Cds, NCds) :-

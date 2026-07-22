@@ -15,9 +15,10 @@ tick_simulation(W, NW, Evts) :-
     spread_diseases(W2, W3, Evts3),
     trigger_disasters(W3, W4, Evts4),
     tick_campfires(W4, W5, Evts5),
-    nature:tick_crops(W5, W6, Evts6),
-    economy:tick_economy(W6, NW, Evts7),
-    append([Evts1, Evts2, Evts3, Evts4, Evts5, Evts6, Evts7], Evts).
+    tick_light_orbs(W5, W6, Evts6),
+    nature:tick_crops(W6, W7, Evts7),
+    economy:tick_economy(W7, NW, Evts8),
+    append([Evts1, Evts2, Evts3, Evts4, Evts5, Evts6, Evts7, Evts8], Evts).
 
 update_room(W, R, NW) :-
     select(O, W.rooms, Rest), O.id == R.id, !,
@@ -241,4 +242,29 @@ do_campfires(W, [RId-T|Ts], NW, Evts) :-
     ),
     update_room(W, NR, W1),
     do_campfires(W1, Ts, NW, REvts),
+    append(Evt, REvts, Evts).
+
+tick_light_orbs(W, NW, Evts) :-
+    findall(RId-T, (world:db_node(_, R), member(light_orb(T), R.props)), Orbs),
+    do_light_orbs(W, Orbs, NW, Evts).
+
+do_light_orbs(W, [], W, []).
+do_light_orbs(W, [RId-T|Ts], NW, Evts) :-
+    world:node(W, RId, R),
+    NT is T - 1,
+    ( NT =:= 0 ->
+        select(light_orb(_), R.props, NProps),
+        ( member(originally_dark, R.props) ->
+            select(originally_dark, NProps, Rest),
+            NRProps = [dark|Rest]
+        ; NRProps = NProps ),
+        NR = R.put(props, NRProps),
+        Evt = [light_orb_dissipated(RId)]
+    ;
+        select(light_orb(_), R.props, Rest),
+        NR = R.put(props, [light_orb(NT)|Rest]),
+        Evt = []
+    ),
+    update_room(W, NR, W1),
+    do_light_orbs(W1, Ts, NW, REvts),
     append(Evt, REvts, Evts).

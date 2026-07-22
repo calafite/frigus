@@ -58,9 +58,13 @@ mod_supply(RId, ItemTag, Delta, NSup) :-
     retractall(db_market_supply(RId, ItemTag, _)),
     assertz(db_market_supply(RId, ItemTag, NSup)).
 
-tick_economy(_, db, Evts) :-
+tick_economy(W, NW, Evts) :-
     findall(RId-Item-Sup, db_market_supply(RId, Item, Sup), Supps),
-    decay_supplies(Supps, Evts).
+    decay_supplies(Supps, Evts1),
+    findall(MId, (world:db_entity(mob, MId, M), member(merchant, M.props)), MIds),
+    decay_merchants(W, MIds, W1, Evts2),
+    NW = W1,
+    append(Evts1, Evts2, Evts).
 
 decay_supplies([], []).
 decay_supplies([RId-Item-Sup|T], Evts) :-
@@ -79,4 +83,23 @@ decay_supplies([RId-Item-Sup|T], Evts) :-
         Evt = []
     ),
     decay_supplies(T, REvts),
+    append(Evt, REvts, Evts).
+
+decay_merchants(W, [], W, []).
+decay_merchants(W, [MId|T], NW, Evts) :-
+    world:entity(W, MId, M),
+    inv(M, Inv),
+    ( select(stack{tag: gold, qty: G}, Inv, Rest) ->
+        ( G < 500 ->
+            NG is G + 10, NInv = [stack{tag: gold, qty: NG}|Rest], Evt = [merchant_restocked_gold(MId)]
+        ; G > 500 ->
+            NG is G - 10, NInv = [stack{tag: gold, qty: NG}|Rest], Evt = []
+        ;
+            NInv = Inv, Evt = []
+        )
+    ;
+        NInv = [stack{tag: gold, qty: 10}|Inv], Evt = [merchant_restocked_gold(MId)]
+    ),
+    world:update(W, M.put(inv, NInv), W1),
+    decay_merchants(W1, T, NW, REvts),
     append(Evt, REvts, Evts).

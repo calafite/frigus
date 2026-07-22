@@ -28,10 +28,16 @@
 :- use_module(build).
 :- use_module(alchemy).
 :- use_module(quest_gen).
+:- use_module(ritual).
 
 step(W, Id, move(Dir), NW, Evts) :- step_move(W, Id, Dir, NW, Evts).
 step(W, Id, kill(TId), NW, Evts) :- step_kill(W, Id, TId, NW, Evts).
-step(W, Id, cast(Sp, TId), NW, Evts) :- step_cast(W, Id, Sp, TId, NW, Evts).
+step(W, Id, cast(Sp, TId), NW, Evts) :-
+    ( cfg_magic:is_utility_spell(Sp) ->
+        magic:step_cast_utility(W, Id, Sp, TId, NW, Evts)
+    ;
+        combat:step_cast(W, Id, Sp, TId, NW, Evts)
+    ).
 step(W, Id, loot(IId), NW, Evts) :- step_loot(W, Id, IId, NW, Evts).
 step(W, Id, equip(Tag), NW, Evts) :- step_equip(W, Id, Tag, NW, Evts).
 step(W, Id, unequip(Slot), NW, Evts) :- step_unequip(W, Id, Slot, NW, Evts).
@@ -96,6 +102,8 @@ step(W, Id, build(StructTag), NW, Evts) :- build:step_build(W, Id, StructTag, NW
 step(W, Id, demolish(Prop), NW, Evts) :- build:step_demolish(W, Id, Prop, NW, Evts).
 step(W, Id, brew(Ingreds), NW, Evts) :- alchemy:step_brew(W, Id, Ingreds, NW, Evts).
 step(W, Id, ask_quest(NpcId), NW, Evts) :- quest_gen:step_ask_quest(W, Id, NpcId, NW, Evts).
+step(W, Id, disguise, NW, Evts) :- stealth:step_disguise(W, Id, NW, Evts).
+step(W, Id, ritual(Type), NW, Evts) :- ritual:step_ritual(W, Id, Type, NW, Evts).
 
 step(W, Id, load_state(State), db, [state_loaded]) :- !,
     world:load_db(State).
@@ -202,6 +210,7 @@ to_act(D, ask_quest(NpcId)) :- D.type == "ask_quest", atom_string(NpcId, D.targe
 to_act(D, load_state(State)) :- D.type == "load_state", State = D.state.
 to_act(D, dump_state) :- D.type == "dump_state".
 to_act(D, clear_state) :- D.type == "clear_state".
+to_act(D, ritual(Type)) :- D.type == "ritual", atom_string(Type, D.ritual).
 
 get_ingreds([], []).
 get_ingreds([H|T], [Str|Rest]) :- atom_string(Str, H), get_ingreds(T, Rest).

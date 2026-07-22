@@ -1,214 +1,251 @@
-:- module(cfg_item, [
-    slot/2, weight/2, consumable/2,
-    val/2, rarity/2, armor_val/2, soulbound/1
+:- module(cfg_combat, [
+    wpn_dmg/2, ar_pen/2, reach/2,
+    inflicts/4, req/3, scale/3,
+    weakness/3, resist/3, immune/2,
+    shield_block/3, physical_type/1
 ]).
 
-slot(fists, wpn).
-slot(sword, wpn).
-slot(poison_dagger, wpn).
-slot(staff, wpn).
-slot(dagger, wpn).
-slot(greatsword, wpn).
-slot(battleaxe, wpn).
-slot(longbow, wpn).
-slot(shortbow, wpn).
-slot(crossbow, wpn).
-slot(magic_wand, wpn).
-slot(wooden_club, wpn).
-slot(bronze_dagger, wpn).
-slot(bronze_sword, wpn).
-slot(iron_mace, wpn).
-slot(iron_spear, wpn).
-slot(steel_claymore, wpn).
-slot(steel_halberd, wpn).
-slot(composite_bow, wpn).
-slot(excalibur, wpn).
-slot(shadowfang, wpn).
-slot(gungnir, wpn).
-slot(mjolnir, wpn).
-slot(solaris, wpn).
+physical_type(slash).
+physical_type(pierce).
+physical_type(blunt).
 
-slot(wooden_shield, shield).
-slot(iron_shield, shield).
-slot(steel_shield, shield).
-slot(tower_shield, shield).
-slot(aegis, shield).
+wpn_dmg(fists, [dmg(blunt, 3)]).
+wpn_dmg(staff, [dmg(blunt, 5)]).
+wpn_dmg(sword, [dmg(slash, 8), dmg(pierce, 2)]).
+wpn_dmg(dagger, [dmg(pierce, 5)]).
+wpn_dmg(greatsword, [dmg(slash, 18)]).
+wpn_dmg(battleaxe, [dmg(slash, 14)]).
+wpn_dmg(longbow, [dmg(pierce, 11)]).
+wpn_dmg(magic_wand, [dmg(magic, 4)]).
+wpn_dmg(wooden_club, [dmg(blunt, 4)]).
+wpn_dmg(bronze_dagger, [dmg(pierce, 5)]).
+wpn_dmg(bronze_sword, [dmg(slash, 6), dmg(pierce, 1)]).
+wpn_dmg(iron_mace, [dmg(blunt, 10)]).
+wpn_dmg(iron_spear, [dmg(pierce, 9)]).
+wpn_dmg(steel_claymore, [dmg(slash, 15)]).
+wpn_dmg(steel_halberd, [dmg(slash, 12), dmg(pierce, 4)]).
+wpn_dmg(composite_bow, [dmg(pierce, 12)]).
+wpn_dmg(excalibur, [dmg(slash, 15), dmg(holy, 10)]).
+wpn_dmg(shadowfang, [dmg(pierce, 10), dmg(dark, 10)]).
+wpn_dmg(gungnir, [dmg(pierce, 14), dmg(lightning, 10)]).
+wpn_dmg(mjolnir, [dmg(blunt, 20), dmg(lightning, 20)]).
+wpn_dmg(solaris, [dmg(slash, 15), dmg(fire, 20)]).
 
-slot(rags, body).
-slot(tunic, body).
-slot(gambeson, body).
-slot(leather_vest, body).
-slot(leather_armor, body).
-slot(studded_leather, body).
-slot(brigandine, body).
-slot(chainmail, body).
-slot(scale_mail, body).
-slot(half_plate, body).
-slot(plate_mail, body).
-slot(robes, body).
-slot(bone_armor, body).
+wpn_dmg(fireball, [dmg(fire, 12)]).
+wpn_dmg(iceblast, [dmg(ice, 8)]).
+wpn_dmg(bash, [dmg(blunt, 5)]).
+wpn_dmg(poison_dagger, [dmg(pierce, 4), dmg(poison, 2)]).
+wpn_dmg(mend, [dmg(holy, 0)]).
+wpn_dmg(rejuvenate, [dmg(nature, 0)]).
+wpn_dmg(meteor_storm, [dmg(fire, 30), dmg(blunt, 20)]).
+wpn_dmg(judgment, [dmg(holy, 40)]).
+wpn_dmg(fireblast, [dmg(fire, 22)]).
+wpn_dmg(holy_light, [dmg(holy, 20)]).
+wpn_dmg(earthquake, [dmg(blunt, 35)]).
+wpn_dmg(chain_lightning, [dmg(lightning, 16)]).
+wpn_dmg(bloodline_curse, [dmg(dark, 15)]).
+wpn_dmg(fire_breath, [dmg(fire, 40)]).
 
-slot(_, none).
+wpn_dmg(wolf, [dmg(slash, 4), dmg(pierce, 2)]).
+wpn_dmg(bear, [dmg(slash, 8), dmg(blunt, 4)]).
+wpn_dmg(giant_spider, [dmg(pierce, 4), dmg(poison, 4)]).
+wpn_dmg(shadow_panther, [dmg(slash, 8), dmg(dark, 4)]).
+wpn_dmg(griffin, [dmg(slash, 10), dmg(pierce, 6)]).
+wpn_dmg(dragon, [dmg(slash, 25), dmg(fire, 25)]).
+wpn_dmg(skeleton, [dmg(blunt, 4), dmg(slash, 2)]).
+wpn_dmg(zombie, [dmg(blunt, 6)]).
+wpn_dmg(wraith, [dmg(dark, 10), dmg(ice, 4)]).
+wpn_dmg(vampire, [dmg(pierce, 8), dmg(dark, 8)]).
+wpn_dmg(demon, [dmg(slash, 12), dmg(fire, 8)]).
+wpn_dmg(imp, [dmg(pierce, 3), dmg(fire, 3)]).
+wpn_dmg(golem, [dmg(blunt, 15)]).
+wpn_dmg(slime, [dmg(blunt, 2), dmg(poison, 2)]).
+wpn_dmg(basilisk, [dmg(pierce, 8), dmg(poison, 8)]).
 
-weight(gold, 0).
-weight(fists, 0).
-weight(sword, 4).
-weight(poison_dagger, 2).
-weight(staff, 3).
-weight(dagger, 1).
-weight(greatsword, 12).
-weight(battleaxe, 8).
-weight(longbow, 3).
-weight(shortbow, 2).
-weight(crossbow, 6).
-weight(magic_wand, 1).
-weight(wooden_club, 4).
-weight(bronze_dagger, 2).
-weight(bronze_sword, 5).
-weight(iron_mace, 7).
-weight(iron_spear, 6).
-weight(steel_claymore, 14).
-weight(steel_halberd, 12).
-weight(composite_bow, 4).
-weight(excalibur, 6).
-weight(shadowfang, 2).
-weight(gungnir, 7).
-weight(mjolnir, 20).
-weight(solaris, 8).
+ar_pen(iron_mace, 0.3).
+ar_pen(mjolnir, 0.5).
+ar_pen(dagger, 0.2).
+ar_pen(bronze_dagger, 0.2).
+ar_pen(shadowfang, 0.4).
+ar_pen(steel_halberd, 0.2).
+ar_pen(greatsword, 0.1).
+ar_pen(battleaxe, 0.1).
+ar_pen(wooden_club, 0.1).
+ar_pen(dragon, 0.4).
+ar_pen(_, 0.0).
 
-weight(wooden_shield, 5).
-weight(iron_shield, 12).
-weight(steel_shield, 15).
-weight(tower_shield, 25).
-weight(aegis, 20).
+reach(longbow, 10).
+reach(composite_bow, 12).
+reach(shortbow, 8).
+reach(crossbow, 10).
+reach(iron_spear, 2).
+reach(steel_halberd, 2).
+reach(pike, 3).
+reach(glaive, 2).
+reach(gungnir, 3).
+reach(magic_wand, 5).
+reach(staff, 2).
+reach(fireball, 15).
+reach(iceblast, 10).
+reach(meteor_storm, 20).
+reach(chain_lightning, 15).
+reach(fireblast, 12).
+reach(bloodline_curse, 15).
+reach(holy_light, 15).
+reach(fire_breath, 10).
+reach(dragon, 3).
+reach(_, 1).
 
-weight(rags, 1).
-weight(tunic, 2).
-weight(gambeson, 4).
-weight(leather_vest, 5).
-weight(leather_armor, 8).
-weight(studded_leather, 10).
-weight(brigandine, 15).
-weight(chainmail, 20).
-weight(scale_mail, 25).
-weight(half_plate, 35).
-weight(plate_mail, 50).
-weight(robes, 3).
-weight(bone_armor, 12).
+shield_block(wooden_shield, 15, 5).
+shield_block(iron_shield, 20, 10).
+shield_block(steel_shield, 25, 15).
+shield_block(tower_shield, 35, 25).
+shield_block(aegis, 40, 40).
+shield_block(_, 0, 0).
 
-weight(health_potion, 1).
-weight(mana_potion, 1).
-weight(elixir_of_life, 1).
-weight(potion_of_haste, 1).
-weight(potion_of_stoneskin, 1).
-weight(deadly_poison, 1).
+weakness(skeleton, blunt, 2.0).
+weakness(skeleton, holy, 2.0).
+weakness(zombie, fire, 1.5).
+weakness(zombie, slash, 1.5).
+weakness(zombie, holy, 2.0).
+weakness(wraith, holy, 2.0).
+weakness(wraith, magic, 1.5).
+weakness(vampire, holy, 2.0).
+weakness(vampire, fire, 1.5).
+weakness(demon, holy, 2.0).
+weakness(demon, ice, 1.5).
+weakness(imp, holy, 1.5).
+weakness(imp, ice, 1.5).
+weakness(golem, blunt, 1.5).
+weakness(golem, magic, 1.5).
+weakness(slime, fire, 2.0).
+weakness(slime, ice, 2.0).
+weakness(giant_spider, fire, 1.5).
+weakness(ent, fire, 2.0).
+weakness(dryad, fire, 1.5).
+weakness(dryad, dark, 1.5).
+weakness(angel, dark, 2.0).
+weakness(angel, void, 1.5).
+weakness(ice_wolf, fire, 2.0).
+weakness(dragon, ice, 1.5).
+weakness(_, _, 1.0).
 
-weight(raw_meat, 2).
-weight(raw_fish, 1).
-weight(apple, 1).
-weight(bread, 1).
-weight(cooked_meat, 2).
-weight(cooked_fish, 1).
+resist(skeleton, pierce, 0.5).
+resist(skeleton, poison, 0.0).
+resist(zombie, blunt, 0.5).
+resist(zombie, poison, 0.0).
+resist(wraith, phys, 0.1).
+resist(wraith, poison, 0.0).
+resist(vampire, dark, 0.5).
+resist(vampire, poison, 0.5).
+resist(demon, fire, 0.2).
+resist(demon, dark, 0.5).
+resist(imp, fire, 0.0).
+resist(golem, slash, 0.2).
+resist(golem, pierce, 0.2).
+resist(golem, poison, 0.0).
+resist(slime, phys, 0.5).
+resist(slime, poison, 0.0).
+resist(dragon, magic, 0.3).
+resist(dragon, dark, 0.5).
+resist(dragon, holy, 0.5).
+resist(shadow_panther, dark, 0.2).
+resist(angel, holy, 0.0).
+resist(ice_wolf, ice, 0.0).
+resist(_, _, 1.0).
 
-weight(iron_ore, 4).
-weight(gold_ore, 4).
-weight(silver_ore, 4).
-weight(copper_ore, 4).
-weight(coal, 2).
-weight(timber, 5).
-weight(iron_ingot, 3).
-weight(gold_ingot, 3).
-weight(silver_ingot, 3).
+immune(skeleton, poison).
+immune(zombie, poison).
+immune(wraith, poison).
+immune(golem, poison).
+immune(slime, poison).
+immune(demon, fire).
+immune(imp, fire).
+immune(dragon, fire).
+immune(angel, holy).
+immune(ice_wolf, ice).
+immune(fire_sprite, fire).
+immune(salamander, fire).
+immune(_, none).
 
-weight(wolf_pelt, 3).
-weight(bear_pelt, 6).
-weight(dragon_scale, 10).
-weight(spider_silk, 1).
-weight(shadow_essence, 0).
-weight(holy_water, 1).
-weight(_, 1).
+inflicts(poison_dagger, poison, 4, 3).
+inflicts(haste, haste, 3, 25).
+inflicts(stoneskin, buff, 5, 5).
+inflicts(meteor_storm, burn, 5, 10).
+inflicts(fireblast, burn, 4, 8).
+inflicts(giant_spider, poison, 3, 4).
+inflicts(snake, poison, 2, 2).
+inflicts(shadowfang, poison, 5, 5).
+inflicts(solaris, burn, 4, 12).
+inflicts(bloodline_curse, bloodline_curse, 10, 8).
+inflicts(fire_breath, burn, 3, 10).
+inflicts(_, none, 0, 0).
 
-val(gold, 1).
-val(sword, 25).
-val(dagger, 10).
-val(greatsword, 60).
-val(longbow, 35).
-val(magic_wand, 80).
-val(iron_mace, 40).
-val(steel_claymore, 120).
-val(excalibur, 5000).
-val(mjolnir, 6000).
+req(sword, str, 10).
+req(staff, int, 10).
+req(fireball, int, 15).
+req(mend, wis, 10).
+req(rejuvenate, wis, 12).
+req(meteor_storm, int, 30).
+req(judgment, wis, 25).
+req(greatsword, str, 25).
+req(battleaxe, str, 18).
+req(longbow, dex, 15).
+req(dagger, dex, 8).
+req(plate_mail, con, 22).
+req(tower_shield, con, 20).
+req(leather_armor, dex, 12).
+req(fireblast, int, 24).
+req(earthquake, wis, 28).
+req(chain_lightning, int, 18).
+req(wooden_club, str, 8).
+req(bronze_dagger, dex, 8).
+req(bronze_sword, str, 10).
+req(iron_mace, str, 12).
+req(iron_spear, dex, 10).
+req(steel_claymore, str, 18).
+req(steel_halberd, str, 16).
+req(composite_bow, dex, 14).
+req(excalibur, str, 25).
+req(shadowfang, dex, 25).
+req(gungnir, dex, 24).
+req(mjolnir, str, 40).
+req(solaris, int, 40).
+req(bloodline_curse, int, 35).
+req(fire_breath, con, 10).
+req(_, _, 0).
 
-val(wooden_shield, 15).
-val(iron_shield, 45).
-val(tower_shield, 150).
-val(aegis, 4000).
-
-val(leather_armor, 30).
-val(chainmail, 100).
-val(plate_mail, 400).
-val(robes, 20).
-
-val(health_potion, 15).
-val(mana_potion, 20).
-val(elixir_of_life, 250).
-val(deadly_poison, 100).
-
-val(raw_meat, 3).
-val(cooked_meat, 8).
-val(apple, 1).
-val(bread, 2).
-
-val(iron_ore, 5).
-val(gold_ore, 25).
-val(timber, 2).
-val(iron_ingot, 15).
-val(gold_ingot, 80).
-val(dragon_scale, 300).
-val(shadow_essence, 150).
-val(_, 1).
-
-rarity(excalibur, 5).
-rarity(mjolnir, 5).
-rarity(solaris, 5).
-rarity(gungnir, 5).
-rarity(aegis, 5).
-rarity(elixir_of_life, 4).
-rarity(dragon_scale, 4).
-rarity(shadow_essence, 4).
-rarity(plate_mail, 3).
-rarity(steel_claymore, 3).
-rarity(gold_ingot, 3).
-rarity(chainmail, 2).
-rarity(iron_mace, 2).
-rarity(health_potion, 1).
-rarity(_, 0).
-
-armor_val(rags, 1).
-armor_val(tunic, 2).
-armor_val(gambeson, 4).
-armor_val(leather_vest, 5).
-armor_val(leather_armor, 8).
-armor_val(studded_leather, 10).
-armor_val(brigandine, 14).
-armor_val(chainmail, 18).
-armor_val(scale_mail, 22).
-armor_val(half_plate, 28).
-armor_val(plate_mail, 35).
-armor_val(robes, 3).
-armor_val(bone_armor, 12).
-armor_val(_, 0).
-
-consumable(health_potion, heal(30)).
-consumable(greater_health_potion, heal(80)).
-consumable(mana_potion, buff(mp_regen, 10, 5)).
-consumable(potion_of_haste, buff(haste, 0, 10)).
-consumable(potion_of_stoneskin, buff(body, 20, 15)).
-consumable(potion_of_invisibility, buff(hidden, 50, 10)).
-consumable(elixir_of_life, heal(9999)).
-
-soulbound(excalibur).
-soulbound(mjolnir).
-soulbound(solaris).
-soulbound(gungnir).
-soulbound(aegis).
+scale(sword, str, 1.2).
+scale(poison_dagger, dex, 1.5).
+scale(fists, str, 1.0).
+scale(staff, int, 1.2).
+scale(fireball, int, 1.5).
+scale(mend, wis, 1.5).
+scale(rejuvenate, wis, 1.2).
+scale(meteor_storm, int, 2.0).
+scale(judgment, wis, 1.8).
+scale(dagger, dex, 1.2).
+scale(greatsword, str, 1.8).
+scale(battleaxe, str, 1.6).
+scale(longbow, dex, 1.5).
+scale(magic_wand, int, 1.2).
+scale(fireblast, int, 1.8).
+scale(holy_light, wis, 1.5).
+scale(earthquake, wis, 2.2).
+scale(chain_lightning, int, 1.6).
+scale(wooden_club, str, 1.0).
+scale(bronze_dagger, dex, 1.1).
+scale(bronze_sword, str, 1.1).
+scale(iron_mace, str, 1.2).
+scale(iron_spear, dex, 1.2).
+scale(steel_claymore, str, 1.5).
+scale(steel_halberd, str, 1.4).
+scale(composite_bow, dex, 1.4).
+scale(excalibur, str, 2.0).
+scale(shadowfang, dex, 2.2).
+scale(gungnir, dex, 2.0).
+scale(mjolnir, str, 2.5).
+scale(solaris, int, 2.5).
+scale(bloodline_curse, int, 2.5).
+scale(fire_breath, con, 3.0).
+scale(_, str, 1.0).
