@@ -20,6 +20,8 @@
 :- use_module(survival).
 :- use_module(zone).
 :- use_module(cooking).
+:- use_module(nature).
+:- use_module(religion).
 
 step(W, Id, move(Dir), NW, Evts) :- step_move(W, Id, Dir, NW, Evts).
 step(W, Id, kill(TId), NW, Evts) :- step_kill(W, Id, TId, NW, Evts).
@@ -67,6 +69,14 @@ step(W, Id, pick(Dir), NW, Evts) :- zone:step_pick(W, Id, Dir, NW, Evts).
 step(W, Id, ignite, NW, Evts) :- interact:step_ignite(W, Id, NW, Evts).
 step(W, Id, cook(Output), NW, Evts) :- cooking:step_cook(W, Id, Output, NW, Evts).
 step(W, Id, poison(Food, Poison), NW, Evts) :- cooking:step_poison(W, Id, Food, Poison, NW, Evts).
+step(W, Id, till, NW, Evts) :- nature:step_till(W, Id, NW, Evts).
+step(W, Id, plant(Seed), NW, Evts) :- nature:step_plant(W, Id, Seed, NW, Evts).
+step(W, Id, harvest, NW, Evts) :- nature:step_harvest(W, Id, NW, Evts).
+step(W, Id, tame(TgtId), NW, Evts) :- nature:step_tame(W, Id, TgtId, NW, Evts).
+step(W, Id, pet_command(PetId, Cmd), NW, Evts) :- nature:step_command(W, Id, PetId, Cmd, NW, Evts).
+step(W, Id, pet_feed(PetId), NW, Evts) :- nature:step_feed(W, Id, PetId, NW, Evts).
+step(W, Id, pray, NW, Evts) :- religion:step_pray(W, Id, NW, Evts).
+step(W, Id, sacrifice(Item), NW, Evts) :- religion:step_sacrifice(W, Id, Item, NW, Evts).
 
 step(W, Id, look, W, [look(RId, Desc, Props, Exits, OIds, MIds, IData)]) :-
     world:entity(W, Id, A), room(A, RId), world:node(W, RId, Node),
@@ -94,16 +104,13 @@ to_act(D, disarm)    :- D.type == "disarm".
 to_act(D, craft(I))  :- D.type == "craft", atom_string(I, D.item).
 to_act(D, ai_tick)   :- D.type == "ai_tick".
 to_act(D, tick)      :- D.type == "tick".
-
 to_act(D, chat(C, M)) :- D.type == "chat", atom_string(C, D.chan), atom_string(M, D.msg).
 to_act(D, chat(whisper(T), M)) :- D.type == "whisper", atom_string(T, D.target), atom_string(M, D.msg).
-
 to_act(D, party(create)) :- D.type == "party_create".
 to_act(D, party(invite(T))) :- D.type == "party_invite", atom_string(T, D.target).
 to_act(D, party(join(P))) :- D.type == "party_join", atom_string(P, D.party).
 to_act(D, party(leave)) :- D.type == "party_leave".
 to_act(D, party(kick(T))) :- D.type == "party_kick", atom_string(T, D.target).
-
 to_act(D, guild(create(N))) :- D.type == "guild_create", atom_string(N, D.name).
 to_act(D, guild(invite(T))) :- D.type == "guild_invite", atom_string(T, D.target).
 to_act(D, guild(join(G))) :- D.type == "guild_join", atom_string(G, D.guild).
@@ -112,17 +119,14 @@ to_act(D, guild(kick(T))) :- D.type == "guild_kick", atom_string(T, D.target).
 to_act(D, guild(promote(T))) :- D.type == "guild_promote", atom_string(T, D.target).
 to_act(D, guild(stash_put(I, Q))) :- D.type == "guild_put", atom_string(I, D.item), Q = D.qty.
 to_act(D, guild(stash_take(I, Q))) :- D.type == "guild_take", atom_string(I, D.item), Q = D.qty.
-
 to_act(D, trade(req(T))) :- D.type == "trade_req", atom_string(T, D.target).
 to_act(D, trade(accept(TId))) :- D.type == "trade_accept", atom_string(TId, D.trade).
 to_act(D, trade(add(TId, I, Q))) :- D.type == "trade_add", atom_string(TId, D.trade), atom_string(I, D.item), Q = D.qty.
 to_act(D, trade(gold(TId, G))) :- D.type == "trade_gold", atom_string(TId, D.trade), G = D.qty.
 to_act(D, trade(ready(TId))) :- D.type == "trade_ready", atom_string(TId, D.trade).
 to_act(D, trade(cancel(TId))) :- D.type == "trade_cancel", atom_string(TId, D.trade).
-
 to_act(D, quest(accept(Q))) :- D.type == "quest_accept", atom_string(Q, D.quest).
 to_act(D, quest(turn_in(Q))) :- D.type == "quest_turn_in", atom_string(Q, D.quest).
-
 to_act(D, rest) :- D.type == "rest".
 to_act(D, sleep) :- D.type == "sleep".
 to_act(D, wake) :- D.type == "wake".
@@ -148,6 +152,18 @@ to_act(D, pick(Dir)) :- D.type == "pick", atom_string(Dir, D.dir).
 to_act(D, ignite) :- D.type == "ignite".
 to_act(D, cook(Output)) :- D.type == "cook", atom_string(Output, D.item).
 to_act(D, poison(Food, Poison)) :- D.type == "poison", atom_string(Food, D.item), atom_string(Poison, D.poison).
+to_act(D, till) :- D.type == "till".
+to_act(D, plant(Seed)) :- D.type == "plant", atom_string(Seed, D.seed).
+to_act(D, harvest) :- D.type == "harvest".
+to_act(D, tame(TgtId)) :- D.type == "tame", atom_string(TgtId, D.target).
+to_act(D, pet_command(PetId, Cmd)) :- D.type == "pet_command", atom_string(PetId, D.pet), cmd_parse(D.command, Cmd).
+to_act(D, pet_feed(PetId)) :- D.type == "pet_feed", atom_string(PetId, D.pet).
+to_act(D, pray) :- D.type == "pray".
+to_act(D, sacrifice(Item)) :- D.type == "sacrifice", atom_string(Item, D.item).
+
+cmd_parse("stay", stay).
+cmd_parse("follow", follow).
+cmd_parse(C, attack(Tgt)) :- sub_string(C, 0, 7, _, "attack "), sub_string(C, 7, _, 0, TgtS), atom_string(Tgt, TgtS).
 
 api_step(Req, Res) :-
     to_act(Req.action, Act),

@@ -6,14 +6,16 @@
 :- use_module(world).
 :- use_module(status).
 :- use_module(move).
+:- use_module(nature).
 
 tick_simulation(W, NW, Evts) :-
     spread_fire(W, W1, Evts1),
     apply_currents(W1, W2, Evts2),
     spread_diseases(W2, W3, Evts3),
     trigger_disasters(W3, W4, Evts4),
-    tick_campfires(W4, NW, Evts5),
-    append([Evts1, Evts2, Evts3, Evts4, Evts5], Evts).
+    tick_campfires(W4, W5, Evts5),
+    nature:tick_crops(W5, NW, Evts6),
+    append([Evts1, Evts2, Evts3, Evts4, Evts5, Evts6], Evts).
 
 update_room(W, R, NW) :-
     select(O, W.rooms, Rest), O.id == R.id, !,

@@ -16,9 +16,11 @@
 :- use_module(npc_life).
 :- use_module(social).
 :- use_module(ai_path).
+:- use_module(ai_pet).
 
 step_ai(W, Id, NW, Evts) :- world:entity(W, Id, M), \+ status:can_act(M), NW = W, Evts = [], !.
 step_ai(W, Id, NW, Evts) :- world:entity(W, Id, M), props(M, P), member(surrendered, P), NW = W, Evts = [], !.
+step_ai(W, Id, NW, Evts) :- world:entity(W, Id, M), get_dict(master, M, _), ai_pet:ai_pet_act(W, Id, NW, Evts), Evts \== [], !.
 step_ai(W, Id, NW, Evts) :- ai_arrest(W, Id, NW, Evts), !.
 step_ai(W, Id, NW, Evts) :- ai_surrender(W, Id, NW, Evts), !.
 step_ai(W, Id, NW, Evts) :- ai_flee(W, Id, NW, Evts), !.
