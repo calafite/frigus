@@ -31,10 +31,14 @@ check_objs(A, QS, [fetch(T, C)|Ts], NA) :-
     check_objs(A.put(inv, NInv), QS, Ts, NA).
 
 grant_rews(_, A, [], A, []).
-grant_rews(W, A, [xp(X)|Ts], NA, [xp(A.id, X)|Evts]) :-
-    prog:add_xp(A, X, TmpA, _), grant_rews(W, TmpA, Ts, NA, Evts).
+grant_rews(W, A, [xp(X)|Ts], NA, [xp(A.id, FinalX)|Evts]) :-
+    stat(A, wis, Wis), stat(A, int, Int), stat(A, luk, Luk),
+    FinalX is X + floor(X * (Wis * 0.02)) + floor(X * (Int * 0.01)) + floor(X * (Luk * 0.01)),
+    prog:add_xp(A, FinalX, TmpA, _), grant_rews(W, TmpA, Ts, NA, Evts).
 grant_rews(W, A, [gold(G)|Ts], NA, Evts) :-
-    inv(A, Inv), inv_add(Inv, gold, G, NInv),
+    stat(A, cha, Cha), stat(A, luk, Luk),
+    FinalG is G + floor(G * (Cha * 0.03)) + floor(G * (Luk * 0.02)),
+    inv(A, Inv), inv_add(Inv, gold, FinalG, NInv),
     grant_rews(W, A.put(inv, NInv), Ts, NA, Evts).
 grant_rews(W, A, [item(T, Q)|Ts], NA, Evts) :-
     inv(A, Inv), inv_add(Inv, T, Q, NInv),

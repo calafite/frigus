@@ -1,105 +1,141 @@
 :- module(cfg_mob, [
-    mob_xp/2,
-    loot_table/5,
-    aggression/2,
-    habitat/2
+    mob_xp/2, loot_table/5, aggression/2, habitat/2
 ]).
 
-mob_xp(goblin, 120).
-mob_xp(wolf, 150).
-mob_xp(basilisk, 400).
-mob_xp(phoenix, 600).
-mob_xp(shadow_panther, 300).
-mob_xp(bear, 250).
-mob_xp(rat, 30).
-mob_xp(giant_spider, 140).
-mob_xp(griffin, 350).
-mob_xp(boar, 80).
-mob_xp(deer, 45).
-mob_xp(chicken, 10).
-mob_xp(sheep, 20).
-mob_xp(cow, 30).
-mob_xp(horse, 60).
-mob_xp(cat, 10).
-mob_xp(fox, 35).
-mob_xp(snake, 50).
-mob_xp(goat, 30).
-mob_xp(_, 100).
+mob_xp(rat, 10).
+mob_xp(bat, 12).
+mob_xp(snake, 15).
+mob_xp(giant_spider, 35).
+mob_xp(wolf, 40).
+mob_xp(boar, 45).
+mob_xp(bear, 80).
+mob_xp(shadow_panther, 120).
+mob_xp(basilisk, 180).
+mob_xp(griffin, 250).
+mob_xp(dragon, 2000).
 
-loot_table(goblin, gold, 1.0, 5, 20).
-loot_table(goblin, potion, 0.4, 1, 2).
-loot_table(goblin, sword, 0.05, 1, 1).
-loot_table(orc, gold, 1.0, 15, 45).
-loot_table(orc, shield, 0.1, 1, 1).
-loot_table(slime, potion, 0.25, 1, 1).
-loot_table(bear, gold, 1.0, 10, 30).
-loot_table(bear, bear_pelt, 1.0, 1, 1).
-loot_table(rat, gold, 0.3, 1, 5).
-loot_table(giant_spider, spider_venom, 0.8, 1, 2).
-loot_table(griffin, gold, 1.0, 30, 80).
-loot_table(griffin, griffin_feather, 1.0, 1, 3).
-loot_table(boar, gold, 0.5, 1, 5).
+mob_xp(goblin, 25).
+mob_xp(orc, 60).
+mob_xp(bandit, 50).
+mob_xp(thief, 45).
+mob_xp(cultist, 70).
+mob_xp(dark_knight, 200).
+mob_xp(necromancer, 300).
+
+mob_xp(skeleton, 30).
+mob_xp(zombie, 35).
+mob_xp(ghoul, 50).
+mob_xp(wraith, 150).
+mob_xp(vampire, 400).
+mob_xp(lich, 1500).
+
+mob_xp(imp, 60).
+mob_xp(hellhound, 90).
+mob_xp(succubus, 180).
+mob_xp(demon, 500).
+mob_xp(balor, 2500).
+
+mob_xp(slime, 20).
+mob_xp(fire_sprite, 40).
+mob_xp(elemental, 100).
+mob_xp(golem, 250).
+
+mob_xp(citizen, 10).
+mob_xp(peasant, 10).
+mob_xp(merchant, 50).
+mob_xp(guard, 100).
+mob_xp(paladin, 250).
+mob_xp(priest, 80).
+mob_xp(_, 50).
+
+loot_table(rat, gold, 0.3, 1, 3).
+loot_table(bat, gold, 0.2, 1, 2).
+loot_table(snake, snake_skin, 0.5, 1, 1).
+loot_table(giant_spider, spider_venom, 0.6, 1, 2).
+loot_table(wolf, wolf_pelt, 0.8, 1, 1).
 loot_table(boar, pork, 1.0, 1, 2).
-loot_table(boar, leather, 0.7, 1, 1).
-loot_table(deer, venison, 1.0, 1, 2).
-loot_table(deer, leather, 1.0, 1, 1).
-loot_table(chicken, chicken_meat, 1.0, 1, 1).
-loot_table(chicken, feather, 1.0, 1, 3).
-loot_table(sheep, mutton, 1.0, 1, 1).
-loot_table(sheep, wool, 1.0, 1, 2).
-loot_table(cow, beef, 1.0, 2, 4).
-loot_table(cow, leather, 1.0, 1, 2).
-loot_table(horse, leather, 1.0, 1, 2).
-loot_table(fox, gold, 0.5, 5, 15).
-loot_table(snake, snake_skin, 1.0, 1, 1).
-loot_table(goat, mutton, 1.0, 1, 2).
+loot_table(bear, bear_pelt, 0.9, 1, 1).
+loot_table(shadow_panther, shadow_essence, 0.2, 1, 1).
+loot_table(basilisk, basilisk_scale, 0.7, 1, 3).
+loot_table(griffin, griffin_feather, 0.8, 1, 3).
+loot_table(dragon, dragon_scale, 1.0, 2, 5).
+loot_table(dragon, gold, 1.0, 500, 2000).
 
-aggression(dog, neutral).
-aggression(wolf, aggressive).
-aggression(basilisk, aggressive).
-aggression(phoenix, neutral).
-aggression(shadow_panther, aggressive).
-aggression(bear, aggressive).
+loot_table(goblin, gold, 0.8, 3, 12).
+loot_table(goblin, bronze_dagger, 0.1, 1, 1).
+loot_table(orc, gold, 0.9, 8, 25).
+loot_table(orc, iron_mace, 0.15, 1, 1).
+loot_table(bandit, gold, 1.0, 10, 40).
+loot_table(bandit, leather_armor, 0.1, 1, 1).
+loot_table(cultist, gold, 0.8, 15, 50).
+loot_table(cultist, mana_potion, 0.3, 1, 2).
+
+loot_table(skeleton, bone_armor, 0.05, 1, 1).
+loot_table(zombie, gold, 0.2, 1, 5).
+loot_table(wraith, shadow_essence, 0.5, 1, 2).
+loot_table(vampire, gold, 1.0, 100, 300).
+
+loot_table(imp, fire_lily, 0.2, 1, 1).
+loot_table(demon, gold, 1.0, 200, 600).
+loot_table(slime, health_potion, 0.2, 1, 1).
+loot_table(golem, iron_ore, 0.8, 2, 6).
+
+loot_table(merchant, gold, 1.0, 100, 500).
+loot_table(guard, iron_sword, 0.5, 1, 1).
+
 aggression(rat, neutral).
-aggression(giant_spider, aggressive).
-aggression(griffin, neutral).
-aggression(boar, aggressive).
-aggression(deer, neutral).
-aggression(chicken, neutral).
-aggression(sheep, neutral).
-aggression(cow, neutral).
-aggression(horse, neutral).
-aggression(cat, neutral).
-aggression(fox, neutral).
+aggression(bat, neutral).
 aggression(snake, aggressive).
-aggression(goat, neutral).
+aggression(giant_spider, aggressive).
+aggression(wolf, aggressive).
+aggression(boar, neutral).
+aggression(bear, aggressive).
+aggression(shadow_panther, aggressive).
+aggression(basilisk, aggressive).
+aggression(griffin, neutral).
+aggression(dragon, aggressive).
+
+aggression(goblin, aggressive).
+aggression(orc, aggressive).
+aggression(bandit, aggressive).
+aggression(thief, neutral).
+aggression(cultist, aggressive).
+
+aggression(skeleton, aggressive).
+aggression(zombie, aggressive).
+aggression(wraith, aggressive).
+aggression(vampire, aggressive).
+aggression(lich, aggressive).
+
+aggression(imp, aggressive).
+aggression(demon, aggressive).
+aggression(slime, aggressive).
+aggression(golem, neutral).
+
+aggression(citizen, neutral).
+aggression(peasant, neutral).
+aggression(merchant, neutral).
+aggression(guard, neutral).
 aggression(_, aggressive).
 
-habitat(dog, settlement).
-habitat(dog, forest).
+habitat(rat, sewer).
+habitat(giant_spider, cavern).
 habitat(wolf, forest).
-habitat(basilisk, cave).
-habitat(basilisk, swamp).
-habitat(phoenix, volcano).
-habitat(shadow_panther, cave).
 habitat(bear, forest).
-habitat(bear, cave).
-habitat(rat, swamp).
-habitat(rat, cave).
-habitat(giant_spider, forest).
-habitat(giant_spider, cave).
-habitat(griffin, peaks).
-habitat(griffin, forest).
-habitat(boar, forest).
-habitat(deer, forest).
-habitat(chicken, settlement).
-habitat(sheep, settlement).
-habitat(cow, settlement).
-habitat(horse, settlement).
-habitat(horse, forest).
-habitat(cat, settlement).
-habitat(fox, forest).
-habitat(snake, forest).
-habitat(snake, swamp).
-habitat(goat, peaks).
-habitat(_, _).
+habitat(shadow_panther, cavern).
+habitat(griffin, sky).
+habitat(dragon, volcano).
+habitat(goblin, cavern).
+habitat(orc, plains).
+habitat(bandit, forest).
+habitat(skeleton, crypt).
+habitat(zombie, crypt).
+habitat(wraith, tomb).
+habitat(vampire, keep).
+habitat(imp, inferno).
+habitat(demon, abyss).
+habitat(slime, sewer).
+habitat(citizen, city).
+habitat(merchant, market).
+habitat(guard, city).
+habitat(_, wilderness).

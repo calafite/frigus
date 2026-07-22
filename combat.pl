@@ -246,8 +246,8 @@ apply_dmg(W, A, T, Dmg, Aff, NW, [HitEvt | AffEvts], HitEvt) :-
     hp(T, THp), NTHp is THp - Dmg, hp(T, NTHp, NT1),
     status:apply_aff(NT1, Aff, NT2, BaseAffEvts),
     ( get_dict(tag, A, basilisk), alive(NT2) ->
-        random_between(1, 100, Roll),
-        ( Roll =< 30 -> status:apply_aff(NT2, aff{type: stun, val: 0, dur: 1}, NT, GazeEvts),
+        stat(A, luk, Luk), random_between(1, 100, Roll),
+        ( Roll =< 30 + floor(Luk * 0.2) -> status:apply_aff(NT2, aff{type: stun, val: 0, dur: 1}, NT, GazeEvts),
           append(BaseAffEvts, [gaze_stun(A.id, T.id) | GazeEvts], AffEvts)
         ; NT = NT2, AffEvts = BaseAffEvts )
     ; NT = NT2, AffEvts = BaseAffEvts ),
@@ -259,7 +259,7 @@ reward(W, A, mob{id: MId, tag: Tag} = M, NW, Evts) :-
         social:party_reward(W1, PId, A.room, Tag, Xp, W2, XpEvts)
     ; quest:update_kill(A, Tag, QA, QEvts), prog:add_xp(QA, Xp, NA, PEvts),
       world:update(W1, NA, W2), append(QEvts, PEvts, XpEvts) ),
-    drop:gen_drops(W2, M, NW, DropEvts), append(XpEvts, DropEvts, Evts).
+    drop:gen_drops(W2, A, M, NW, DropEvts), append(XpEvts, DropEvts, Evts).
 reward(W, A, plyr{id: PId} = NT, NW, [respawn(PId, SpawnRId) | Evts]) :-
     prog:rebirth_player(NT, RebornPlayer, SpawnRId),
     world:update(W, A, TW), world:update(TW, RebornPlayer, NW), Evts = [].

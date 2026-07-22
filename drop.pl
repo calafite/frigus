@@ -1,4 +1,4 @@
-:- module(drop, [gen_drops/4]).
+:- module(drop, [gen_drops/5]).
 
 :- use_module(library(random)).
 :- use_module(config).
@@ -7,13 +7,16 @@
 
 id_gen(Prefix, Id) :- random_between(1000000, 9999999, R), atomic_list_concat([Prefix, '_', R], Id).
 
-gen_drops(W, M, NW, Evts) :-
+gen_drops(W, A, M, NW, Evts) :-
     room(M, RId),
     Tag = M.tag,
-    findall(drop(ITag, Qty), (
-        config:loot_table(Tag, ITag, Chance, Min, Max),
+    stat(A, luk, Luk),
+    findall(drop(ITag, FinalQty), (
+        config:loot_table(Tag, ITag, BaseChance, Min, Max),
+        Chance is BaseChance + (Luk * 0.005),
         random(F), F =< Chance,
-        random_between(Min, Max, Qty)
+        random_between(Min, Max, BaseQty),
+        FinalQty is BaseQty + floor(Luk * 0.05)
     ), Drops),
     add_drops(W, RId, Drops, W1, DEvts),
     ( get_dict(props, M, Props), \+ member(no_corpse, Props) ->
