@@ -11,6 +11,8 @@
     quests/2, quests/3,
     altitude/2, altitude/3, climb_state/2, climb_state/3,
     stance/2, stance/3, mount/2, mount/3, torch_life/2, torch_life/3,
+    job/2, job/3, home/2, home/3, work/2, work/3,
+    act_state/2, act_state/3, mems/2, mems/3,
     inv_add/4, inv_rem/4, inv_wt/2, max_wt/2,
     allowed_race/2
 ]).
@@ -78,6 +80,26 @@ mount(E, V, E.put(mount, V)).
 torch_life(E, L) :- get_dict(torch_life, E, L), !.
 torch_life(_, 100).
 torch_life(E, V, E.put(torch_life, V)).
+
+job(E, J) :- get_dict(job, E, J), !.
+job(_, none).
+job(E, V, E.put(job, V)).
+
+home(E, H) :- get_dict(home, E, H), !.
+home(_, none).
+home(E, V, E.put(home, V)).
+
+work(E, W) :- get_dict(work, E, W), !.
+work(_, none).
+work(E, V, E.put(work, V)).
+
+act_state(E, S) :- get_dict(act_state, E, S), !.
+act_state(_, wander).
+act_state(E, V, E.put(act_state, V)).
+
+mems(E, M) :- get_dict(mems, E, M), !.
+mems(_, mems{}).
+mems(E, V, E.put(mems, V)).
 
 get_ceil(E, Stat, Val) :-
     ( race(E, demigod) -> Val = 9999

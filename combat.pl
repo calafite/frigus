@@ -15,6 +15,7 @@
 :- use_module(stealth).
 :- use_module(social).
 :- use_module(quest).
+:- use_module(npc_life).
 
 dynamic_enemy(A, T) :-
     fac(A, FA), fac(T, FT),
@@ -89,7 +90,8 @@ step_kill(W, AId, TId, NW, Evts) :-
         ; member(aff{type: hidden, val: _, dur: _}, AAffs) -> Dmg is Dmg2 * 3, Evt = backstab(AId, TId, Dmg)
         ; Dmg = Dmg2, ( IsCrit == true -> Evt = crit(AId, TId, Dmg) ; Evt = hit(AId, TId, Dmg) ) ),
         ( is_dict(CleanA, mob) -> get_aff(CleanA.tag, Aff) ; get_aff(Wpn, Aff) ),
-        apply_dmg(W, CleanA, T, Dmg, Aff, NW, Evts, Evt)
+        apply_dmg(W, CleanA, T, Dmg, Aff, W1, Evts, Evt),
+        ( is_dict(T, mob) -> npc_life:mod_mem(W1, TId, AId, attack, NW) ; NW = W1 )
     ; world:update(W, CleanA, NW), Evts = [miss(AId, TId)] ).
 
 step_cast(W, AId, Sp, TId, NW, Evts) :-
@@ -103,7 +105,8 @@ step_cast(W, AId, Sp, TId, NW, Evts) :-
         calc_dmg(W, FinalA, Sp, BaseDmg), total_armor(T, Arm), NetDmg is max(1, BaseDmg - Arm),
         roll_crit(FinalA, IsCrit),
         ( IsCrit == true -> Dmg is NetDmg * 2, Evt = cast_crit(AId, Sp, TId, Dmg) ; Dmg = NetDmg, Evt = cast(AId, Sp, TId, Dmg) ),
-        get_aff(Sp, Aff), apply_dmg(W, FinalA, T, Dmg, Aff, NW, Evts, Evt)
+        get_aff(Sp, Aff), apply_dmg(W, FinalA, T, Dmg, Aff, W1, Evts, Evt),
+        ( is_dict(T, mob) -> npc_life:mod_mem(W1, TId, AId, attack, NW) ; NW = W1 )
     ; world:update(W, FinalA, NW), Evts = [cast_miss(AId, Sp, TId)] ).
 
 apply_dmg(W, A, T, Dmg, _, NW, [HitEvt, reborn(TId) | REvts], HitEvt) :-

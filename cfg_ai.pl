@@ -1,4 +1,4 @@
-:- module(cfg_ai, [hate/2, role/2, mania/2]).
+:- module(cfg_ai, [hate/2, role/2, mania/2, courage/2, vocal/1, herd/1]).
 
 hate(orc, elf).
 hate(orc, dwarf).
@@ -81,3 +81,34 @@ mania(orc, cannibal).
 mania(demon, sadist).
 mania(dark_elf, sadist).
 mania(interrogator, sadist).
+
+courage(guard, 0.1).
+courage(paladin, 0.0).
+courage(bandit, 0.3).
+courage(goblin, 0.4).
+courage(wolf, 0.3).
+courage(citizen, 0.8).
+courage(peasant, 0.8).
+courage(merchant, 0.7).
+courage(dragon, 0.05).
+courage(demon, 0.0).
+courage(_, 0.2).
+
+vocal(guard).
+vocal(bandit).
+vocal(goblin).
+vocal(wolf).
+vocal(citizen).
+vocal(peasant).
+vocal(merchant).
+vocal(orc).
+vocal(cultist).
+
+herd(wolf).
+herd(goblin).
+herd(bandit).
+herd(orc).
+herd(rat).
+herd(horse).
+herd(sheep).
+herd(cow).
