@@ -13,6 +13,7 @@
 entity(_, Id, E) :- db_entity(_, Id, E), !.
 
 node(_, Id, N) :- db_node(Id, N), !.
+node(_, Id, N) :- string(Id), atom_string(Atom, Id), db_node(Atom, N), !.
 
 add(_, Type, E, db) :-
     get_dict(id, E, Id),
@@ -27,6 +28,10 @@ update(_, E, db) :-
     ; db_node(Id, _) ->
         retractall(db_node(Id, _)),
         assertz(db_node(Id, E))
+    ; is_dict(E, room) ->
+        assertz(db_node(Id, E))
+    ;
+        assertz(db_entity(mob, Id, E))
     ).
 
 remove(_, Id, db) :-

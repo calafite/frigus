@@ -22,15 +22,19 @@ ai_dragon_act(W, Id, NW, Evts) :-
             random_between(1, 100, Roll),
             ( Roll =< 40 ->
                 combat:step_cast(W, Id, fire_breath, TgtId, W1, Evts1),
-                world:node(W1, RId, N),
-                ( member(burning(_), N.props) -> select(burning(_), N.props, RestProps) ; RestProps = N.props ),
-                NN = N.put(props, [burning(3)|RestProps]),
-                zone:update_room(W1, NN, NW),
-                append(Evts1, [room_ablaze(RId)], Evts)
+                ( world:node(W1, RId, N) ->
+                    ( member(burning(_), N.props) -> select(burning(_), N.props, RestProps) ; RestProps = N.props ),
+                    NN = N.put(props, [burning(3)|RestProps]),
+                    world:update(W1, NN, NW),
+                    append(Evts1, [room_ablaze(RId)], Evts)
+                ;
+                    NW = W1, Evts = Evts1
+                )
             ;
                 combat:step_kill(W, Id, TgtId, NW, Evts)
             )
         ;
             NW = W, Evts = []
         )
-    ).
+    ), !.
+ai_dragon_act(W, _, W, []).

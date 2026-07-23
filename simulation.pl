@@ -8,6 +8,7 @@
 :- use_module(move).
 :- use_module(nature).
 :- use_module(economy).
+:- use_module(env).
 
 tick_simulation(W, NW, Evts) :-
     spread_fire(W, W1, Evts1),
@@ -20,9 +21,7 @@ tick_simulation(W, NW, Evts) :-
     economy:tick_economy(W7, NW, Evts8),
     append([Evts1, Evts2, Evts3, Evts4, Evts5, Evts6, Evts7, Evts8], Evts).
 
-update_room(W, R, NW) :-
-    select(O, W.rooms, Rest), O.id == R.id, !,
-    NW = W.put(rooms, [R|Rest]).
+update_room(W, R, NW) :- world:update(W, R, NW).
 
 flammable(R) :-
     get_dict(theme, R, Theme),
@@ -30,7 +29,7 @@ flammable(R) :-
 
 spread_fire(W, NW, Evts) :-
     findall(RId-I, (world:db_node(RId, R), member(burning(I), R.props)), Burning),
-    env:db_env(Env),
+    ( env:db_env(Env) -> true ; Env = env{weath: clear} ),
     do_fire(W, Burning, Env.weath, NW, Evts).
 
 do_fire(W, [], _, W, []).
@@ -160,7 +159,7 @@ apply_disaster(meteor, W, NW, [disaster(meteor, RId) | Evts]) :-
     NW = W2.
 
 apply_disaster(blizzard, W, NW, [disaster(blizzard) | Evts]) :-
-    env:db_env(Env),
+    ( env:db_env(Env) -> true ; Env = env{seas: spring} ),
     ( Env.seas == winter ->
         NEnv = Env.put(weath, blizzard),
         retractall(env:db_env(_)), assertz(env:db_env(NEnv)),

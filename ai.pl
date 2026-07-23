@@ -102,9 +102,11 @@ can_spot_criminal(W, Guard, T, NW, BlowEvts) :-
 inv_rem_all(Inv, Tag, NInv) :-
     ( select(stack{tag: Tag, qty: _}, Inv, Rest) -> NInv = Rest ; NInv = Inv ).
 
-find_prison(W, PrisonId) :-
-    findall(R.id, (member(R, W.rooms), member(prison, R.props)), Cands),
-    random_member(PrisonId, Cands).
+find_prison(_W, PrisonId) :-
+    findall(RId, (world:db_node(RId, R), get_dict(props, R, Props), member(prison, Props)), Cands),
+    Cands \== [],
+    random_member(PrisonId, Cands), !.
+find_prison(_, prison).
 
 ai_surrender(W, Id, NW, Evts) :-
     world:entity(W, Id, M),
@@ -112,7 +114,7 @@ ai_surrender(W, Id, NW, Evts) :-
     cfg_ai:courage(M.tag, C),
     Hp =< MaxHp * C, Hp =< MaxHp * 0.15,
     room(M, RId), world:node(W, RId, N),
-    dict_keys(N.exits, Exits), Exits == [],
+    get_dict(exits, N, ExitsDict), dict_keys(ExitsDict, Exits), Exits == [],
     \+ (props(M, P), member(surrendered, P)), !,
     props(M, P), M1 = M.put(props, [surrendered|P]),
     world:update(W, M1, NW),
@@ -123,7 +125,7 @@ ai_flee(W, Id, NW, Evts) :-
     hp(M, Hp), get_dict(max_hp, M, MaxHp),
     cfg_ai:courage(M.tag, C), Hp < MaxHp * C,
     room(M, RId), world:node(W, RId, N),
-    dict_keys(N.exits, Exits), Exits \= [], random_member(Dir, Exits),
+    get_dict(exits, N, ExitsDict), dict_keys(ExitsDict, Exits), Exits \= [], random_member(Dir, Exits),
     move:step_move(W, Id, Dir, NW, Evts).
 
 ai_flee(W, Id, NW, Evts) :-
@@ -131,7 +133,7 @@ ai_flee(W, Id, NW, Evts) :-
     room(M, RId), world:room_entities(W, RId, Ents),
     member(T, Ents), alive(T), hates(T, M), is_combatant(T), !,
     world:node(W, RId, N),
-    dict_keys(N.exits, Exits), Exits \= [], random_member(Dir, Exits),
+    get_dict(exits, N, ExitsDict), dict_keys(ExitsDict, Exits), Exits \= [], random_member(Dir, Exits),
     move:step_move(W, Id, Dir, NW, Evts).
 
 ai_call_help(W, Id, NW, Evts) :-
@@ -146,7 +148,7 @@ ai_call_help(W, Id, NW, Evts) :-
 
 ai_respond_help(W, Id, NW, Evts) :-
     world:entity(W, Id, M), world:flags(W, Fs),
-    get_dict(help_call_room, Fs, CallRId),
+    get_dict(help_call_room, Fs, CallRId), CallRId \== none,
     get_dict(help_call_tag, Fs, CallTag),
     M.tag == CallTag, room(M, RId), RId \== CallRId,
     ai_path:step_towards(W, Id, CallRId, NW, Evts),
@@ -301,12 +303,12 @@ ai_chase(W, Id, NW, Evts) :-
 ai_patrol(W, Id, NW, Evts) :-
     world:entity(W, Id, M), get_dict(route, M, Route), get_dict(route_idx, M, Idx),
     length(Route, Len), NIdx is (Idx + 1) mod Len, nth0(NIdx, Route, NRId),
-    room(M, RId), world:node(W, RId, N), get_dict(Dir, N.exits, NRId),
+    room(M, RId), world:node(W, RId, N), get_dict(exits, N, ExitsDict), get_dict(Dir, ExitsDict, NRId),
     NM = M.put(route_idx, NIdx), world:update(W, NM, TW),
     move:step_move(TW, Id, Dir, NW, Evts).
 
 ai_wander(W, Id, NW, Evts) :-
     world:entity(W, Id, M), get_dict(wander, M, true),
-    room(M, RId), world:node(W, RId, N), dict_keys(N.exits, Exits), Exits \= [],
+    room(M, RId), world:node(W, RId, N), get_dict(exits, N, ExitsDict), dict_keys(ExitsDict, Exits), Exits \= [],
     random_member(Dir, Exits),
     move:step_move(W, Id, Dir, NW, Evts).

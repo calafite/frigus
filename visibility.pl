@@ -40,7 +40,8 @@ can_see_target(W, A, T) :-
     ).
 
 revealed_exits(_W, A, Node, Exits) :-
-    dict_keys(Node.exits, NormalExits),
+    get_dict(exits, Node, NormalExitsDict),
+    dict_keys(NormalExitsDict, NormalExits),
     ( get_dict(secrets, Node, Secrets) ->
         stat(A, wis, Wis), stat(A, luk, Luk),
         get_dict(reqs, Node, Reqs),
@@ -52,18 +53,22 @@ revealed_exits(_W, A, Node, Exits) :-
     ).
 
 resolve_exit(_W, _A, Node, Dir, NRId) :-
-    get_dict(Dir, Node.exits, NRId), !.
+    get_dict(exits, Node, Exits),
+    ( get_dict(Dir, Exits, NRId)
+    ; atom_string(DirAtom, Dir), get_dict(DirAtom, Exits, NRId)
+    ), !.
 resolve_exit(_W, A, Node, Dir, NRId) :-
     get_dict(secrets, Node, Secrets),
     get_dict(reqs, Node, Reqs),
-    get_dict(Dir, Reqs, ReqVal),
+    ( get_dict(Dir, Reqs, ReqVal) ; atom_string(DirAtom, Dir), get_dict(DirAtom, Reqs, ReqVal) ),
     stat(A, wis, Wis), stat(A, luk, Luk),
     Wis + floor(Luk * 0.3) >= ReqVal,
-    get_dict(Dir, Secrets, NRId).
+    ( get_dict(Dir, Secrets, NRId) ; atom_string(DirAtom, Dir), get_dict(DirAtom, Secrets, NRId) ), !.
 
 reveal_details(A, Node, FullDesc) :-
-    ( \+ member(dark, Node.props) ; props(A, P), member(night_vision, P) ), !,
-    Base = Node.desc,
+    get_dict(props, Node, Props),
+    ( \+ member(dark, Props) ; props(A, P), member(night_vision, P) ), !,
+    ( get_dict(desc, Node, Base) -> true ; Base = "An unmapped location." ),
     ( get_dict(details, Node, Details) ->
         stat(A, wis, Wis), stat(A, luk, Luk),
         EffInt is Wis + floor(Luk * 0.2),

@@ -11,7 +11,7 @@ cannot_enter(_W, A, _C, N, _Dir) :- get_dict(req_key, N, Key), inv(A, Inv), \+ m
 cannot_enter(W, _A, _C, N, _Dir) :- get_dict(req_switch, N, Sw), world:flags(W, Fs), \+ get_dict(Sw, Fs, true).
 
 cannot_enter(_W, A, _C, N, _Dir) :-
-    member(deep_water, N.props),
+    get_dict(props, N, Props), member(deep_water, Props),
     \+ altitude(A, air),
     \+ (props(A, P), member(swimming, P)),
     \+ (inv(A, Inv), member(stack{tag: boat, qty: _}, Inv)).
@@ -33,7 +33,7 @@ cannot_enter(_W, _A, C, _N, Dir) :-
     get_dict(one_way_exits, C, OneWays), member(Dir, OneWays).
 
 cannot_enter(_W, A, _C, N, _Dir) :-
-    member(narrow, N.props),
+    get_dict(props, N, Props), member(narrow, Props),
     \+ stance(A, crawl).
 
 cannot_enter(W, _A, C, _N, Dir) :-
@@ -44,9 +44,10 @@ cannot_enter(_W, A, C, _N, Dir) :-
     get_dict(req_portal_key, C, Portals), get_dict(Dir, Portals, Key),
     inv(A, Inv), \+ member(stack{tag: Key, qty: _}, Inv).
 
-cannot_enter(_W, A, _C, N, _Dir) :-
-    get_dict(locked_exits, N, Locked), member(locked, Locked),
-    \+ get_dict(owner, N, A.id).
+cannot_enter(_W, A, _C, N, Dir) :-
+    get_dict(locked_exits, N, Locked),
+    ( member(Dir, Locked) ; member(locked, Locked) ),
+    ( \+ get_dict(owner, N, Owner) ; Owner \== A.id ).
 
 cannot_enter(W, _A, _C, N, _Dir) :-
     get_dict(cap, N, Cap),
@@ -62,8 +63,8 @@ can_enter(W, A, C, N, Dir) :- \+ cannot_enter(W, A, C, N, Dir).
 on_exit(_W, A, _N, A, []) :- !.
 
 on_enter(W, A, N, NA, [discovered_landmark(A.id, N.id) | Evts]) :-
-    member(landmark, N.props),
-    get_dict(landmarks, A, Known),
+    get_dict(props, N, Props), member(landmark, Props),
+    ( get_dict(landmarks, A, Known) -> true ; Known = [] ),
     \+ member(N.id, Known), !,
     A1 = A.put(landmarks, [N.id | Known]),
     on_enter_normal(W, A1, N, NA, Evts).
@@ -82,9 +83,9 @@ on_enter_trespass(_W, A, N, NA, [teleported(A.id, TargetId)]) :-
     get_dict(teleport_target, N, TargetId), !,
     entity:room(A, TargetId, NA).
 
-on_enter_trespass(W, A, N, NA, [teleported(A.id, TargetId)]) :-
+on_enter_trespass(_W, A, N, NA, [teleported(A.id, TargetId)]) :-
     get_dict(type, N, teleporter), !,
-    findall(R.id, member(R, W.rooms), RIds),
+    findall(RId, world:db_node(RId, _), RIds),
     random_member(TargetId, RIds),
     entity:room(A, TargetId, NA).
 

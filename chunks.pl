@@ -7,7 +7,6 @@
 :- use_module(names).
 :- use_module(proc_spawn).
 :- use_module(proc_loot).
-:- use_module(zone).
 
 ensure_chunk(W, cell(X, Y, Z), NW) :-
     \+ world:db_node(cell(X, Y, Z), _), !,
@@ -55,8 +54,9 @@ generate_cell(W, X, Y, Z, NW) :-
     ( Nodes \== [] -> Room = Room0.put(nodes, Nodes) ; Room = Room0 ),
     assertz(world:db_node(cell(X, Y, Z), Room)),
     roll_cell_mobs(W, Biome, Lvl, cell(X, Y, Z), S5, W1, S6),
-    roll_cell_chests(W1, Lvl, cell(X, Y, Z), S6, NW, _),
-    assert_reverse_connections(W, X, Y, Z).
+    roll_cell_chests(W1, Lvl, cell(X, Y, Z), S6, W2, _),
+    assert_reverse_connections(W2, X, Y, Z),
+    NW = db.
 
 get_biome(Z, _, S, Biome, NS) :-
     Z < 0, !,
@@ -138,5 +138,5 @@ update_neighbor_exit(W, TargetId, Dir, SrcId) :-
     world:db_node(TargetId, N), !,
     get_dict(exits, N, Ex),
     NEx = Ex.put(Dir, SrcId),
-    zone:update_room(W, N.put(exits, NEx), _).
+    world:update(W, N.put(exits, NEx), _).
 update_neighbor_exit(_, _, _, _).

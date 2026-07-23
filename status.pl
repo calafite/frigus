@@ -12,8 +12,8 @@ get_val(K, E, _D, V) :- get_dict(K, E, V), !.
 get_val(_, _, D, D).
 
 find_square(_W, SqId) :-
-    findall(R.id, (world:db_node(R.id, R), member(square, R.props)), Cands),
-    ( Cands = [SqId|_] -> true ; SqId = temple ).
+    findall(RId, (world:db_node(RId, R), get_dict(props, R, Props), member(square, Props)), Cands),
+    ( Cands = [SqId|_] -> true ; SqId = square ).
 
 can_act(E) :-
     affs(E, A),
@@ -41,7 +41,7 @@ step_tick(W, system, NW, Evts) :- !,
     append(Evts1, Evts2, Evts).
 
 step_tick(W, Id, NW, Evts) :-
-    world:entity(W, Id, E),
+    world:entity(W, Id, E), !,
     ( is_dict(E, plyr) ->
         survival:tick_srv(W, Id, E, E1, SEvts)
     ; E1 = E, SEvts = [] ),
@@ -65,8 +65,9 @@ step_tick(W, Id, NW, Evts) :-
         Regen is floor(MaxHp * 0.1),
         TmpHp is min(MaxHp, Hp + Regen)
     ; TmpHp = Hp ),
-    room(E_Jail, RId), world:node(W, RId, N),
-    ( member(burning(I), N.props), \+ is_immune(E_Jail, burn) ->
+    room(E_Jail, RId),
+    ( world:node(W, RId, N) -> get_dict(props, N, NProps) ; NProps = [] ),
+    ( member(burning(I), NProps), \+ is_immune(E_Jail, burn) ->
         FDmg is I * 4,
         NHp is max(0, TmpHp - FDmg - Dmg),
         FEvt = [fire_burn(Id, FDmg)]
@@ -89,11 +90,14 @@ step_tick(W, Id, NW, Evts) :-
       append(TmpEvts, FEvt, TmpEvts2),
       append(TmpEvts2, JEvt, Evts),
       world:update(W, NE, NW) ).
+step_tick(W, _, W, []).
 
 dec_cds(Cds, NCds) :-
-    dict_pairs(Cds, cds, Pairs),
+    is_dict(Cds), !,
+    dict_pairs(Cds, Tag, Pairs),
     dec_pairs(Pairs, NPairs),
-    dict_pairs(NCds, cds, NPairs).
+    dict_pairs(NCds, Tag, NPairs).
+dec_cds(_, cds{}).
 
 dec_pairs([], []).
 dec_pairs([_-V|T], NT) :- V =< 1, !, dec_pairs(T, NT).

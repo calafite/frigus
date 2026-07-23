@@ -1,6 +1,7 @@
 :- module(npc_life, [step_life/4, mod_mem/5, get_mem/3]).
 
 :- use_module(library(random)).
+:- use_module(library(lists)).
 :- use_module(entity).
 :- use_module(world).
 :- use_module(cfg_npc).
@@ -8,6 +9,8 @@
 :- use_module(move).
 :- use_module(survival).
 :- use_module(config).
+:- use_module(env).
+:- use_module(item).
 
 :- discontiguous exec_state/6.
 
@@ -16,7 +19,8 @@ mod_mem(W, NpcId, PlyrId, Type, NW) :-
     mems(M, Mems),
     cfg_npc:mem_mod(Type, Val),
     ( get_dict(PlyrId, Mems, Cur) -> NVal is Cur + Val ; NVal = Val ),
-    world:update(W, M.put(mems, Mems.put(PlyrId, NVal)), NW).
+    world:update(W, M.put(mems, Mems.put(PlyrId, NVal)), NW), !.
+mod_mem(W, _, _, _, W).
 
 get_mem(M, PlyrId, Val) :-
     mems(M, Mems), get_dict(PlyrId, Mems, Val), !.
@@ -25,7 +29,8 @@ get_mem(_, _, 0).
 step_life(W, Id, NW, Evts) :-
     world:entity(W, Id, M),
     job(M, JobTag), JobTag \== none,
-    get_dict(env, W, Env), Hr = Env.hr,
+    ( env:db_env(Env) -> true ; Env = env{hr: 12} ),
+    Hr = Env.hr,
     ( cfg_npc:base_job(JobTag, BaseJob) -> true ; BaseJob = JobTag ),
     cfg_npc:job_sched(BaseJob, Hr, ExpState),
     act_state(M, CurState),
@@ -33,7 +38,7 @@ step_life(W, Id, NW, Evts) :-
         exec_state(ExpState, W, Id, M, NW, Evts)
     ;
         trans_state(CurState, ExpState, W, Id, M, NW, Evts)
-    ).
+    ), !.
 step_life(W, _, W, []).
 
 trans_state(sleep, ExpState, W, Id, _M, NW, Evts) :-
@@ -41,7 +46,7 @@ trans_state(sleep, ExpState, W, Id, _M, NW, Evts) :-
     world:entity(W1, Id, M1),
     M2 = M1.put(act_state, ExpState),
     world:update(W1, M2, NW),
-    Evts = Evts1.
+    Evts = Evts1, !.
 trans_state(_, ExpState, W, _Id, M, NW, []) :-
     world:update(W, M.put(act_state, ExpState), NW).
 
@@ -49,11 +54,10 @@ exec_state(sleep, W, Id, M, NW, Evts) :-
     home(M, HId), HId \== none,
     room(M, RId),
     ( RId == HId ->
-        get_dict(state, M, S),
-        ( S \== sleeping -> survival:step_sleep(W, Id, NW, Evts) ; NW = W, Evts = [] )
+        ( get_dict(state, M, S), S == sleeping -> NW = W, Evts = [] ; survival:step_sleep(W, Id, NW, Evts) )
     ;
         ai_path:step_towards(W, Id, HId, NW, Evts)
-    ).
+    ), !.
 
 exec_state(eat, W, Id, M, NW, Evts) :-
     inv(M, Inv), member(stack{tag: bread, qty: _}, Inv), !,
@@ -63,14 +67,14 @@ exec_state(eat, W, Id, M, NW, Evts) :-
     item:step_use(W, Id, apple, NW, Evts).
 exec_state(eat, W, Id, M, NW, Evts) :-
     room(M, RId), world:node(W, RId, N),
-    ( member(tavern, N.props) ->
+    get_dict(props, N, Props),
+    ( member(tavern, Props) ->
         NW = W, Evts = []
-    ;
-        find_loc(W, RId, tavern, TgtId), TgtId \== none ->
+    ; find_loc(W, RId, tavern, TgtId), TgtId \== none ->
         ai_path:step_towards(W, Id, TgtId, NW, Evts)
     ;
         NW = W, Evts = []
-    ).
+    ), !.
 
 exec_state(work, W, Id, M, NW, Evts) :-
     work(M, WId), WId \== none,
@@ -79,7 +83,7 @@ exec_state(work, W, Id, M, NW, Evts) :-
         do_job_action(M, W, NW, Evts)
     ;
         ai_path:step_towards(W, Id, WId, NW, Evts)
-    ).
+    ), !.
 
 do_job_action(M, W, NW, Evts) :-
     M.tag == miner, random_between(1, 100, R), R =< 20, !,
@@ -97,17 +101,17 @@ do_job_action(_, W, W, []).
 
 exec_state(leisure, W, Id, M, NW, Evts) :-
     room(M, RId), world:node(W, RId, N),
-    ( member(square, N.props) ->
+    get_dict(props, N, Props),
+    ( member(square, Props) ->
         ( npc_trade(W, M, RId, NW, Evts) -> true
         ; random_between(1, 100, R),
-          ( R =< 20 -> dict_keys(N.exits, Exits), random_member(Dir, Exits), move:step_move(W, Id, Dir, NW, Evts)
+          ( R =< 20, get_dict(exits, N, ExitsDict), dict_keys(ExitsDict, Exits), Exits \== [] -> random_member(Dir, Exits), move:step_move(W, Id, Dir, NW, Evts)
           ; NW = W, Evts = [] ) )
-    ;
-        find_loc(W, RId, square, TgtId), TgtId \== none ->
+    ; find_loc(W, RId, square, TgtId), TgtId \== none ->
         ai_path:step_towards(W, Id, TgtId, NW, Evts)
     ;
         NW = W, Evts = []
-    ).
+    ), !.
 
 exec_state(_, W, _, _, W, []).
 
@@ -125,7 +129,7 @@ npc_trade(W, M, RId, NW, Evts) :-
     Evts = [npc_trade(M.id, T.id, Item, 10)].
 
 find_loc(W, Start, Prop, TgtId) :-
-    findall(R.id, (member(R, W.rooms), member(Prop, R.props)), Cands),
+    findall(RId, (world:db_node(RId, R), get_dict(props, R, Props), member(Prop, Props)), Cands),
     Cands \= [],
     ai_path:find_path(W, Start, TgtId, 20, _),
     member(TgtId, Cands), !.
