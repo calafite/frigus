@@ -174,7 +174,7 @@ theme_node(volcano, _, basalt_fissure).
 
 seed_citizens :-
     Mobs = [
-        dict{
+        mob{
             id: guard_sam,
             tag: guard,
             name: "Captain Sam",
@@ -191,7 +191,7 @@ seed_citizens :-
             threats: dict{},
             mems: dict{}
         },
-        dict{
+        mob{
             id: guard_jerry,
             tag: guard,
             name: "Guard Jerry",
@@ -208,7 +208,7 @@ seed_citizens :-
             threats: dict{},
             mems: dict{}
         },
-        dict{
+        mob{
             id: peasant_bob,
             tag: peasant,
             name: "Bob the Farmer",
@@ -231,7 +231,7 @@ seed_citizens :-
             threats: dict{},
             mems: dict{}
         },
-        dict{
+        mob{
             id: miner_ted,
             tag: miner,
             name: "Ted the Miner",
@@ -254,7 +254,7 @@ seed_citizens :-
             threats: dict{},
             mems: dict{}
         },
-        dict{
+        mob{
             id: merchant_silvia,
             tag: merchant,
             name: "Silvia the Merchant",
@@ -281,7 +281,7 @@ seed_citizens :-
             threats: dict{},
             mems: dict{}
         },
-        dict{
+        mob{
             id: priest_luke,
             tag: priest,
             name: "Father Luke",
@@ -307,10 +307,10 @@ seed_citizens :-
     ],
     forall(member(M, Mobs), assertz(world:db_entity(mob, M.id, M))),
     Items = [
-        dict{id: floor_hoe, tag: hoe, qty: 1, room: square},
-        dict{id: floor_pole, tag: fishing_pole, qty: 1, room: square},
-        dict{id: floor_flint, tag: flint_and_steel, qty: 1, room: square},
-        dict{id: floor_skin, tag: empty_waterskin, qty: 1, room: square}
+        item{id: floor_hoe, tag: hoe, qty: 1, room: square},
+        item{id: floor_pole, tag: fishing_pole, qty: 1, room: square},
+        item{id: floor_flint, tag: flint_and_steel, qty: 1, room: square},
+        item{id: floor_skin, tag: empty_waterskin, qty: 1, room: square}
     ],
     forall(member(I, Items), assertz(world:db_entity(item, I.id, I))).
 

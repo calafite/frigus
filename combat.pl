@@ -1,11 +1,12 @@
 :- module(combat, [
-    step_kill/5, step_cast/6, valid_target/3, dynamic_enemy/2,
-    apply_dmg/8, gen_threat/5, get_highest_threat/2
+    step_kill/5, step_cast/6, step_cast_entry/6, valid_target/3, dynamic_enemy/2,
+    apply_dmg/8, gen_threat/5, get_highest_threat/2, resolve_spell/2, resolve_target/5
 ]).
 
 :- use_module(library(lists)).
 :- use_module(library(random)).
 :- use_module(cfg_combat).
+:- use_module(cfg_magic).
 :- use_module(config).
 :- use_module(entity).
 :- use_module(world).
@@ -17,6 +18,54 @@
 :- use_module(social).
 :- use_module(quest).
 :- use_module(npc_life).
+
+% --- RESOLUTION UTILITIES ---
+resolve_spell(Query, SpellTag) :-
+    atom(Query), ( cfg_magic:cost(Query, _) ; cfg_magic:spell_nature(Query, _) ), !,
+    SpellTag = Query.
+resolve_spell(Query, SpellTag) :-
+    atom_string(QueryAtom, Query), resolve_spell(QueryAtom, SpellTag), !.
+resolve_spell(f, fireball) :- !.
+resolve_spell(i, iceblast) :- !.
+resolve_spell(m, mend) :- !.
+resolve_spell(b, bash) :- !.
+resolve_spell(fb, fireblast) :- !.
+resolve_spell(hl, holy_light) :- !.
+resolve_spell(ms, meteor_storm) :- !.
+resolve_spell(meteor, meteor_storm) :- !.
+resolve_spell(eq, earthquake) :- !.
+resolve_spell(cl, chain_lightning) :- !.
+resolve_spell(light, light_spell) :- !.
+resolve_spell(invis, invisibility) :- !.
+resolve_spell(inv, invisibility) :- !.
+resolve_spell(tp, teleport) :- !.
+resolve_spell(id, identify_spell) :- !.
+resolve_spell(identify, identify_spell) :- !.
+resolve_spell(uncurse, remove_curse) :- !.
+resolve_spell(rej, rejuvenate) :- !.
+resolve_spell(Query, SpellTag) :-
+    atom(Query),
+    findall(Sp, (cfg_magic:cost(Sp, _), sub_atom(Sp, _, _, _, Query)), Matches),
+    Matches = [SpellTag|_], !.
+
+resolve_target(W, AId, RId, TQuery, Target) :-
+    ( TQuery == self ; TQuery == "" ; TQuery == none ; TQuery == AId ), !,
+    world:entity(W, AId, Target).
+resolve_target(W, _AId, RId, TQuery, Target) :-
+    world:entity(W, TQuery, Target), room(Target, RId), !.
+resolve_target(W, _AId, RId, TQuery, Target) :-
+    world:room_entities(W, RId, Ents), member(Target, Ents),
+    ( Target.id == TQuery
+    ; Target.tag == TQuery
+    ; (get_dict(name, Target, Name), string_lower(Name, LName), string_lower(TQuery, LTQuery), sub_string(LName, _, _, _, LTQuery))
+    ; (get_dict(race, Target, Race), Race == TQuery)
+    ; (get_dict(class, Target, Class), Class == TQuery)
+    ), !.
+
+is_beneficial_spell(mend).
+is_beneficial_spell(rejuvenate).
+is_beneficial_spell(haste).
+is_beneficial_spell(stoneskin).
 
 dynamic_enemy(A, T) :-
     fac(A, FA), fac(T, FT),
@@ -145,45 +194,60 @@ get_highest_threat(E, BestId) :-
     sort(2, @>=, Pairs, Sorted),
     ( Sorted = [BestId-_|_] -> true ; BestId = none ).
 
-step_kill(W, AId, TId, NW, Evts) :-
-    world:entity(W, AId, A), status:can_act(A), world:entity(W, TId, T),
-    valid_target(W, A, T), crime_check(A, T, MidA), stealth:strip_stealth(MidA, CleanA),
-    wpn(CleanA, Wpn),
-    ( config:ammo(Wpn, AmmoTag) ->
-        inv(CleanA, Inv),
-        ( member(stack{tag: AmmoTag, qty: Qty}, Inv), Qty >= 1 ->
-            inv_rem(Inv, AmmoTag, 1, NInv), A1 = CleanA.put(inv, NInv), AmmoOK = true
-        ; AmmoOK = false )
-    ; A1 = CleanA, AmmoOK = true ),
-    ( AmmoOK == true ->
-        ( reach_check(A1, T, Wpn) ->
-            ( roll_hit(A1, T) ->
-                roll_dodge(T, IsDodge),
-                ( IsDodge == true ->
-                    world:update(W, A1, W1), Evts = [dodged(TId, AId)], try_counter(W1, T, A1, NW, Evts)
-                ;
-                    roll_block(T, BlockMit),
-                    ( BlockMit > 0 -> BEvt = [blocked(TId, AId, BlockMit)] ; BEvt = [] ),
-                    calc_dmg(W, A1, T, Wpn, BaseDmg),
-                    NetDmg1 is max(0, BaseDmg - BlockMit),
-                    ( NetDmg1 =:= 0 ->
-                        world:update(W, A1, W1), Evts = BEvt, try_counter(W1, T, A1, NW, Evts)
-                    ;
-                        roll_crit(A1, IsCrit), ( IsCrit == true -> NetDmg2 is NetDmg1 * 2 ; NetDmg2 = NetDmg1 ),
-                        roll_double(A1, IsDouble), affs(A1, AAffs),
-                        ( IsDouble == true -> Dmg is NetDmg2 * 2, Evt = double_hit(AId, TId, Dmg)
-                        ; member(aff{type: hidden, val: _, dur: _}, AAffs) -> Dmg is NetDmg2 * 3, Evt = backstab(AId, TId, Dmg)
-                        ; Dmg = NetDmg2, ( IsCrit == true -> Evt = crit(AId, TId, Dmg) ; Evt = hit(AId, TId, Dmg) ) ),
-                        ( is_dict(A1, mob) -> get_aff(A1.tag, Aff) ; get_aff(Wpn, Aff) ),
-                        apply_dmg(W, A1, T, Dmg, Aff, W1, DEvts, Evt),
-                        ( is_dict(T, mob) -> npc_life:mod_mem(W1, TId, AId, attack, W2) ; W2 = W1 ),
-                        gen_threat(W2, TId, AId, Dmg, NW),
-                        append(BEvt, DEvts, Evts)
-                    )
-                )
-            ; world:update(W, A1, W1), Evts = [miss(AId, TId)], try_counter(W1, T, A1, NW, Evts) )
-        ; world:update(W, A1, NW), Evts = [out_of_reach(AId, TId)] )
-    ; world:update(W, CleanA, NW), Evts = [out_of_ammo(AId, Wpn)] ).
+% --- ATTACK ACTION (step_kill) ---
+step_kill(W, AId, TQuery, NW, Evts) :-
+    world:entity(W, AId, A),
+    ( \+ status:can_act(A) ->
+        NW = W, Evts = [cannot_act(AId)]
+    ; room(A, RId), world:node(W, RId, N), member(safe, N.props) ->
+        NW = W, Evts = [safe_zone(AId, RId)]
+    ; room(A, RId), resolve_target(W, AId, RId, TQuery, T) ->
+        ( \+ alive(T) ->
+            NW = W, Evts = [target_already_dead(AId, T.id)]
+        ; \+ visibility:can_see_target(W, A, T) ->
+            NW = W, Evts = [cannot_see_target(AId, TQuery)]
+        ;
+            crime_check(A, T, MidA), stealth:strip_stealth(MidA, CleanA),
+            wpn(CleanA, Wpn),
+            ( config:ammo(Wpn, AmmoTag) ->
+                inv(CleanA, Inv),
+                ( member(stack{tag: AmmoTag, qty: Qty}, Inv), Qty >= 1 ->
+                    inv_rem(Inv, AmmoTag, 1, NInv), A1 = CleanA.put(inv, NInv), AmmoOK = true
+                ; AmmoOK = false )
+            ; A1 = CleanA, AmmoOK = true ),
+            ( AmmoOK == true ->
+                ( reach_check(A1, T, Wpn) ->
+                    ( roll_hit(A1, T) ->
+                        roll_dodge(T, IsDodge),
+                        ( IsDodge == true ->
+                            world:update(W, A1, W1), Evts = [dodged(T.id, AId)], try_counter(W1, T, A1, NW, Evts)
+                        ;
+                            roll_block(T, BlockMit),
+                            ( BlockMit > 0 -> BEvt = [blocked(T.id, AId, BlockMit)] ; BEvt = [] ),
+                            calc_dmg(W, A1, T, Wpn, BaseDmg),
+                            NetDmg1 is max(0, BaseDmg - BlockMit),
+                            ( NetDmg1 =:= 0 ->
+                                world:update(W, A1, W1), Evts = BEvt, try_counter(W1, T, A1, NW, Evts)
+                            ;
+                                roll_crit(A1, IsCrit), ( IsCrit == true -> NetDmg2 is NetDmg1 * 2 ; NetDmg2 = NetDmg1 ),
+                                roll_double(A1, IsDouble), affs(A1, AAffs),
+                                ( IsDouble == true -> Dmg is NetDmg2 * 2, Evt = double_hit(AId, T.id, Dmg)
+                                ; member(aff{type: hidden, val: _, dur: _}, AAffs) -> Dmg is NetDmg2 * 3, Evt = backstab(AId, T.id, Dmg)
+                                ; Dmg = NetDmg2, ( IsCrit == true -> Evt = crit(AId, T.id, Dmg) ; Evt = hit(AId, T.id, Dmg) ) ),
+                                ( is_dict(A1, mob) -> get_aff(A1.tag, Aff) ; get_aff(Wpn, Aff) ),
+                                apply_dmg(W, A1, T, Dmg, Aff, W1, DEvts, Evt),
+                                ( is_dict(T, mob) -> npc_life:mod_mem(W1, T.id, AId, attack, W2) ; W2 = W1 ),
+                                gen_threat(W2, T.id, AId, Dmg, NW),
+                                append(BEvt, DEvts, Evts)
+                            )
+                        )
+                    ; world:update(W, A1, W1), Evts = [miss(AId, T.id)], try_counter(W1, T, A1, NW, Evts) )
+                ; world:update(W, A1, NW), Evts = [out_of_reach(AId, T.id)] )
+            ; world:update(W, CleanA, NW), Evts = [out_of_ammo(AId, Wpn)] )
+        )
+    ;
+        NW = W, Evts = [target_not_found(AId, TQuery)]
+    ).
 
 try_counter(W, T, A, NW, Evts) :-
     stat(T, dex, Dex), stat(T, luk, Luk), random_between(1, 100, Roll),
@@ -194,26 +258,51 @@ try_counter(W, T, A, NW, Evts) :-
         append(Evts, CEvts, _)
     ; NW = W ).
 
-step_cast(W, AId, Sp, _, NW, Evts) :-
-    cfg_combat:aoe(Sp), !,
-    world:entity(W, AId, A), status:can_cast(A), cds(A, Cds), \+ get_dict(Sp, Cds, _),
-    config:req(Sp, ReqStat, ReqVal), stat(A, ReqStat, Val), Val >= ReqVal,
-    stealth:strip_stealth(A, CleanA), cost(Sp, Cost), mp(CleanA, Mp), Mp >= Cost,
-    NMp is Mp - Cost, mp(CleanA, NMp, CastA),
-    ( config:cooldown(Sp, CD) -> cds(CastA, Cds.put(Sp, CD), FinalA) ; FinalA = CastA ),
-    room(FinalA, RId), world:room_entities(W, RId, Ents),
-    apply_aoe(W, FinalA, Sp, Ents, W1, AoeEvts),
-    world:update(W1, FinalA, NW),
-    Evts = [cast_aoe(AId, Sp) | AoeEvts].
+% --- SPELL CAST ENTRY POINT ---
+step_cast_entry(W, AId, SpQuery, TQuery, NW, Evts) :-
+    \+ resolve_spell(SpQuery, _), !,
+    NW = W, Evts = [unknown_spell(AId, SpQuery)].
 
-step_cast(W, AId, Sp, _, NW, Evts) :-
-    cfg_combat:summon(Sp, MobTag), !,
-    world:entity(W, AId, A), status:can_cast(A), cds(A, Cds), \+ get_dict(Sp, Cds, _),
-    config:req(Sp, ReqStat, ReqVal), stat(A, ReqStat, Val), Val >= ReqVal,
-    stealth:strip_stealth(A, CleanA), cost(Sp, Cost), mp(CleanA, Mp), Mp >= Cost,
-    NMp is Mp - Cost, mp(CleanA, NMp, CastA),
-    ( config:cooldown(Sp, CD) -> cds(CastA, Cds.put(Sp, CD), FinalA) ; FinalA = CastA ),
-    room(FinalA, RId),
+step_cast_entry(W, AId, SpQuery, TQuery, NW, Evts) :-
+    resolve_spell(SpQuery, Sp),
+    world:entity(W, AId, A),
+    ( \+ status:can_cast(A) ->
+        NW = W, Evts = [cannot_cast(AId)]
+    ; cds(A, Cds), get_dict(Sp, Cds, RemCD) ->
+        NW = W, Evts = [spell_cooldown(AId, Sp, RemCD)]
+    ; config:req(Sp, ReqStat, ReqVal), ReqStat \== none, stat(A, ReqStat, Val), Val < ReqVal ->
+        NW = W, Evts = [req_not_met(AId, ReqStat, ReqVal)]
+    ; config:req_race(Sp, ReqRace), ReqRace \== none, race(A, Race), Race \== ReqRace, \+ is_special(A) ->
+        NW = W, Evts = [race_req_not_met(AId, ReqRace)]
+    ; cost(Sp, Cost), mp(A, Mp), Mp < Cost ->
+        NW = W, Evts = [insufficient_mp(AId, Cost, Mp)]
+    ;
+        dispatch_cast(W, AId, A, Sp, TQuery, NW, Evts)
+    ).
+
+dispatch_cast(W, AId, A, Sp, TQuery, NW, Evts) :-
+    cfg_magic:is_utility_spell(Sp), !,
+    magic:step_cast_utility(W, AId, Sp, TQuery, NW, Evts).
+
+dispatch_cast(W, AId, A, Sp, _, NW, Evts) :-
+    config:aoe(Sp), !,
+    room(A, RId), world:node(W, RId, N),
+    ( member(safe, N.props), config:friendly_fire_enabled(Sp) ->
+        NW = W, Evts = [safe_zone(AId, RId)]
+    ;
+        cost(Sp, Cost), mp(A, Mp), NMp is Mp - Cost, mp(A, NMp, CastA),
+        ( config:cooldown(Sp, CD) -> cds(CastA, CastA.cds.put(Sp, CD), FinalA) ; FinalA = CastA ),
+        world:room_entities(W, RId, Ents),
+        apply_aoe(W, FinalA, Sp, Ents, W1, AoeEvts),
+        world:update(W1, FinalA, NW),
+        Evts = [cast_aoe(AId, Sp) | AoeEvts]
+    ).
+
+dispatch_cast(W, AId, A, Sp, _, NW, Evts) :-
+    config:summon(Sp, MobTag), !,
+    room(A, RId),
+    cost(Sp, Cost), mp(A, Mp), NMp is Mp - Cost, mp(A, NMp, CastA),
+    ( config:cooldown(Sp, CD) -> cds(CastA, CastA.cds.put(Sp, CD), FinalA) ; FinalA = CastA ),
     random_between(100000, 999999, Rnd), atomic_list_concat([MobTag, '_', Rnd], MId),
     lvl(FinalA, Lvl),
     BaseHp is 20 + (Lvl * 10), BaseStr is 10 + (Lvl * 2), BaseDex is 10 + (Lvl * 2), BaseInt is 10 + (Lvl * 2),
@@ -222,28 +311,61 @@ step_cast(W, AId, Sp, _, NW, Evts) :-
     world:update(W1, FinalA, NW),
     Evts = [summoned(AId, Sp, MId)].
 
+dispatch_cast(W, AId, A, Sp, TQuery, NW, Evts) :-
+    room(A, RId), world:node(W, RId, N),
+    ( (TQuery == self ; TQuery == "" ; TQuery == none ; TQuery == AId) ->
+        ( is_beneficial_spell(Sp) -> Target = A
+        ; world:room_entities(W, RId, Ents), member(Candidate, Ents), Candidate.id \== AId, alive(Candidate), dynamic_enemy(A, Candidate) -> Target = Candidate
+        ; Target = A
+        )
+    ; resolve_target(W, AId, RId, TQuery, Target) -> true
+    ; Target = none
+    ),
+    ( Target == none ->
+        NW = W, Evts = [target_not_found(AId, TQuery)]
+    ; \+ alive(Target) ->
+        NW = W, Evts = [target_already_dead(AId, Target.id)]
+    ; \+ is_beneficial_spell(Sp), member(safe, N.props) ->
+        NW = W, Evts = [safe_zone(AId, RId)]
+    ;
+        cost(Sp, Cost), mp(A, Mp), NMp is Mp - Cost, mp(A, NMp, CastA),
+        ( config:cooldown(Sp, CD) -> cds(CastA, CastA.cds.put(Sp, CD), FinalA) ; FinalA = CastA ),
+        exec_targeted_spell(W, AId, FinalA, Sp, Target, NW, Evts)
+    ).
+
+exec_targeted_spell(W, AId, CastA, mend, T, NW, [healed(AId, T.id, HealAmt)]) :- !,
+    stat(CastA, wis, Wis), HealAmt is 30 + floor(Wis * 2),
+    get_dict(max_hp, T, MaxHp), hp(T, Hp), NHp is min(MaxHp, Hp + HealAmt),
+    hp(T, NHp, T1),
+    world:update(W, CastA, W1), world:update(W1, T1, NW).
+
+exec_targeted_spell(W, AId, CastA, rejuvenate, T, NW, [healed(AId, T.id, HealAmt)]) :- !,
+    stat(CastA, wis, Wis), HealAmt is 50 + floor(Wis * 3),
+    get_dict(max_hp, T, MaxHp), hp(T, Hp), NHp is min(MaxHp, Hp + HealAmt),
+    hp(T, NHp, T1),
+    world:update(W, CastA, W1), world:update(W1, T1, NW).
+
+exec_targeted_spell(W, AId, CastA, Sp, T, NW, Evts) :-
+    crime_check(CastA, T, MidA),
+    stealth:strip_stealth(MidA, CleanA),
+    ( reach_check(CleanA, T, Sp) ->
+        ( roll_hit(CleanA, T) ->
+            calc_dmg(W, CleanA, T, Sp, BaseDmg), total_armor(T, Arm), NetDmg is max(1, BaseDmg - Arm),
+            roll_crit(CleanA, IsCrit),
+            ( IsCrit == true -> Dmg is NetDmg * 2, Evt = cast_crit(AId, Sp, T.id, Dmg) ; Dmg = NetDmg, Evt = cast(AId, Sp, T.id, Dmg) ),
+            get_aff(Sp, Aff), apply_dmg(W, CleanA, T, Dmg, Aff, W1, DEvts, Evt),
+            ( is_dict(T, mob) -> npc_life:mod_mem(W1, T.id, AId, attack, W2) ; W2 = W1 ),
+            gen_threat(W2, T.id, AId, Dmg, NW), Evts = DEvts
+        ; world:update(W, CleanA, NW), Evts = [cast_miss(AId, Sp, T.id)] )
+    ; world:update(W, CleanA, NW), Evts = [out_of_reach(AId, T.id)] ).
+
 step_cast(W, AId, Sp, TId, NW, Evts) :-
-    world:entity(W, AId, A), status:can_cast(A), cds(A, Cds), \+ get_dict(Sp, Cds, _),
-    world:entity(W, TId, T), valid_target(W, A, T), config:req(Sp, ReqStat, ReqVal),
-    stat(A, ReqStat, Val), Val >= ReqVal, crime_check(A, T, MidA),
-    stealth:strip_stealth(MidA, CleanA), cost(Sp, Cost), mp(CleanA, Mp), Mp >= Cost,
-    NMp is Mp - Cost, mp(CleanA, NMp, CastA),
-    ( config:cooldown(Sp, CD) -> cds(CastA, Cds.put(Sp, CD), FinalA) ; FinalA = CastA ),
-    ( reach_check(FinalA, T, Sp) ->
-        ( roll_hit(FinalA, T) ->
-            calc_dmg(W, FinalA, T, Sp, BaseDmg), total_armor(T, Arm), NetDmg is max(1, BaseDmg - Arm),
-            roll_crit(FinalA, IsCrit),
-            ( IsCrit == true -> Dmg is NetDmg * 2, Evt = cast_crit(AId, Sp, TId, Dmg) ; Dmg = NetDmg, Evt = cast(AId, Sp, TId, Dmg) ),
-            get_aff(Sp, Aff), apply_dmg(W, FinalA, T, Dmg, Aff, W1, DEvts, Evt),
-            ( is_dict(T, mob) -> npc_life:mod_mem(W1, TId, AId, attack, W2) ; W2 = W1 ),
-            gen_threat(W2, TId, AId, Dmg, NW), Evts = DEvts
-        ; world:update(W, FinalA, NW), Evts = [cast_miss(AId, Sp, TId)] )
-    ; world:update(W, FinalA, NW), Evts = [out_of_reach(AId, TId)] ).
+    step_cast_entry(W, AId, Sp, TId, NW, Evts).
 
 apply_aoe(W, _, _, [], W, []).
 apply_aoe(W, A, Sp, [T|Ts], NW, Evts) :-
     ( A.id \== T.id, alive(T), (is_dict(T, plyr) ; is_dict(T, mob)),
-      (cfg_combat:friendly_fire_enabled(Sp) ; dynamic_enemy(A, T)) ->
+      (config:friendly_fire_enabled(Sp) ; dynamic_enemy(A, T)) ->
         ( roll_hit(A, T) ->
             calc_dmg(W, A, T, Sp, BaseDmg), total_armor(T, Arm), NetDmg is max(1, BaseDmg - Arm),
             roll_crit(A, IsCrit),

@@ -13,11 +13,16 @@ start_server(Port) :-
 
 handle_step(Request) :-
     http_read_json_dict(Request, Req),
-
-    ( catch(engine:api_step(Req, Res), Err, (message_to_string(Err, Msg), Res = json{error: Msg})) ->
-        true
+    format(user_error, '~n=================== [INCOMING REQUEST] ===================~n~q~n', [Req]),
+    ( catch(engine:api_step(Req, Res), Err, (
+            format(user_error, '~n!!! [EXCEPTION CAUGHT IN SERVER] !!!~nTerm: ~q~n', [Err]),
+            print_message(error, Err),
+            message_to_string(Err, Msg),
+            Res = json{error: Msg}
+      )) ->
+        format(user_error, '<<< [SERVER RESPONSE] ~q~n==========================================================~n', [Res])
     ;
+        format(user_error, '!!! [SERVER GOAL FAILED WITHOUT EXCEPTION] !!!~n==========================================================~n', []),
         Res = json{error: "Action failed or invalid request format"}
     ),
-
     reply_json_dict(Res).

@@ -76,7 +76,7 @@ spread_neighbors(W, [_|Exits], ExitDict, RId, NW, Evts) :-
 
 apply_currents(W, NW, Evts) :-
     findall(E, (
-        world:db_entity(_, _, E),
+        (world:db_entity(plyr, _, E) ; world:db_entity(mob, _, E)),
         alive(E), room(E, RId), world:node(W, RId, N),
         (member(current(Dir), N.props) ; member(flood_current(Dir), N.props))
     ), Ents),
@@ -101,7 +101,7 @@ do_currents(W, [_|T], NW, Evts) :- do_currents(W, T, NW, Evts).
 
 spread_diseases(W, NW, Evts) :-
     findall(RId-Dis, (
-        world:db_entity(_, _, E),
+        (world:db_entity(plyr, _, E) ; world:db_entity(mob, _, E)),
         alive(E), room(E, RId), affs(E, Affs),
         member(aff{type: Dis, val: _, dur: _}, Affs),
         member(Dis, [plague, fever, blight])
@@ -165,7 +165,7 @@ apply_disaster(blizzard, W, NW, [disaster(blizzard) | Evts]) :-
         NEnv = Env.put(weath, blizzard),
         retractall(env:db_env(_)), assertz(env:db_env(NEnv)),
         findall(E, (
-            world:db_entity(_, _, E),
+            (world:db_entity(plyr, _, E) ; world:db_entity(mob, _, E)),
             alive(E), room(E, RId), world:node(W, RId, N), N.type == outdoor
         ), Ents),
         freeze_entities(W, Ents, NW, Evts)

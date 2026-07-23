@@ -1,4 +1,6 @@
-:- module(engine, [api_step/2]).
+:- module(engine, [api_step/2, json_to_term/2, term_to_json/2]).
+
+:- discontiguous step/5.
 
 :- use_module(world).
 :- use_module(entity).
@@ -31,14 +33,13 @@
 :- use_module(ritual).
 :- use_module(mud_socket).
 
+% Restricted race password definition
+restricted_password("AETHER_PRIMORDIAL_2026").
+
+% --- ENGINE STEP CLAUSES ---
 step(W, Id, move(Dir), NW, Evts) :- step_move(W, Id, Dir, NW, Evts).
 step(W, Id, kill(TId), NW, Evts) :- step_kill(W, Id, TId, NW, Evts).
-step(W, Id, cast(Sp, TId), NW, Evts) :-
-    ( cfg_magic:is_utility_spell(Sp) ->
-        magic:step_cast_utility(W, Id, Sp, TId, NW, Evts)
-    ;
-        combat:step_cast(W, Id, Sp, TId, NW, Evts)
-    ).
+step(W, Id, cast(Sp, TId), NW, Evts) :- combat:step_cast_entry(W, Id, Sp, TId, NW, Evts).
 step(W, Id, loot(IId), NW, Evts) :- step_loot(W, Id, IId, NW, Evts).
 step(W, Id, equip(Tag), NW, Evts) :- step_equip(W, Id, Tag, NW, Evts).
 step(W, Id, unequip(Slot), NW, Evts) :- step_unequip(W, Id, Slot, NW, Evts).
@@ -107,113 +108,200 @@ step(W, Id, disguise, NW, Evts) :- stealth:step_disguise(W, Id, NW, Evts).
 step(W, Id, ritual(Type), NW, Evts) :- ritual:step_ritual(W, Id, Type, NW, Evts).
 step(W, Id, socket(Item, Gem), NW, Evts) :- mud_socket:step_socket(W, Id, Item, Gem, NW, Evts).
 
-step(_W, _Id, load_state(State), db, [state_loaded]) :- !,
-    world:load_db(State).
-step(_W, _Id, dump_state, db, [state_dump(Dump)]) :- !,
-    world:dump_db(Dump).
-step(_W, _Id, clear_state, db, [state_cleared]) :- !,
-    world:clear_db.
+% --- PLAYER EXISTENCE & CREATION ---
+step(W, Id, player_exists, W, [player_status(Id, status(exists))]) :-
+    world:entity(W, Id, _), !.
+step(W, Id, player_exists, W, [player_status(Id, status(not_found))]).
 
+step(W, Id, ensure_player, db, [player_created(Id)]) :- world:entity(W, Id, _), !.
+step(_W, Id, ensure_player, db, [player_created(Id)]) :- default_player(Id, P), world:add(db, plyr, P, _).
+
+step(_W, Id, create_player(Race, Class, Gender, Str, Dex, Con, Int, Wis, Cha, Luk, Wpn, Pwd), db, [player_created(Id)]) :-
+    validate_character_creation(Race, Class, Gender, Str, Dex, Con, Int, Wis, Cha, Luk, Wpn, Pwd),
+    build_custom_player(Id, Race, Class, Gender, Str, Dex, Con, Int, Wis, Cha, Luk, Wpn, PlayerEntity),
+    world:add(db, plyr, PlayerEntity, _).
+
+% --- STATE MANAGEMENT ---
+step(_W, _Id, load_state(State), db, [state_loaded]) :- !, world:load_db(State).
+step(_W, _Id, dump_state, db, [state_dump(Dump)]) :- !, world:dump_db(Dump).
+step(_W, _Id, clear_state, db, [state_cleared]) :- !, world:clear_db.
+
+% --- LOOK ACTION ---
 step(W, Id, look, W, [look(RId, Desc, Props, Exits, OIds, MIds, IData)]) :-
     world:entity(W, Id, A), room(A, RId), world:node(W, RId, Node),
-    visibility:reveal_details(A, Node, Desc), Props = Node.props,
-    visibility:revealed_exits(W, A, Node, Exits), world:room_entities(W, RId, Ents),
-    findall(O.id, (member(O, Ents), is_dict(O, plyr), O.id \= Id, visibility:can_see_target(W, A, O)), OIds),
-    findall(M.id, (member(M, Ents), is_dict(M, mob), alive(M), visibility:can_see_target(W, A, M)), MIds),
-    findall(item{id: E.id, tag: E.tag, qty: E.qty}, (member(E, Ents), is_dict(E, item)), IData).
+    visibility:reveal_details(A, Node, Desc), get_dict(props, Node, Props),
+    visibility:revealed_exits(W, A, Node, Exits),
+    findall(OId, (world:db_entity(plyr, OId, O), OId \= Id, get_dict(room, O, RId), visibility:can_see_target(W, A, O)), OIds),
+    findall(MId, (world:db_entity(mob, MId, M), alive(M), get_dict(room, M, RId), visibility:can_see_target(W, A, M)), MIds),
+    findall(item{id: EId, tag: ETag, qty: EQty}, (world:db_entity(item, EId, E), get_dict(room, E, RId), get_dict(tag, E, ETag), get_dict(qty, E, EQty)), IData).
 
-to_act(D, move(Dir)) :- D.type == "move", atom_string(Dir, D.dir).
-to_act(D, look)      :- D.type == "look".
-to_act(D, kill(T))   :- D.type == "kill", atom_string(T, D.target).
-to_act(D, cast(S, T)):- D.type == "cast", atom_string(S, D.spell), atom_string(T, D.target).
-to_act(D, loot(T))   :- D.type == "loot", atom_string(T, D.target).
-to_act(D, equip(I))  :- D.type == "equip", atom_string(I, D.item).
-to_act(D, unequip(S)) :- D.type == "unequip", atom_string(S, D.slot).
-to_act(D, use(I))    :- D.type == "use", atom_string(I, D.item).
-to_act(D, talk(T))   :- D.type == "talk", atom_string(T, D.target).
-to_act(D, buy(T, I, Q)) :- D.type == "buy", atom_string(T, D.target), atom_string(I, D.item), Q = D.qty.
-to_act(D, sell(T, I, Q)):- D.type == "sell", atom_string(T, D.target), atom_string(I, D.item), Q = D.qty.
-to_act(D, steal(T, I, Q)):- D.type == "steal", atom_string(T, D.target), atom_string(I, D.item), Q = D.qty.
-to_act(D, hide)      :- D.type == "hide".
-to_act(D, train(S))  :- D.type == "train", atom_string(S, D.stat).
-to_act(D, pull(Sw))  :- D.type == "pull", atom_string(Sw, D.switch).
-to_act(D, disarm)    :- D.type == "disarm".
-to_act(D, craft(I))  :- D.type == "craft", atom_string(I, D.item).
-to_act(D, ai_tick)   :- D.type == "ai_tick".
-to_act(D, tick)      :- D.type == "tick".
-to_act(D, chat(C, M)) :- D.type == "chat", atom_string(C, D.chan), atom_string(M, D.msg).
-to_act(D, chat(whisper(T), M)) :- D.type == "whisper", atom_string(T, D.target), atom_string(M, D.msg).
-to_act(D, party(create)) :- D.type == "party_create".
-to_act(D, party(invite(T))) :- D.type == "party_invite", atom_string(T, D.target).
-to_act(D, party(join(P))) :- D.type == "party_join", atom_string(P, D.party).
-to_act(D, party(leave)) :- D.type == "party_leave".
-to_act(D, party(kick(T))) :- D.type == "party_kick", atom_string(T, D.target).
-to_act(D, guild(create(N))) :- D.type == "guild_create", atom_string(N, D.name).
-to_act(D, guild(invite(T))) :- D.type == "guild_invite", atom_string(T, D.target).
-to_act(D, guild(join(G))) :- D.type == "guild_join", atom_string(G, D.guild).
-to_act(D, guild(leave)) :- D.type == "guild_leave".
-to_act(D, guild(kick(T))) :- D.type == "guild_kick", atom_string(T, D.target).
-to_act(D, guild(promote(T))) :- D.type == "guild_promote", atom_string(T, D.target).
-to_act(D, guild(stash_put(I, Q))) :- D.type == "guild_put", atom_string(I, D.item), Q = D.qty.
-to_act(D, guild(stash_take(I, Q))) :- D.type == "guild_take", atom_string(I, D.item), Q = D.qty.
-to_act(D, trade(req(T))) :- D.type == "trade_req", atom_string(T, D.target).
-to_act(D, trade(accept(TId))) :- D.type == "trade_accept", atom_string(TId, D.trade).
-to_act(D, trade(add(TId, I, Q))) :- D.type == "trade_add", atom_string(TId, D.trade), atom_string(I, D.item), Q = D.qty.
-to_act(D, trade(gold(TId, G))) :- D.type == "trade_gold", atom_string(TId, D.trade), G = D.qty.
-to_act(D, trade(ready(TId))) :- D.type == "trade_ready", atom_string(TId, D.trade).
-to_act(D, trade(cancel(TId))) :- D.type == "trade_cancel", atom_string(TId, D.trade).
-to_act(D, quest(accept(Q))) :- D.type == "quest_accept", atom_string(Q, D.quest).
-to_act(D, quest(turn_in(Q))) :- D.type == "quest_turn_in", atom_string(Q, D.quest).
-to_act(D, rest) :- D.type == "rest".
-to_act(D, sleep) :- D.type == "sleep".
-to_act(D, wake) :- D.type == "wake".
-to_act(D, drink) :- D.type == "drink", \+ get_dict(item, D, _).
-to_act(D, drink(S)) :- D.type == "drink", atom_string(S, D.item).
-to_act(D, fill) :- D.type == "fill".
-to_act(D, fish) :- D.type == "fish".
-to_act(D, fly(air)) :- D.type == "fly", atom_string(A, D.altitude), A == "air".
-to_act(D, fly(ground)) :- D.type == "fly", atom_string(A, D.altitude), A == "ground".
-to_act(D, climb) :- D.type == "climb".
-to_act(D, jump(Dir)) :- D.type == "jump", atom_string(Dir, D.dir).
-to_act(D, mount(Mount)) :- D.type == "mount", atom_string(Mount, D.mount_tag).
-to_act(D, dismount) :- D.type == "dismount".
-to_act(D, stance(Stance)) :- D.type == "stance", atom_string(Stance, D.stance).
-to_act(D, search) :- D.type == "search".
-to_act(D, travel(Dest)) :- D.type == "travel", atom_string(Dest, D.destination).
-to_act(D, break(ObjId)) :- D.type == "break", atom_string(ObjId, D.object).
-to_act(D, lock(Dir)) :- D.type == "lock", atom_string(Dir, D.dir).
-to_act(D, unlock(Dir)) :- D.type == "unlock", atom_string(Dir, D.dir).
-to_act(D, buy_property) :- D.type == "buy_property".
-to_act(D, furniture(FurnId, Act)) :- D.type == "furniture", atom_string(FurnId, D.furniture), atom_string(Act, D.action).
-to_act(D, pick(Dir)) :- D.type == "pick", atom_string(Dir, D.dir).
-to_act(D, ignite) :- D.type == "ignite".
-to_act(D, cook(Output)) :- D.type == "cook", atom_string(Output, D.item).
-to_act(D, poison(Food, Poison)) :- D.type == "poison", atom_string(Food, D.item), atom_string(Poison, D.poison).
-to_act(D, till) :- D.type == "till".
-to_act(D, plant(Seed)) :- D.type == "plant", atom_string(Seed, D.seed).
-to_act(D, harvest) :- D.type == "harvest".
-to_act(D, tame(TgtId)) :- D.type == "tame", atom_string(TgtId, D.target).
-to_act(D, pet_command(PetId, Cmd)) :- D.type == "pet_command", atom_string(PetId, D.pet), cmd_parse(D.command, Cmd).
-to_act(D, pet_feed(PetId)) :- D.type == "pet_feed", atom_string(PetId, D.pet).
-to_act(D, pray) :- D.type == "pray".
-to_act(D, sacrifice(Item)) :- D.type == "sacrifice", atom_string(Item, D.item).
-to_act(D, enchant(Item, Rune)) :- D.type == "enchant", atom_string(Item, D.item), atom_string(Rune, D.rune).
-to_act(D, identify(Item)) :- D.type == "identify", atom_string(Item, D.item).
-to_act(D, repair(Slot, Kit)) :- D.type == "repair", atom_string(Slot, D.slot), atom_string(Kit, D.kit).
-to_act(D, pay_bounty) :- D.type == "pay_bounty".
-to_act(D, jailbreak) :- D.type == "jailbreak".
-to_act(D, bribe(GuardId)) :- D.type == "bribe", atom_string(GuardId, D.target).
-to_act(D, gather(NodeId)) :- D.type == "gather", atom_string(NodeId, D.node).
-to_act(D, skin(CorpseId)) :- D.type == "skin", atom_string(CorpseId, D.corpse).
-to_act(D, build(StructTag)) :- D.type == "build", atom_string(StructTag, D.structure).
-to_act(D, demolish(Prop)) :- D.type == "demolish", atom_string(Prop, D.prop).
-to_act(D, brew(Ingreds)) :- D.type == "brew", get_ingreds(D.ingredients, Ingreds).
-to_act(D, ask_quest(NpcId)) :- D.type == "ask_quest", atom_string(NpcId, D.target).
-to_act(D, load_state(State)) :- D.type == "load_state", State = D.state.
-to_act(D, dump_state) :- D.type == "dump_state".
-to_act(D, clear_state) :- D.type == "clear_state".
-to_act(D, ritual(Type)) :- D.type == "ritual", atom_string(Type, D.ritual).
-to_act(D, socket(Item, Gem)) :- D.type == "socket", atom_string(Item, D.item), atom_string(Gem, D.gem).
+% --- SAFE ENGINE CATCH-ALL ---
+step(W, Id, Act, W, [action_failed(Id, Act)]).
+
+% --- TEMPLATES & VALIDATIONS ---
+default_player(Id, P) :-
+    P = plyr{
+        id: Id, tag: sa, class: fighter, race: human, lvl: 1, xp: 0,
+        hp: 50, max_hp: 50, mp: 20, max_mp: 20, fatigue: 0,
+        str: 12, dex: 12, con: 12, int: 10, wis: 10, cha: 10, luk: 10,
+        room: square, fac: citizen, equip: equip{wpn: fists, shield: none, body: none},
+        inv: [stack{tag: gold, qty: 100}], affs: [], cds: cds{}, threats: dict{},
+        bounty: 0, reps: reps{}, ceils: ceils{}, quests: dict{}, skills: skills{}, mems: dict{}, gender: male
+    }.
+
+% --- CHARACTER CREATION VALIDATION & BUILDER ---
+validate_character_creation(Race, Class, Gender, Str, Dex, Con, Int, Wis, Cha, Luk, Wpn, Pwd) :-
+    validate_race(Race, Pwd),
+    valid_class(Class),
+    valid_gender(Gender),
+    valid_weapon(Wpn),
+    validate_stats(Str, Dex, Con, Int, Wis, Cha, Luk, Race).
+
+validate_race(Race, Pwd) :-
+    config:restricted_race(Race), !,
+    restricted_password(MasterPwdStr),
+    atom_string(MasterPwd, MasterPwdStr),
+    ( Pwd == MasterPwd ; Pwd == MasterPwdStr ).
+validate_race(Race, _) :-
+    valid_race(Race).
+
+valid_race(Race) :-
+    member(Race, [human, elf, dwarf, orc, goblin, halfling, draconian, beastkin, merfolk, golem, undead, troll, gnome, tiefling, giant, demon, angel, demigod]).
+
+valid_class(Class) :-
+    member(Class, [fighter, wizard, rogue, cleric]).
+
+valid_gender(Gender) :-
+    member(Gender, [male, female, nonbinary]).
+
+valid_weapon(Wpn) :-
+    member(Wpn, [fists, sword, dagger, staff, shortbow, wooden_club, bronze_dagger, bronze_sword]).
+
+validate_stats(Str, Dex, Con, Int, Wis, Cha, Luk, Race) :-
+    Str >= 8, Dex >= 8, Con >= 8, Int >= 8, Wis >= 8, Cha >= 8, Luk >= 8,
+    Total is Str + Dex + Con + Int + Wis + Cha + Luk,
+    ( config:restricted_race(Race) -> Total =< 370 ; Total =< 85 ).
+
+build_custom_player(Id, Race, Class, Gender, Str, Dex, Con, Int, Wis, Cha, Luk, Wpn, P) :-
+    ( Wpn == fists -> EquipWpn = fists ; EquipWpn = Wpn ),
+    ( Wpn \== fists -> InvItems = [stack{tag: gold, qty: 100}, stack{tag: Wpn, qty: 1}] ; InvItems = [stack{tag: gold, qty: 100}] ),
+    BaseHp is 30 + (Con * 2),
+    BaseMp is 10 + (Int * 2),
+    P = plyr{
+        id: Id, tag: sa, class: Class, race: Race, lvl: 1, xp: 0,
+        hp: BaseHp, max_hp: BaseHp, mp: BaseMp, max_mp: BaseMp, fatigue: 0,
+        str: Str, dex: Dex, con: Con, int: Int, wis: Wis, cha: Cha, luk: Luk,
+        room: square, fac: citizen, equip: equip{wpn: EquipWpn, shield: none, body: none},
+        inv: InvItems, affs: [], cds: cds{}, threats: dict{},
+        bounty: 0, reps: reps{}, ceils: ceils{}, quests: dict{}, skills: skills{}, mems: dict{}, gender: Gender
+    }.
+
+% --- ACTION PARSING ---
+to_act(D, Act) :- get_dict(type, D, TypeStr), string_lower(TypeStr, Type), parse_act(Type, D, Act).
+
+parse_act("player_exists", _, player_exists).
+parse_act("ensure_player", _, ensure_player).
+parse_act("create_player", D, create_player(Race, Class, Gender, Str, Dex, Con, Int, Wis, Cha, Luk, Wpn, Pwd)) :-
+    get_dict(race, D, RS), atom_string(Race, RS),
+    get_dict(class, D, CS), atom_string(Class, CS),
+    get_dict(gender, D, GS), atom_string(Gender, GS),
+    get_dict(str, D, Str), get_dict(dex, D, Dex), get_dict(con, D, Con),
+    get_dict(int, D, Int), get_dict(wis, D, Wis), get_dict(cha, D, Cha), get_dict(luk, D, Luk),
+    get_dict(starting_weapon, D, WS), atom_string(Wpn, WS),
+    ( get_dict(secret_password, D, PS) -> atom_string(Pwd, PS) ; Pwd = "" ).
+parse_act("move", D, move(Dir)) :- get_dict(dir, D, DS), atom_string(Dir, DS).
+parse_act("look", _, look).
+parse_act("kill", D, kill(T)) :- get_dict(target, D, TS), atom_string(T, TS).
+parse_act("cast", D, cast(S, T)) :-
+    get_dict(spell, D, SS), atom_string(S, SS),
+    ( get_dict(target, D, TS) -> atom_string(T, TS) ; T = self ).
+parse_act("loot", D, loot(T)) :- get_dict(target, D, TS), atom_string(T, TS).
+parse_act("equip", D, equip(I)) :- get_dict(item, D, IS), atom_string(I, IS).
+parse_act("unequip", D, unequip(S)) :- get_dict(slot, D, SS), atom_string(S, SS).
+parse_act("use", D, use(I)) :- get_dict(item, D, IS), atom_string(I, IS).
+parse_act("talk", D, talk(T)) :- get_dict(target, D, TS), atom_string(T, TS).
+parse_act("buy", D, buy(T, I, Q)) :- get_dict(target, D, TS), get_dict(item, D, IS), get_dict(qty, D, Q), atom_string(T, TS), atom_string(I, IS).
+parse_act("sell", D, sell(T, I, Q)) :- get_dict(target, D, TS), get_dict(item, D, IS), get_dict(qty, D, Q), atom_string(T, TS), atom_string(I, IS).
+parse_act("steal", D, steal(T, I, Q)) :- get_dict(target, D, TS), get_dict(item, D, IS), get_dict(qty, D, Q), atom_string(T, TS), atom_string(I, IS).
+parse_act("hide", _, hide).
+parse_act("train", D, train(S)) :- get_dict(stat, D, SS), atom_string(S, SS).
+parse_act("pull", D, pull(Sw)) :- get_dict(switch, D, SS), atom_string(Sw, SS).
+parse_act("disarm", _, disarm).
+parse_act("craft", D, craft(I)) :- get_dict(item, D, IS), atom_string(I, IS).
+parse_act("ai_tick", _, ai_tick).
+parse_act("tick", _, tick).
+parse_act("chat", D, chat(C, M)) :- get_dict(chan, D, CS), get_dict(msg, D, M), atom_string(C, CS).
+parse_act("whisper", D, chat(whisper(T), M)) :- get_dict(target, D, TS), get_dict(msg, D, M), atom_string(T, TS).
+parse_act("party_create", _, party(create)).
+parse_act("party_invite", D, party(invite(T))) :- get_dict(target, D, TS), atom_string(T, TS).
+parse_act("party_join", D, party(join(P))) :- get_dict(party, D, PS), atom_string(P, PS).
+parse_act("party_leave", _, party(leave)).
+parse_act("party_kick", D, party(kick(T))) :- get_dict(target, D, TS), atom_string(T, TS).
+parse_act("guild_create", D, guild(create(N))) :- get_dict(name, D, NS), atom_string(N, NS).
+parse_act("guild_invite", D, guild(invite(T))) :- get_dict(target, D, TS), atom_string(T, TS).
+parse_act("guild_join", D, guild(join(G))) :- get_dict(guild, D, GS), atom_string(G, GS).
+parse_act("guild_leave", _, guild(leave)).
+parse_act("guild_kick", D, guild(kick(T))) :- get_dict(target, D, TS), atom_string(T, TS).
+parse_act("guild_promote", D, guild(promote(T))) :- get_dict(target, D, TS), atom_string(T, TS).
+parse_act("guild_put", D, guild(stash_put(I, Q))) :- get_dict(item, D, IS), get_dict(qty, D, Q), atom_string(I, IS).
+parse_act("guild_take", D, guild(stash_take(I, Q))) :- get_dict(item, D, IS), get_dict(qty, D, Q), atom_string(I, IS).
+parse_act("trade_req", D, trade(req(T))) :- get_dict(target, D, TS), atom_string(T, TS).
+parse_act("trade_accept", D, trade(accept(TId))) :- get_dict(trade, D, TS), atom_string(TId, TS).
+parse_act("trade_add", D, trade(add(TId, I, Q))) :- get_dict(trade, D, TS), get_dict(item, D, IS), get_dict(qty, D, Q), atom_string(TId, TS), atom_string(I, IS).
+parse_act("trade_gold", D, trade(gold(TId, G))) :- get_dict(trade, D, TS), get_dict(qty, D, G), atom_string(TId, TS).
+parse_act("trade_ready", D, trade(ready(TId))) :- get_dict(trade, D, TS), atom_string(TId, TS).
+parse_act("trade_cancel", D, trade(cancel(TId))) :- get_dict(trade, D, TS), atom_string(TId, TS).
+parse_act("quest_accept", D, quest(accept(Q))) :- get_dict(quest, D, QS), atom_string(Q, QS).
+parse_act("quest_turn_in", D, quest(turn_in(Q))) :- get_dict(quest, D, QS), atom_string(Q, QS).
+parse_act("rest", _, rest).
+parse_act("sleep", _, sleep).
+parse_act("wake", _, wake).
+parse_act("drink", D, drink(S)) :- (get_dict(item, D, IS) -> atom_string(S, IS) ; S = none).
+parse_act("fill", _, fill).
+parse_act("fish", _, fish).
+parse_act("fly", D, fly(air)) :- get_dict(altitude, D, AS), AS == "air".
+parse_act("fly", D, fly(ground)) :- get_dict(altitude, D, AS), AS == "ground".
+parse_act("climb", _, climb).
+parse_act("jump", D, jump(Dir)) :- get_dict(dir, D, DS), atom_string(Dir, DS).
+parse_act("mount", D, mount(Mount)) :- get_dict(mount_tag, D, MS), atom_string(Mount, MS).
+parse_act("dismount", _, dismount).
+parse_act("stance", D, stance(Stance)) :- get_dict(stance, D, SS), atom_string(Stance, SS).
+parse_act("search", _, search).
+parse_act("travel", D, travel(Dest)) :- get_dict(destination, D, DS), atom_string(Dest, DS).
+parse_act("break", D, break(ObjId)) :- get_dict(object, D, OS), atom_string(ObjId, OS).
+parse_act("lock", D, lock(Dir)) :- get_dict(dir, D, DS), atom_string(Dir, DS).
+parse_act("unlock", D, unlock(Dir)) :- get_dict(dir, D, DS), atom_string(Dir, DS).
+parse_act("buy_property", _, buy_property).
+parse_act("furniture", D, furniture(FurnId, Act)) :- get_dict(furniture, D, FS), get_dict(action, D, AS), atom_string(FurnId, FS), atom_string(Act, AS).
+parse_act("pick", D, pick(Dir)) :- get_dict(dir, D, DS), atom_string(Dir, DS).
+parse_act("ignite", _, ignite).
+parse_act("cook", D, cook(Output)) :- get_dict(item, D, OS), atom_string(Output, OS).
+parse_act("poison", D, poison(Food, Poison)) :- get_dict(item, D, FS), get_dict(poison, D, PS), atom_string(Food, FS), atom_string(Poison, PS).
+parse_act("till", _, till).
+parse_act("plant", D, plant(Seed)) :- get_dict(seed, D, SS), atom_string(Seed, SS).
+parse_act("harvest", _, harvest).
+parse_act("tame", D, tame(TgtId)) :- get_dict(target, D, TS), atom_string(TgtId, TS).
+parse_act("pet_command", D, pet_command(PetId, Cmd)) :- get_dict(pet, D, PS), get_dict(command, D, CS), atom_string(PetId, PS), cmd_parse(CS, Cmd).
+parse_act("pet_feed", D, pet_feed(PetId)) :- get_dict(pet, D, PS), atom_string(PetId, PS).
+parse_act("pray", _, pray).
+parse_act("sacrifice", D, sacrifice(Item)) :- get_dict(item, D, IS), atom_string(Item, IS).
+parse_act("enchant", D, enchant(Item, Rune)) :- get_dict(item, D, IS), get_dict(rune, D, RS), atom_string(Item, IS), atom_string(Rune, RS).
+parse_act("identify", D, identify(Item)) :- get_dict(item, D, IS), atom_string(Item, IS).
+parse_act("repair", D, repair(Slot, Kit)) :- get_dict(slot, D, SS), get_dict(kit, D, KS), atom_string(Slot, SS), atom_string(Kit, KS).
+parse_act("pay_bounty", _, pay_bounty).
+parse_act("jailbreak", _, jailbreak).
+parse_act("bribe", D, bribe(GuardId)) :- get_dict(target, D, TS), atom_string(GuardId, TS).
+parse_act("gather", D, gather(NodeId)) :- get_dict(node, D, NS), atom_string(NodeId, NS).
+parse_act("skin", D, skin(CorpseId)) :- get_dict(corpse, D, CS), atom_string(CorpseId, CS).
+parse_act("build", D, build(StructTag)) :- get_dict(structure, D, SS), atom_string(StructTag, SS).
+parse_act("demolish", D, demolish(Prop)) :- get_dict(prop, D, PS), atom_string(Prop, PS).
+parse_act("brew", D, brew(Ingreds)) :- get_dict(ingredients, D, Is), get_ingreds(Is, Ingreds).
+parse_act("ask_quest", D, ask_quest(NpcId)) :- get_dict(target, D, TS), atom_string(NpcId, TS).
+parse_act("load_state", D, load_state(State)) :- get_dict(state, D, State).
+parse_act("dump_state", _, dump_state).
+parse_act("clear_state", _, clear_state).
+parse_act("ritual", D, ritual(Type)) :- get_dict(ritual, D, RS), atom_string(Type, RS).
+parse_act("socket", D, socket(Item, Gem)) :- get_dict(item, D, IS), get_dict(gem, D, GS), atom_string(Item, IS), atom_string(Gem, GS).
 
 get_ingreds([], []).
 get_ingreds([H|T], [Str|Rest]) :- atom_string(Str, H), get_ingreds(T, Rest).
@@ -222,7 +310,52 @@ cmd_parse("stay", stay).
 cmd_parse("follow", follow).
 cmd_parse(C, attack(Tgt)) :- sub_string(C, 0, 7, _, "attack "), sub_string(C, 7, _, 0, TgtS), atom_string(Tgt, TgtS).
 
+% --- API HANDLERS ---
 api_step(Req, Res) :-
-    to_act(Req.action, Act),
-    step(db, Req.actor, Act, _, Evts),
-    Res = json{events: Evts}.
+    ( catch(api_step_internal(Req, ResDict), Err, (
+            message_to_string(Err, Msg),
+            ResDict = json{error: Msg}
+      )) ->
+        ( nonvar(ResDict) -> Res = ResDict ; Res = json{error: "Goal evaluation failed"} )
+    ;
+        Res = json{error: "Goal evaluation failed"}
+    ).
+
+api_step_internal(Req, json{events: JsonEvts}) :-
+    get_dict(actor, Req, ActorStr), atom_string(Actor, ActorStr),
+    get_dict(action, Req, ActionDict), to_act(ActionDict, Act),
+    step(db, Actor, Act, _, Evts),
+    terms_to_json(Evts, JsonEvts).
+
+is_bool_or_null(true).
+is_bool_or_null(false).
+is_bool_or_null(@(true)).
+is_bool_or_null(@(false)).
+is_bool_or_null(@(null)).
+
+% --- JSON SERIALIZATION ---
+terms_to_json([], []) :- !.
+terms_to_json([H|T], [JH|JT]) :- term_to_json(H, JH), terms_to_json(T, JT).
+
+term_to_json(Var, null) :- var(Var), !.
+term_to_json(Dict, JsonDict) :- is_dict(Dict), !, dict_pairs(Dict, _, Pairs), map_pairs(Pairs, JsonPairs), dict_pairs(JsonDict, json, JsonPairs).
+term_to_json(List, JsonList) :- is_list(List), !, terms_to_json(List, JsonList).
+term_to_json(Term, json{functor: FunctorStr, args: JsonArgs}) :- compound(Term), !, Term =.. [Functor|Args], atom_string(Functor, FunctorStr), terms_to_json(Args, JsonArgs).
+term_to_json(Special, Special) :- is_bool_or_null(Special), !.
+term_to_json(Atom, AtomStr) :- atom(Atom), \+ number(Atom), !, atom_string(Atom, AtomStr).
+term_to_json(Val, Val).
+
+map_pairs([], []).
+map_pairs([K-V|T], [K-JV|NT]) :- term_to_json(V, JV), map_pairs(T, NT).
+
+json_to_term(Dict, Term) :- is_dict(Dict), get_dict(functor, Dict, FunctorStr), get_dict(args, Dict, JsonArgs), !, atom_string(Functor, FunctorStr), map_json_to_terms(JsonArgs, Args), Term =.. [Functor|Args].
+json_to_term(Dict, Term) :- is_dict(Dict), !, dict_pairs(Dict, Tag, Pairs), map_json_pairs(Pairs, TermPairs), dict_pairs(Term, Tag, TermPairs).
+json_to_term(List, TermList) :- is_list(List), !, map_json_to_terms(List, TermList).
+json_to_term(Special, Special) :- is_bool_or_null(Special), !.
+json_to_term(Str, Atom) :- string(Str), !, atom_string(Atom, Str).
+json_to_term(Val, Val).
+
+map_json_to_terms([], []).
+map_json_to_terms([H|T], [TH|TT]) :- json_to_term(H, TH), map_json_to_terms(T, TT).
+map_json_pairs([], []).
+map_json_pairs([K-V|T], [K-TV|NT]) :- json_to_term(V, TV), map_json_pairs(T, NT).

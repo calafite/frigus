@@ -15,15 +15,18 @@ entity(_, Id, E) :- db_entity(_, Id, E), !.
 node(_, Id, N) :- db_node(Id, N), !.
 
 add(_, Type, E, db) :-
-    assertz(db_entity(Type, E.id, E)).
+    get_dict(id, E, Id),
+    retractall(db_entity(Type, Id, _)),
+    assertz(db_entity(Type, Id, E)).
 
 update(_, E, db) :-
-    ( db_entity(Type, E.id, _) ->
-        retractall(db_entity(Type, E.id, _)),
-        assertz(db_entity(Type, E.id, E))
-    ; db_node(E.id, _) ->
-        retractall(db_node(E.id, _)),
-        assertz(db_node(E.id, E))
+    get_dict(id, E, Id),
+    ( db_entity(Type, Id, _) ->
+        retractall(db_entity(Type, Id, _)),
+        assertz(db_entity(Type, Id, E))
+    ; db_node(Id, _) ->
+        retractall(db_node(Id, _)),
+        assertz(db_node(Id, E))
     ).
 
 remove(_, Id, db) :-
@@ -45,12 +48,33 @@ flags(_, Fs, db) :-
     dict_pairs(Fs, flags, Pairs),
     forall(member(K-V, Pairs), assertz(db_flag(K, V))).
 
-load_db(State) :-
+retag_dict(Dict, NewTag, TaggedDict) :-
+    is_dict(Dict), !,
+    dict_pairs(Dict, _, Pairs),
+    map_retag_pairs(Pairs, CleanPairs),
+    dict_pairs(TaggedDict, NewTag, CleanPairs).
+retag_dict(List, Tag, CleanList) :-
+    is_list(List), !,
+    map_retag_list(List, Tag, CleanList).
+retag_dict(Val, _, Val).
+
+map_retag_list([], _, []).
+map_retag_list([H|T], Tag, [TH|TT]) :-
+    retag_dict(H, Tag, TH),
+    map_retag_list(T, Tag, TT).
+
+map_retag_pairs([], []).
+map_retag_pairs([K-V|T], [K-TV|NT]) :-
+    retag_dict(V, dict, TV),
+    map_retag_pairs(T, NT).
+
+load_db(RawState) :-
+    engine:json_to_term(RawState, State),
     clear_db,
-    ( get_dict(plyrs, State, Plyrs) -> forall(member(P, Plyrs), assertz(db_entity(plyr, P.id, P))) ; true ),
-    ( get_dict(mobs, State, Mobs) -> forall(member(M, Mobs), assertz(db_entity(mob, M.id, M))) ; true ),
-    ( get_dict(items, State, Items) -> forall(member(I, Items), assertz(db_entity(item, I.id, I))) ; true ),
-    ( get_dict(rooms, State, Rooms) -> forall(member(R, Rooms), assertz(db_node(R.id, R))) ; true ),
+    ( get_dict(plyrs, State, Plyrs) -> forall(member(P0, Plyrs), (retag_dict(P0, plyr, P), get_dict(id, P, PId), assertz(db_entity(plyr, PId, P)))) ; true ),
+    ( get_dict(mobs, State, Mobs) -> forall(member(M0, Mobs), (retag_dict(M0, mob, M), get_dict(id, M, MId), assertz(db_entity(mob, MId, M)))) ; true ),
+    ( get_dict(items, State, Items) -> forall(member(I0, Items), (retag_dict(I0, item, I), get_dict(id, I, IId), assertz(db_entity(item, IId, I)))) ; true ),
+    ( get_dict(rooms, State, Rooms) -> forall(member(R0, Rooms), (retag_dict(R0, room, R), get_dict(id, R, RId), assertz(db_node(RId, R)))) ; true ),
     ( get_dict(flags, State, Fs) ->
         dict_pairs(Fs, flags, Pairs),
         forall(member(K-V, Pairs), assertz(db_flag(K, V)))

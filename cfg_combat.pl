@@ -205,7 +205,7 @@ req(gungnir, dex, 24).
 req(mjolnir, str, 40).
 req(solaris, int, 40).
 req(bloodline_curse, cha, 35).
-req(_, _, 0).
+req(_, none, 0).
 
 scale(sword, str, 1.2).
 scale(poison_dagger, dex, 1.5).

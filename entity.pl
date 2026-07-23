@@ -3,7 +3,7 @@
     lvl/2, lvl/3, xp/2, xp/3, class/2, race/2,
     str/2, str/3, dex/2, dex/3, con/2, con/3,
     int/2, int/3, wis/2, wis/3, cha/2, cha/3, luk/2, luk/3,
-    inv/2, inv/3, equip/2, equip/3, stat/3,
+    inv/2, inv/3, equip/2, equip/3, stat/3, base_stat/3,
     fac/2, fac/3, affs/2, affs/3, wpn/2, alive/1,
     reps/2, reps/3, rep_val/3, rep_mod/4,
     cds/2, cds/3, total_armor/2, props/2,
@@ -20,25 +20,27 @@
 ]).
 
 :- use_module(config).
+:- use_module(cfg_combat).
 
-hp(E, E.hp).         hp(E, V, E.put(hp, V)).
-room(E, E.room).     room(E, V, E.put(room, V)).
-mp(E, E.mp).         mp(E, V, E.put(mp, V)).
-lvl(E, E.lvl).       lvl(E, V, E.put(lvl, V)).
-xp(E, E.xp).         xp(E, V, E.put(xp, V)).
-class(E, E.class).
+hp(E, Hp)         :- get_dict(hp, E, Hp).         hp(E, V, E.put(hp, V)).
+room(E, Room)     :- get_dict(room, E, Room).     room(E, V, E.put(room, V)).
+mp(E, Mp)         :- get_dict(mp, E, Mp).         mp(E, V, E.put(mp, V)).
+lvl(E, Lvl)       :- get_dict(lvl, E, Lvl).       lvl(E, V, E.put(lvl, V)).
+xp(E, Xp)         :- get_dict(xp, E, Xp).         xp(E, V, E.put(xp, V)).
+class(E, Class)   :- get_dict(class, E, Class).
 
-str(E, E.str).       str(E, V, E.put(str, V)).
-dex(E, E.dex).       dex(E, V, E.put(dex, V)).
-con(E, E.con).       con(E, V, E.put(con, V)).
-int(E, E.int).       int(E, V, E.put(int, V)).
-wis(E, E.wis).       wis(E, V, E.put(wis, V)).
-cha(E, E.cha).       cha(E, V, E.put(cha, V)).
-luk(E, E.luk).       luk(E, V, E.put(luk, V)).
+str(E, V)         :- get_dict(str, E, V).         str(E, V, E.put(str, V)).
+dex(E, V)         :- get_dict(dex, E, V).         dex(E, V, E.put(dex, V)).
+con(E, V)         :- get_dict(con, E, V).         con(E, V, E.put(con, V)).
+int(E, V)         :- get_dict(int, E, V).         int(E, V, E.put(int, V)).
+wis(E, V)         :- get_dict(wis, E, V).         wis(E, V, E.put(wis, V)).
+cha(E, V)         :- get_dict(cha, E, V).         cha(E, V, E.put(cha, V)).
+luk(E, V)         :- get_dict(luk, E, V).         luk(E, V, E.put(luk, V)).
 
-inv(E, E.inv).       inv(E, V, E.put(inv, V)).
-equip(E, E.equip).   equip(E, V, E.put(equip, V)).
-fac(E, E.fac).       fac(E, V, E.put(fac, V)).
+inv(E, V)         :- get_dict(inv, E, V).         inv(E, V, E.put(inv, V)).
+equip(E, V)       :- get_dict(equip, E, V).       equip(E, V, E.put(equip, V)).
+fac(E, V)         :- get_dict(fac, E, V).         fac(E, V, E.put(fac, V)).
+
 affs(E, A) :- get_dict(affs, E, A), !.
 affs(_, []).
 affs(E, V, E.put(affs, V)).
@@ -51,7 +53,9 @@ bounty(E, B) :- get_dict(bounty, E, B), !.
 bounty(_, 0).
 bounty(E, V, E.put(bounty, V)).
 
-race(E, E.race) :- get_dict(race, E, _), !.
+race(E, Race) :-
+    is_dict(E),
+    get_dict(race, E, Race), !.
 race(_, human).
 
 props(E, P) :-
@@ -161,7 +165,7 @@ item_armor(none, 0) :- !.
 item_armor(Item, Val) :-
     is_dict(Item, item), get_dict(tag, Item, Tag), !,
     config:armor_val(Tag, Base),
-    ( get_dict(props, Item, Props), member(prop(armor, M), Props) -> Val is Base + M ; Val = Base ).
+    ( get_dict(props, Item, Props), member(prop(ArmorProp, M), Props), ArmorProp == armor -> Val is Base + M ; Val = Base ).
 item_armor(Tag, Val) :- config:armor_val(Tag, Val), !.
 item_armor(_, 0).
 
@@ -174,38 +178,53 @@ total_armor(E, Armor) :-
     ( member(aff{type: buff, stat: body, val: BMod, dur: _}, Affs) ->
         Armor is SVal + BVal + BMod + StBonus
     ; Armor is SVal + BVal + StBonus ).
+total_armor(E, Armor) :-
+    is_dict(E, mob), props(E, Props),
+    findall(A, member(prop(armor, A), Props), AVals),
+    sum_list(AVals, Armor), !.
 total_armor(_, 0).
 
 buff_mod([], _, 0).
 buff_mod([aff{type: buff, stat: S, val: V, dur: _}|T], S, Out) :- buff_mod(T, S, R), Out is R + V, !.
 buff_mod([aff{type: plague, val: _, dur: _}|T], S, Out) :- buff_mod(T, S, R), Out is R - 5, !.
 buff_mod([aff{type: fever, val: _, dur: _}|T], S, Out) :- (S == int -> buff_mod(T, S, R), Out is R - 10, ! ; buff_mod(T, S, Out)).
-buff_mod([aff{type: blight, val: _, dur: _}|T], S, Out) :- ((S == str ; S == dex ; S == con) -> buff_mod(T, S, R), Out is R - 5, ! ; buff_mod(T, S, Out)).
 buff_mod([_|T], S, Out) :- buff_mod(T, S, Out).
 
 equip_stat_mod(E, Stat, Total) :-
-    equip(E, Eq), dict_values(Eq, Items),
+    equip(E, Eq), dict_pairs(Eq, _, Pairs),
     findall(Val, (
-        member(Item, Items), is_dict(Item, item),
+        member(_-Item, Pairs), is_dict(Item, item),
         get_dict(props, Item, Props), member(prop(Stat, Val), Props)
     ), Vals),
     sum_list(Vals, Total).
 
-stat(E, S, V) :-
+base_stat(_, none, 9999) :- !.
+base_stat(E, S, V) :-
     get_dict(S, E, Base), affs(E, A), buff_mod(A, S, Mod),
     ( race(E, Race), config:race_bonus(Race, S, Bonus) -> true ; Bonus = 0 ),
     ( stance(E, crawl) -> (S == dex -> StMod = -5 ; S == str -> StMod = -3 ; StMod = 0) ; StMod = 0 ),
     ( is_dict(E, plyr) -> equip_stat_mod(E, S, EqMod) ; EqMod = 0 ),
+    V is Base + Mod + Bonus + StMod + EqMod, !.
+base_stat(_, _, 1).
+
+stat(_, none, 9999) :- !.
+stat(E, S, V) :-
+    base_stat(E, S, BaseV),
     ( is_encumbered(E) -> (S == dex -> EncMod = -8 ; S == str -> EncMod = -4 ; EncMod = 0) ; EncMod = 0 ),
-    V is Base + Mod + Bonus + StMod + EqMod + EncMod, !.
+    V is BaseV + EncMod, !.
 stat(_, _, 1).
 
 wpn(E, W) :-
-    is_dict(E, plyr), get_dict(wpn, E.equip, WObj), WObj \== none,
+    is_dict(E, plyr), get_dict(equip, E, Eq), get_dict(wpn, Eq, WObj), WObj \== none,
     (is_dict(WObj, item) -> get_dict(tag, WObj, W) ; W = WObj), !.
+wpn(E, Tag) :-
+    is_dict(E, mob), get_dict(tag, E, Tag), cfg_combat:wpn_dmg(Tag, _), !.
 wpn(_, fists).
 
-alive(E) :- hp(E, Hp), Hp > 0.
+alive(E) :-
+    is_dict(E),
+    get_dict(hp, E, Hp),
+    Hp > 0.
 
 inv_add(Inv, Item, _Qty, [Item | Inv]) :-
     is_dict(Item, item), !.
@@ -230,7 +249,7 @@ inv_wt([stack{tag: Tag, qty: Q} | T], W) :-
     config:weight(Tag, UW), inv_wt(T, RW), W is RW + (UW * Q).
 
 max_wt(E, W) :-
-    stat(E, str, S), stat(E, con, C),
+    base_stat(E, str, S), base_stat(E, con, C),
     mount(E, Mount),
     ( Mount == horse -> Extra = 200 ; Mount == griffin -> Extra = 300 ; Extra = 0 ),
     W is (S * 7) + (C * 3) + Extra.

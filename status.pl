@@ -19,7 +19,7 @@ can_act(E) :-
     affs(E, A),
     \+ member(aff{type: stun, dur: _, val: _}, A),
     \+ member(aff{type: freeze, dur: _, val: _}, A),
-    get_dict(state, E, State), State \== sleeping,
+    ( get_dict(state, E, State) -> State \== sleeping ; true ),
     ( member(aff{type: confusion, dur: _, val: _}, A) -> random_between(1, 100, R), R > 50 ; true ).
 
 can_cast(E) :-

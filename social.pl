@@ -20,8 +20,9 @@ soc(_, S, db) :-
 
 chat_tgts(W, local, Id, Tgts) :-
     world:entity(W, Id, A), room(A, RId), world:room_entities(W, RId, Ents),
-    findall(E.id, (member(E, Ents), is_dict(E, plyr)), Tgts).
-chat_tgts(_W, global, _, Tgts) :- findall(P.id, world:db_entity(plyr, _, P), Tgts).
+    findall(PId, (member(E, Ents), is_dict(E, plyr), get_dict(id, E, PId)), Tgts).
+chat_tgts(_W, global, _, Tgts) :-
+    findall(PId, (world:db_entity(plyr, PId, _)), Tgts).
 chat_tgts(W, party, Id, Tgts) :-
     world:entity(W, Id, A), get_dict(party, A, PId), PId \== none,
     soc(W, S), get_dict(PId, S.parties, P), Tgts = P.members.
@@ -143,7 +144,7 @@ step_guild(W, Id, join(GId), NW, [guild_joined(Id, GId)]) :-
     world:entity(W, Id, A), \+ get_dict(guild, A, _),
     soc(W, S), get_dict(GId, S.guilds, G),
     NG = G.put(members, [Id|G.members]),
-    Gs = S.guilds.put(GId, NG), soc(W, S.put(guilds, Gs), W1),
+    Gs = S.guilds.put(GId, NG), soc(W, S.put(guilds, NGs), W1),
     world:update(W1, A.put(guild, GId), NW).
 
 step_guild(W, Id, leave, NW, [guild_left(Id)]) :-

@@ -6,6 +6,7 @@
 ]).
 
 :- use_module(config).
+:- use_module(entity).
 :- use_module(world).
 :- use_module(library(random)).
 :- use_module(library(lists)).
@@ -30,7 +31,7 @@ item_price(RId, ItemTag, buy, A, Price) :-
     get_supply(RId, ItemTag, Sup),
     baseline_supply(ItemTag, Base),
     config:val(ItemTag, BasePrice),
-    entity:stat(A, cha, Cha), entity:stat(A, luk, Luk),
+    stat(A, cha, Cha), stat(A, luk, Luk),
     Factor is Base / max(1, Sup),
     RawPrice is BasePrice * Factor,
     Discount is (Cha * 0.01) + (Luk * 0.005),
@@ -40,7 +41,7 @@ item_price(RId, ItemTag, sell, A, Price) :-
     get_supply(RId, ItemTag, Sup),
     baseline_supply(ItemTag, Base),
     config:val(ItemTag, BasePrice),
-    entity:stat(A, cha, Cha), entity:stat(A, luk, Luk),
+    stat(A, cha, Cha), stat(A, luk, Luk),
     Factor is Base / max(1, Sup),
     RawPrice is BasePrice * Factor,
     Bonus is (Cha * 0.01) + (Luk * 0.005),
