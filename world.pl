@@ -10,15 +10,19 @@
 :- dynamic db_node/2.
 :- dynamic db_flag/2.
 
+entity(_, Id, E) :- atom(Id), db_entity(_, Id, E), !.
+entity(_, Id, E) :- string(Id), atom_string(Atom, Id), db_entity(_, Atom, E), !.
 entity(_, Id, E) :- db_entity(_, Id, E), !.
 
 node(_, Id, N) :- db_node(Id, N), !.
+node(_, Id, N) :- string(Id), catch(term_string(Term, Id), _, fail), db_node(Term, N), !.
 node(_, Id, N) :- string(Id), atom_string(Atom, Id), db_node(Atom, N), !.
 
 add(_, Type, E, db) :-
     get_dict(id, E, Id),
     retractall(db_entity(Type, Id, _)),
-    assertz(db_entity(Type, Id, E)).
+    assertz(db_entity(Type, Id, E)), !.
+add(_, _, _, db).
 
 update(_, E, db) :-
     get_dict(id, E, Id),
@@ -32,11 +36,13 @@ update(_, E, db) :-
         assertz(db_node(Id, E))
     ;
         assertz(db_entity(mob, Id, E))
-    ).
+    ), !.
+update(_, _, db).
 
 remove(_, Id, db) :-
     retractall(db_entity(_, Id, _)),
-    retractall(db_node(Id, _)).
+    retractall(db_node(Id, _)), !.
+remove(_, _, db).
 
 room_entities(_, RId, Ents) :-
     findall(E, (
@@ -51,7 +57,8 @@ flags(_, Fs) :-
 flags(_, Fs, db) :-
     retractall(db_flag(_, _)),
     dict_pairs(Fs, flags, Pairs),
-    forall(member(K-V, Pairs), assertz(db_flag(K, V))).
+    forall(member(K-V, Pairs), assertz(db_flag(K, V))), !.
+flags(_, _, db).
 
 retag_dict(Dict, NewTag, TaggedDict) :-
     is_dict(Dict), !,

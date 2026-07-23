@@ -10,15 +10,15 @@
 
 ai_pet_act(W, Id, NW, Evts) :-
     world:entity(W, Id, Pet),
-    get_dict(master, Pet, MasterId),
-    ( world:entity(W, MasterId, Master) ->
-        get_dict(command, Pet, Cmd),
+    ( get_dict(master, Pet, MasterId), world:entity(W, MasterId, Master) ->
+        ( get_dict(command, Pet, Cmd) -> true ; Cmd = follow ),
         execute_cmd(Cmd, W, Id, Pet, Master, NW, Evts)
     ;
         NW = W, Evts = []
-    ).
+    ), !.
+ai_pet_act(W, _, W, []).
 
-execute_cmd(stay, W, _, _, _, W, []).
+execute_cmd(stay, W, _, _, _, W, []) :- !.
 
 execute_cmd(follow, W, Id, Pet, Master, NW, Evts) :-
     room(Pet, PRId), room(Master, MRId),
@@ -26,7 +26,7 @@ execute_cmd(follow, W, Id, Pet, Master, NW, Evts) :-
         ai_path:step_towards(W, Id, MRId, NW, Evts)
     ;
         NW = W, Evts = []
-    ).
+    ), !.
 
 execute_cmd(attack(TgtId), W, Id, Pet, Master, NW, Evts) :-
     room(Pet, PRId), room(Master, MRId),
@@ -39,7 +39,7 @@ execute_cmd(attack(TgtId), W, Id, Pet, Master, NW, Evts) :-
         ;
             execute_cmd(follow, W, Id, Pet, Master, NW, Evts)
         )
-    ).
+    ), !.
 
 execute_cmd(_, W, Id, Pet, Master, NW, Evts) :-
     execute_cmd(follow, W, Id, Pet, Master, NW, Evts).

@@ -5,7 +5,6 @@
 :- use_module(entity).
 :- use_module(world).
 :- use_module(status).
-:- use_module(zone).
 
 recipe(cooked_fish, campfire, [raw_fish]).
 recipe(cooked_meat, campfire, [raw_meat]).
@@ -37,30 +36,59 @@ is_poison(nightshade).
 check_ingreds(_, []).
 check_ingreds(Inv, [Tag|T]) :-
     ( member(stack{tag: Tag, qty: Q}, Inv), Q >= 1
-    ; member(Item, Inv), is_dict(Item, item), Item.tag == Tag ),
+    ; member(Item, Inv), is_dict(Item, item), Item.tag == Tag ), !,
     check_ingreds(Inv, T).
 
 consume_ingreds(Inv, [], Inv).
-consume_ingreds(Inv, [Tag|T], NInv) :- inv_rem(Inv, Tag, 1, Tmp), consume_ingreds(Tmp, T, NInv).
+consume_ingreds(Inv, [Tag|T], NInv) :-
+    inv_rem(Inv, Tag, 1, Tmp), !,
+    consume_ingreds(Tmp, T, NInv).
+consume_ingreds(Inv, [_|T], NInv) :-
+    consume_ingreds(Inv, T, NInv).
 
 step_cook(W, Id, Output, NW, Evts) :-
-    world:entity(W, Id, A), alive(A), status:can_act(A),
-    recipe(Output, Station, Ingreds),
-    room(A, RId), world:node(W, RId, N), ( member(Station, N.props) ; member(campfire(_), N.props) ),
-    inv(A, Inv), check_ingreds(Inv, Ingreds), consume_ingreds(Inv, Ingreds, Inv1),
-    skill_val(A, cooking, Lvl), stat(A, wis, Wis), stat(A, luk, Luk),
-    random_between(1, 100, Roll),
-    ( Roll + Lvl + floor(Wis * 0.2) + floor(Luk * 0.2) >= 15 ->
-        inv_add(Inv1, Output, 1, Inv2),
-        ( Lvl < 100, random_between(1, 100, R2), R2 =< (25 + floor(Luk * 0.2)) ->
-            skill_mod(A, cooking, 1, A1), NLvl is Lvl + 1,
-            Evts = [cooked(Id, Output), skill_up(Id, cooking, NLvl)]
-        ; A1 = A, Evts = [cooked(Id, Output)] )
-    ; inv_add(Inv1, burnt_food, 1, Inv2), A1 = A, Evts = [burnt_cooking(Id, Output)] ),
-    world:update(W, A1.put(inv, Inv2), NW).
+    world:entity(W, Id, A),
+    ( \+ status:can_act(A) ->
+        NW = W, Evts = [cannot_act(Id)]
+    ; \+ recipe(Output, _, _) ->
+        NW = W, Evts = [unknown_recipe(Id, Output)]
+    ;
+        recipe(Output, Station, Ingreds),
+        room(A, RId), world:node(W, RId, N),
+        ( get_dict(props, N, Props) -> true ; Props = [] ),
+        ( (member(Station, Props) ; member(campfire(_), Props)) -> HasStation = true ; HasStation = false ),
+        ( HasStation == false ->
+            NW = W, Evts = [missing_station(Id, Station)]
+        ; inv(A, Inv), \+ check_ingreds(Inv, Ingreds) ->
+            NW = W, Evts = [missing_ingredients(Id, Output)]
+        ;
+            inv(A, Inv), consume_ingreds(Inv, Ingreds, Inv1),
+            skill_val(A, cooking, Lvl), stat(A, wis, Wis), stat(A, luk, Luk),
+            random_between(1, 100, Roll),
+            ( Roll + Lvl + floor(Wis * 0.2) + floor(Luk * 0.2) >= 15 ->
+                inv_add(Inv1, Output, 1, Inv2),
+                ( Lvl < 100, random_between(1, 100, R2), R2 =< (25 + floor(Luk * 0.2)) ->
+                    skill_mod(A, cooking, 1, A1), NLvl is Lvl + 1,
+                    Evts = [cooked(Id, Output), skill_up(Id, cooking, NLvl)]
+                ; A1 = A, Evts = [cooked(Id, Output)] )
+            ;
+                inv_add(Inv1, burnt_food, 1, Inv2), A1 = A,
+                Evts = [burnt_cooking(Id, Output)]
+            ),
+            world:update(W, A1.put(inv, Inv2), NW)
+        )
+    ).
 
-step_poison(W, Id, Food, Poison, NW, [poisoned_food(Id, Food, Poisoned)]) :-
-    world:entity(W, Id, A), alive(A), status:can_act(A),
-    is_poison(Poison), poison_version(Food, Poisoned),
-    inv(A, Inv), inv_rem(Inv, Food, 1, Inv1), inv_rem(Inv1, Poison, 1, Inv2),
-    inv_add(Inv2, Poisoned, 1, Inv3), world:update(W, A.put(inv, Inv3), NW).
+step_poison(W, Id, Food, Poison, NW, Evts) :-
+    world:entity(W, Id, A),
+    ( \+ status:can_act(A) ->
+        NW = W, Evts = [cannot_act(Id)]
+    ; is_poison(Poison), poison_version(Food, Poisoned),
+      inv(A, Inv), inv_rem(Inv, Food, 1, Inv1), inv_rem(Inv1, Poison, 1, Inv2)
+    ->
+        inv_add(Inv2, Poisoned, 1, Inv3),
+        world:update(W, A.put(inv, Inv3), NW),
+        Evts = [poisoned_food(Id, Food, Poisoned)]
+    ;
+        NW = W, Evts = [cannot_poison(Id, Food, Poison)]
+    ).

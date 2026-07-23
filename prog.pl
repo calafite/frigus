@@ -7,6 +7,17 @@
 :- use_module(world).
 :- use_module(status).
 
+valid_stat(str).
+valid_stat(dex).
+valid_stat(con).
+valid_stat(int).
+valid_stat(wis).
+valid_stat(cha).
+valid_stat(luk).
+
+growth_val(C, Stat, G) :- config:growth(C, Stat, G), !.
+growth_val(_, _, 1).
+
 add_xp(A, Amt, NA, Evts) :-
     xp(A, Cur),
     NXp is Cur + Amt,
@@ -18,10 +29,10 @@ lvl_check(A, Xp, NA, [lvl_up(A.id, NLvl) | REvts]) :-
     Xp >= Req, !,
     NXp is Xp - Req,
     NLvl is Lvl + 1,
-    class(A, C),
-    config:growth(C, str, GS), config:growth(C, dex, GD), config:growth(C, con, GC),
-    config:growth(C, int, GI), config:growth(C, wis, GW), config:growth(C, cha, GCh),
-    config:growth(C, luk, GL),
+    ( class(A, C) -> true ; C = fighter ),
+    growth_val(C, str, GS), growth_val(C, dex, GD), growth_val(C, con, GC),
+    growth_val(C, int, GI), growth_val(C, wis, GW), growth_val(C, cha, GCh),
+    growth_val(C, luk, GL),
     get_ceil(A, str, CS), str(A, Str), NStr is min(CS, Str + GS),
     get_ceil(A, dex, CD), dex(A, Dex), NDex is min(CD, Dex + GD),
     get_ceil(A, con, CC), con(A, Con), NCon is min(CC, Con + GC),
@@ -35,37 +46,50 @@ lvl_check(A, Xp, NA, [lvl_up(A.id, NLvl) | REvts]) :-
 lvl_check(A, Xp, NA, []) :-
     xp(A, Xp, NA).
 
-step_train(W, Id, Stat, NW, Evts) :-
-    world:entity(W, Id, A), alive(A), status:can_act(A),
-    stat(A, Stat, Val), Cost is Val * 20,
-    xp(A, Xp), Xp >= Cost, NXp is Xp - Cost,
-    get_ceil(A, Stat, Ceil),
-    ( Val < Ceil ->
-        NVal is Val + 1,
-        A1 = A.put(xp, NXp).put(Stat, NVal),
-        Evts = [trained(Id, Stat, NVal)],
-        world:update(W, A1, NW)
+step_train(W, Id, StatQuery, NW, Evts) :-
+    world:entity(W, Id, A),
+    ( atom_string(Stat, StatQuery) -> true ; Stat = StatQuery ),
+    ( \+ status:can_act(A) ->
+        NW = W, Evts = [cannot_act(Id)]
+    ; \+ valid_stat(Stat) ->
+        NW = W, Evts = [invalid_stat(Id, StatQuery)]
     ;
-        stat(A, luk, Luk),
-        random_between(1, 100, Roll),
-        ( Roll =< 5 + floor(Luk * 0.1) ->
-            NCeil is Ceil + 1, NVal is Val + 1,
-            ceils(A, Ceils), NCeils = Ceils.put(Stat, NCeil),
-            A1 = A.put(xp, NXp).put(Stat, NVal).put(ceils, NCeils),
-            Evts = [breakthrough(Id, Stat, NCeil, NVal)],
-            world:update(W, A1, NW)
+        stat(A, Stat, Val), Cost is Val * 20,
+        xp(A, Xp),
+        ( Xp < Cost ->
+            NW = W, Evts = [insufficient_xp(Id, Cost, Xp)]
         ;
-            A1 = A.put(xp, NXp),
-            Evts = [train_failed(Id, Stat)],
-            world:update(W, A1, NW)
+            NXp is Xp - Cost,
+            get_ceil(A, Stat, Ceil),
+            ( Val < Ceil ->
+                NVal is Val + 1,
+                A1 = A.put(xp, NXp).put(Stat, NVal),
+                world:update(W, A1, NW),
+                Evts = [trained(Id, Stat, NVal)]
+            ;
+                stat(A, luk, Luk),
+                random_between(1, 100, Roll),
+                ( Roll =< 5 + floor(Luk * 0.1) ->
+                    NCeil is Ceil + 1, NVal is Val + 1,
+                    ( ceils(A, Ceils), is_dict(Ceils) -> true ; Ceils = ceils{} ),
+                    NCeils = Ceils.put(Stat, NCeil),
+                    A1 = A.put(xp, NXp).put(Stat, NVal).put(ceils, NCeils),
+                    world:update(W, A1, NW),
+                    Evts = [breakthrough(Id, Stat, NCeil, NVal)]
+                ;
+                    A1 = A.put(xp, NXp),
+                    world:update(W, A1, NW),
+                    Evts = [train_failed(Id, Stat)]
+                )
+            )
         )
     ).
 
 keep_stack(S) :-
     get_dict(tag, S, Tag),
     ( config:soulbound(Tag) -> true
-    ; get_dict(enchanted, S, Enc), member(permanent, Enc) -> true
-    ).
+    ; get_dict(enchanted, S, Enc), is_list(Enc), member(permanent, Enc) -> true
+    ), !.
 
 rebirth_affs(P, NAffs) :-
     affs(P, Affs),

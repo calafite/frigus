@@ -9,6 +9,8 @@
 :- use_module(entity).
 :- use_module(world).
 :- use_module(quest).
+:- use_module(status).
+:- use_module(combat).
 
 :- dynamic db_generated_quest/4.
 
@@ -36,22 +38,27 @@ gen_quest(NpcTag, QId, db) :-
     id_gen(q_gen, QId),
     ( npc_theme(NpcTag, Theme) -> true ; Theme = general ),
     findall(O-R, gen_pool(Theme, O, R), Pool),
-    random_member(Obj-Rews, Pool),
+    ( Pool \== [] -> random_member(Obj-Rews, Pool) ; Obj = kill(rat, 5), Rews = [xp(100), gold(30)] ),
     assertz(db_generated_quest(NpcTag, QId, [Obj], Rews)).
 
-step_ask_quest(W, Id, NpcId, NW, Evts) :-
+step_ask_quest(W, Id, NpcQuery, NW, Evts) :-
     world:entity(W, Id, A),
-    world:entity(W, NpcId, Npc),
-    quests(A, Qs),
-    ( get_dict(active_gen_quest, Npc, QId) ->
-        ( get_dict(QId, Qs, _) ->
-            Evts = [already_active(QId)], NW = W
+    ( \+ status:can_act(A) ->
+        NW = W, Evts = [cannot_act(Id)]
+    ; room(A, RId), combat:resolve_target(W, Id, RId, NpcQuery, Npc) ->
+        ( quests(A, Qs), is_dict(Qs) -> true ; Qs = dict{} ),
+        ( get_dict(active_gen_quest, Npc, QId) ->
+            ( get_dict(QId, Qs, _) ->
+                NW = W, Evts = [already_active(QId)]
+            ;
+                quest:step_accept(W, Id, QId, NW, Evts)
+            )
         ;
-            quest:step_accept(W, Id, QId, NW, Evts)
+            gen_quest(Npc.tag, QId, db),
+            Npc1 = Npc.put(active_gen_quest, QId),
+            world:update(W, Npc1, W1),
+            quest:step_accept(W1, Id, QId, NW, Evts)
         )
     ;
-        gen_quest(Npc.tag, QId, db),
-        Npc1 = Npc.put(active_gen_quest, QId),
-        world:update(W, Npc1, W1),
-        quest:step_accept(W1, Id, QId, NW, Evts)
+        NW = W, Evts = [target_not_found(Id, NpcQuery)]
     ).
