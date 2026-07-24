@@ -47,19 +47,23 @@ is_crime(Tgt) :-
     ( get_dict(bounty, Tgt, B) -> B =< 0 ; true ).
 
 do_pay_bounty(Id, Evts) :-
-    world:get_entity(Id, Actor),
-    ( get_dict(bounty, Actor, B), B > 0 ->
-        ( entity:rem_item(Actor, gold, B, A1) ->
-            entity:clear_bounty(A1, FinalA),
-            world:put_entity(FinalA),
-            clear_local_threats(Id, FinalA),
-            Evts = [bounty_paid(Id, B)]
+    ( world:get_entity(Id, Actor) ->
+        ( (get_dict(bounty, Actor, B), B > 0) ->
+            ( entity:rem_item(Actor, gold, B, A1) ->
+                entity:clear_bounty(A1, FinalA),
+                world:put_entity(FinalA),
+                world:save_db('world_state.json'),
+                clear_local_threats(Id, FinalA),
+                Evts = [bounty_paid(Id, B)]
+            ;
+                Evts = [error(insufficient_gold_for_bounty(Id, B))]
+            )
         ;
-            Evts = [error(insufficient_gold_for_bounty(Id, B))]
+            Evts = [error(no_bounty_to_pay(Id))]
         )
     ;
-        Evts = [error(no_bounty_to_pay(Id))]
-    ).
+        Evts = [error(actor_not_found(Id))]
+    ), !.
 
 clear_local_threats(PId, Player) :-
     get_dict(room, Player, Room),
@@ -146,6 +150,7 @@ apply_damage(SrcId, SrcEnt, Tgt, Dmg, Evts) :-
         BInc is Dmg * 5,
         entity:add_bounty(SrcEnt, BInc, NAttacker),
         world:put_entity(NAttacker),
+        world:save_db('world_state.json'),
         CrimeEvts = [bounty_gained(SrcId, BInc)]
     ;
         CrimeEvts = [], NAttacker = SrcEnt
@@ -236,6 +241,7 @@ handle_death(SrcEnt, DeadTgt, Evts) :-
     ),
     entity:clear_bounty(DeadTgt, CleanTgt),
     world:put_entity(CleanTgt),
+    world:save_db('world_state.json'),
     resolve_death(NSrc, CleanTgt, BaseEvts),
     append(BountyEvts, BaseEvts, Evts).
 
