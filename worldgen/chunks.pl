@@ -28,7 +28,7 @@ generate_cell(X, Y, Z, Id) :-
 
     Exits0 = dict{north: IdNorth, south: IdSouth, east: IdEast, west: IdWest},
     ( Z > -5 -> Z1 is Z - 1, chunk_id(X, Y, Z1, IdDown), Exits1 = Exits0.put(down, IdDown) ; Exits1 = Exits0 ),
-    ( Z < 5  -> Z2 is Z + 1, chunk_id(X, Y, Z2, IdUp),   Exits2 = Exits1.put(up, IdUp) ; Exits2 = Exits1 ),
+    ( Z < 5  -> Z2 is Z + 1, chunk_id(X, Y, Z2, IdUp), Exits2 = Exits1.put(up, IdUp) ; Exits2 = Exits1 ),
 
     ( X == 0, Y == 0, Z == 0 -> FinalExits = Exits2.put(town, square) ; FinalExits = Exits2 ),
 

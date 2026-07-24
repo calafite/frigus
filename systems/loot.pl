@@ -8,10 +8,10 @@ gen_drops(DeadMob, Evts) :-
     Tag = DeadMob.tag,
     RId = DeadMob.room,
     findall(item{tag: ITag, qty: FinalQty}, (
-        spawn_config:loot_table(Tag, ITag, Chance, Min, Max),
-        random(F), F =< Chance,
-        random_between(Min, Max, FinalQty)
-    ), Drops),
+                spawn_config:loot_table(Tag, ITag, Chance, Min, Max),
+                random(F), F =< Chance,
+                random_between(Min, Max, FinalQty)
+                                            ), Drops),
     spawn_items(RId, Drops, Evts).
 
 spawn_items(_, [], []).

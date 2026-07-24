@@ -15,32 +15,32 @@ is_mob(E) :- is_dict(E), \+ is_plyr(E), \+ is_item(E), get_dict(hp, E, _).
 
 do_look(Id, Evts) :-
     ( world:get_entity(Id, A) ->
-        get_dict(room, A, RoomId),
-        ( world:get_room(RoomId, Node) ->
-            get_dict(id, Node, RId),
-            ( get_dict(desc, Node, Desc) -> true ; Desc = "A room." ),
-            ( get_dict(props, Node, Props) -> true ; Props = [] ),
-            ( get_dict(exits, Node, ExitsDict), dict_keys(ExitsDict, Exits) -> true ; Exits = [] ),
-            world:room_entities(RId, Ents),
-            get_dict(hp, A, SelfHp), get_dict(max_hp, A, SelfMaxHp),
-            get_dict(mp, A, SelfMp), get_dict(max_mp, A, SelfMaxMp),
-            ( get_dict(affs, A, SelfAffs) -> true ; SelfAffs = dict{} ),
-            SelfStats = dict{hp: SelfHp, max_hp: SelfMaxHp, mp: SelfMp, max_mp: SelfMaxMp, affs: SelfAffs},
+          get_dict(room, A, RoomId),
+          ( world:get_room(RoomId, Node) ->
+                get_dict(id, Node, RId),
+                ( get_dict(desc, Node, Desc) -> true ; Desc = "A room." ),
+                ( get_dict(props, Node, Props) -> true ; Props = [] ),
+                ( get_dict(exits, Node, ExitsDict), dict_keys(ExitsDict, Exits) -> true ; Exits = [] ),
+                world:room_entities(RId, Ents),
+                get_dict(hp, A, SelfHp), get_dict(max_hp, A, SelfMaxHp),
+                get_dict(mp, A, SelfMp), get_dict(max_mp, A, SelfMaxMp),
+                ( get_dict(affs, A, SelfAffs) -> true ; SelfAffs = dict{} ),
+                SelfStats = dict{hp: SelfHp, max_hp: SelfMaxHp, mp: SelfMp, max_mp: SelfMaxMp, affs: SelfAffs},
 
-            ( get_dict(type, Node, outdoor) -> world:env_state(EnvState), env:env_desc(EnvState, EnvDesc) ; EnvDesc = "" ),
+                ( get_dict(type, Node, outdoor) -> world:env_state(EnvState), env:env_desc(EnvState, EnvDesc) ; EnvDesc = "" ),
 
-            findall(dict{id: OId, hp: OHp, max_hp: OMaxHp, bounty: OBty, affs: OAffs},
-                    (member(O, Ents), is_plyr(O), get_dict(id, O, OId), OId \== Id,
-                     get_dict(hp, O, OHp), get_dict(max_hp, O, OMaxHp), (get_dict(bounty, O, OBty) -> true ; OBty = 0), (get_dict(affs, O, OAffs) -> true ; OAffs = dict{})), OData),
-            findall(dict{id: MId, name: MName, tag: MTag, hp: MHp, max_hp: MMaxHp, affs: MAffs},
-                    (member(M, Ents), is_mob(M), get_dict(hp, M, MHp), MHp > 0,
-                     get_dict(id, M, MId), (get_dict(name, M, MName) -> true ; MName = MTag),
-                     get_dict(tag, M, MTag), (get_dict(max_hp, M, MMaxHp) -> true ; MMaxHp = MHp), (get_dict(affs, M, MAffs) -> true ; MAffs = dict{})), MData),
-            findall(dict{id: IId, tag: ITag, qty: IQty},
-                    (member(I, Ents), is_item(I), get_dict(id, I, IId),
-                     get_dict(tag, I, ITag), get_dict(qty, I, IQty)), IData),
-            Evts = [look(RId, Desc, Props, Exits, OData, MData, IData, SelfStats, EnvDesc)]
-        ; Evts = [error(room_not_found(RoomId))] )
+                findall(dict{id: OId, hp: OHp, max_hp: OMaxHp, bounty: OBty, affs: OAffs},
+                        (member(O, Ents), is_plyr(O), get_dict(id, O, OId), OId \== Id,
+                         get_dict(hp, O, OHp), get_dict(max_hp, O, OMaxHp), (get_dict(bounty, O, OBty) -> true ; OBty = 0), (get_dict(affs, O, OAffs) -> true ; OAffs = dict{})), OData),
+                findall(dict{id: MId, name: MName, tag: MTag, hp: MHp, max_hp: MMaxHp, affs: MAffs},
+                        (member(M, Ents), is_mob(M), get_dict(hp, M, MHp), MHp > 0,
+                         get_dict(id, M, MId), (get_dict(name, M, MName) -> true ; MName = MTag),
+                         get_dict(tag, M, MTag), (get_dict(max_hp, M, MMaxHp) -> true ; MMaxHp = MHp), (get_dict(affs, M, MAffs) -> true ; MAffs = dict{})), MData),
+                findall(dict{id: IId, tag: ITag, qty: IQty},
+                        (member(I, Ents), is_item(I), get_dict(id, I, IId),
+                         get_dict(tag, I, ITag), get_dict(qty, I, IQty)), IData),
+                Evts = [look(RId, Desc, Props, Exits, OData, MData, IData, SelfStats, EnvDesc)]
+          ; Evts = [error(room_not_found(RoomId))] )
     ; Evts = [error(actor_not_found(Id))] ).
 
 do_status(Id, [status_info(Id, Lvl, Xp, ReqXp, StatPoints, Stats, Health, Bty)]) :-

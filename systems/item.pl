@@ -40,10 +40,10 @@ do_equip(Id, Tag, Evts) :-
     NEq = Eq.put(Slot, Tag),
     entity:rem_item(Actor, Tag, 1, TmpAct),
     ( OldTag == none ->
-        NActor = TmpAct.put(equip, NEq)
+          NActor = TmpAct.put(equip, NEq)
     ;
-        entity:add_item(TmpAct, OldTag, 1, NActor_WOld),
-        NActor = NActor_WOld.put(equip, NEq)
+      entity:add_item(TmpAct, OldTag, 1, NActor_WOld),
+      NActor = NActor_WOld.put(equip, NEq)
     ),
     world:put_entity(NActor),
     Evts = [equipped(Id, Tag, Slot)].

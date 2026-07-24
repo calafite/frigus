@@ -1,6 +1,6 @@
 :- module(spawn_config, [
-    mob_xp/2, loot_table/5, race_bonus/3, race_trait/2, is_aggressive/1
-]).
+              mob_xp/2, loot_table/5, race_bonus/3, race_trait/2, is_aggressive/1
+                        ]).
 
 mob_xp(rat, 10).
 mob_xp(wolf, 40).

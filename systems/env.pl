@@ -24,10 +24,10 @@ phase(T, morning)   :- T < 720, !.
 phase(T, afternoon) :- T < 1080, !.
 phase(T, evening)   :- T < 1440, !.
 
-msg_time(morning,   "The sun rises, casting a warm glow over the realm.").
+msg_time(morning, "The sun rises, casting a warm glow over the realm.").
 msg_time(afternoon, "The sun reaches its zenith.").
-msg_time(evening,   "The sun begins to set, painting the sky in hues of orange and purple.").
-msg_time(night,     "Darkness falls as the stars emerge.").
+msg_time(evening, "The sun begins to set, painting the sky in hues of orange and purple.").
+msg_time(night, "Darkness falls as the stars emerge.").
 
 chk_weath(W, NW, [env_msg(Msg)]) :-
     random_between(1, 100, R), R =< 2,
@@ -40,9 +40,9 @@ pick_weath(NW) :-
     random_member(NW, [clear, rain, storm, snow]).
 
 msg_weath(clear, "The skies clear up, revealing the expanse above.").
-msg_weath(rain,  "Dark clouds gather and rain begins to fall.").
+msg_weath(rain, "Dark clouds gather and rain begins to fall.").
 msg_weath(storm, "Thunder crashes! A violent storm has begun.").
-msg_weath(snow,  "A gentle snow starts to drift down from the cold sky.").
+msg_weath(snow, "A gentle snow starts to drift down from the cold sky.").
 
 env_desc(Cur, Desc) :-
     get_dict(time, Cur, T),

@@ -1,8 +1,8 @@
 :- module(names, [
-    gen_npc_name/3,
-    gen_creature_name/3,
-    reload_databases/0
-]).
+              gen_npc_name/3,
+              gen_creature_name/3,
+              reload_databases/0
+                 ]).
 
 :- use_module('rng').
 :- use_module(library(lists)).
@@ -66,9 +66,9 @@ assert_lines([Line|Ts], Pred) :-
     ( Line == "" -> true
     ; sub_string(Line, 0, 1, _, "#") -> true
     ;
-        atom_string(Atom, Line),
-        Goal =.. [Pred, Atom],
-        assertz(Goal)
+      atom_string(Atom, Line),
+      Goal =.. [Pred, Atom],
+      assertz(Goal)
     ),
     assert_lines(Ts, Pred).
 

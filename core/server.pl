@@ -26,11 +26,11 @@ start_server(Port) :-
 
 init_world :-
     ( world:load_db('world_state.json'), world:get_room(square, _) ->
-        format('Loaded existing world state from world_state.json~n', [])
+          format('Loaded existing world state from world_state.json~n', [])
     ;
-        format('No valid world state found. Building starter world...~n', []),
-        builder:build_starter_world,
-        world:save_db('world_state.json')
+      format('No valid world state found. Building starter world...~n', []),
+      builder:build_starter_world,
+      world:save_db('world_state.json')
     ).
 
 start_ticker :-
@@ -46,14 +46,14 @@ run_world_tick :-
     ( EnvEvts \== [] -> push_outdoors(EnvEvts) ; true ),
     ai:do_ai_tick(_),
     forall(active_client(_, ActorId), (
-        status:do_tick(ActorId, TickEvts),
-        ( TickEvts \== [] ->
-            ( world:get_entity(ActorId, A) ->
-                get_dict(room, A, RoomId),
-                world:push_room_events(RoomId, TickEvts)
-            ; true )
-        ; true )
-    )),
+               status:do_tick(ActorId, TickEvts),
+               ( TickEvts \== [] ->
+                     ( world:get_entity(ActorId, A) ->
+                           get_dict(room, A, RoomId),
+                           world:push_room_events(RoomId, TickEvts)
+                     ; true )
+               ; true )
+                                      )),
     broadcast_room_events.
 
 push_outdoors(Evts) :-
@@ -80,44 +80,44 @@ handle_ws(Request) :-
 ws_loop(WebSocket) :-
     ws_receive(WebSocket, Message, [format(json)]),
     ( get_dict(type, Message, close) ->
-        retractall(active_client(WebSocket, _))
+          retractall(active_client(WebSocket, _))
     ;
-        process_ws_message(WebSocket, Message.data),
-        ws_loop(WebSocket)
+      process_ws_message(WebSocket, Message.data),
+      ws_loop(WebSocket)
     ).
 
 process_ws_message(WebSocket, Req) :-
     ( get_dict(actor, Req, RawActor) ->
-        engine:ensure_atom(RawActor, ActorId),
-        retractall(active_client(WebSocket, _)),
-        assertz(active_client(WebSocket, ActorId))
+          engine:ensure_atom(RawActor, ActorId),
+          retractall(active_client(WebSocket, _)),
+          assertz(active_client(WebSocket, ActorId))
     ;
-        ActorId = unknown
+      ActorId = unknown
     ),
     ( catch(engine:api_step(Req, Res), Err, (
-            message_to_string(Err, Msg),
-            Res = json{status: "exception", error: Msg}
-      )) ->
-        true
+                message_to_string(Err, Msg),
+                Res = json{status: "exception", error: Msg}
+                                            )) ->
+          true
     ;
-        Res = json{status: "error", error: "Request handler goal failed"}
+      Res = json{status: "error", error: "Request handler goal failed"}
     ),
     ws_send(WebSocket, json(Res)),
 
     ( ActorId \== unknown, world:get_entity(ActorId, Actor), get_dict(room, Actor, RoomId) ->
-        flush_and_send_room_events(RoomId)
+          flush_and_send_room_events(RoomId)
     ;
-        true
+      true
     ).
 
 handle_step(Request) :-
     http_read_json_dict(Request, Req),
     ( catch(engine:api_step(Req, Res), Err, (
-            message_to_string(Err, Msg),
-            Res = json{status: "exception", error: Msg}
-      )) ->
-        true
+                message_to_string(Err, Msg),
+                Res = json{status: "exception", error: Msg}
+                                            )) ->
+          true
     ;
-        Res = json{status: "error", error: "Request handler goal failed"}
+      Res = json{status: "error", error: "Request handler goal failed"}
     ),
     reply_json_dict(Res).

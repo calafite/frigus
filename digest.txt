@@ -7,8 +7,12 @@ Directory structure:
     │   ├── spawn.pl
     │   └── world.pl
     ├── core/
+    │   ├── auth.pl
     │   ├── engine.pl
     │   ├── entity.pl
+    │   ├── events.pl
+    │   ├── json_io.pl
+    │   ├── parser.pl
     │   ├── server.pl
     │   └── world.pl
     ├── data/
@@ -17,9 +21,11 @@ Directory structure:
     │   ├── first_names.txt
     │   └── last_names.txt
     ├── systems/
+    │   ├── admin.pl
     │   ├── ai.pl
     │   ├── combat.pl
     │   ├── env.pl
+    │   ├── info.pl
     │   ├── item.pl
     │   ├── loot.pl
     │   ├── move.pl
@@ -52,10 +58,21 @@ FILE: config/combat.pl
 ================================================
 :- module(combat_config, [
     wpn_dmg/2, wpn_trait/2, wpn_crit_mult/2,
-    spell_cost/2, spell_cooldown/2, spell_dmg/2
+    spell_cost/2, spell_cooldown/2, spell_dmg/2,
+    spell_type/2, spell_affinity/2, spell_apply_tgt/2, spell_apply_self/2
 ]).
 
-% Base Weapon Damage
+:- discontiguous spell_type/2.
+:- discontiguous spell_cost/2.
+:- discontiguous spell_cooldown/2.
+:- discontiguous spell_dmg/2.
+:- discontiguous spell_apply_tgt/2.
+:- discontiguous spell_apply_self/2.
+:- discontiguous spell_affinity/2.
+
+% ==========================================
+% WEAPON CONFIGURATION
+% ==========================================
 wpn_dmg(fists, [dmg(blunt, 3)]).
 wpn_dmg(dagger, [dmg(pierce, 5)]).
 wpn_dmg(shortsword, [dmg(slash, 7)]).
@@ -66,19 +83,12 @@ wpn_dmg(shortbow, [dmg(pierce, 7)]).
 wpn_dmg(staff, [dmg(blunt, 5)]).
 wpn_dmg(iron_sword, [dmg(slash, 10)]).
 
-% Monster Attack Fallbacks
 wpn_dmg(rat, [dmg(pierce, 2)]).
 wpn_dmg(wolf, [dmg(slash, 4)]).
 wpn_dmg(goblin, [dmg(slash, 5)]).
 wpn_dmg(orc, [dmg(blunt, 8)]).
 wpn_dmg(dragon, [dmg(fire, 25)]).
 
-% Weapon Traits:
-% - reliable: Steady, predictable damage bounds.
-% - flurry: Chance to trigger a rapid 2nd attack.
-% - massacre: Devastating critical hit multipliers.
-% - precision: High critical strike chance.
-% - catalyst: Empowers magic damage.
 wpn_trait(sword, reliable).
 wpn_trait(iron_sword, reliable).
 wpn_trait(shortsword, reliable).
@@ -89,26 +99,235 @@ wpn_trait(shortbow, precision).
 wpn_trait(staff, catalyst).
 wpn_trait(_, standard).
 
-% Critical Damage Multipliers
 wpn_crit_mult(battleaxe, 2.5).
 wpn_crit_mult(greatsword, 2.5).
 wpn_crit_mult(dagger, 1.8).
 wpn_crit_mult(_, 2.0).
 
-% Spell Configuration
+% ==========================================
+% GENERAL / BASE SPELLS
+% ==========================================
+spell_type(fireball, damage).
 spell_cost(fireball, 15).
-spell_cost(fireblast, 25).
-spell_cost(iceblast, 12).
-spell_cost(mend, 10).
-
 spell_cooldown(fireball, 3).
-spell_cooldown(fireblast, 5).
-spell_cooldown(iceblast, 3).
-spell_cooldown(mend, 2).
-
 spell_dmg(fireball, 15).
+
+spell_type(fireblast, damage).
+spell_cost(fireblast, 25).
+spell_cooldown(fireblast, 5).
 spell_dmg(fireblast, 22).
+
+spell_type(iceblast, damage).
+spell_cost(iceblast, 12).
+spell_cooldown(iceblast, 3).
 spell_dmg(iceblast, 12).
+spell_apply_tgt(iceblast, [frostbite(3, 5)]).
+
+spell_type(mend, heal).
+spell_cost(mend, 10).
+spell_cooldown(mend, 2).
+spell_dmg(mend, 30).
+
+spell_type(ignite, damage).
+spell_cost(ignite, 10).
+spell_cooldown(ignite, 4).
+spell_dmg(ignite, 5).
+spell_apply_tgt(ignite, [burning(4, 8)]).
+
+% ==========================================
+% CELESTIAL / ANGEL SPELLS
+% ==========================================
+spell_type(smite, damage).
+spell_affinity(smite, [angel]).
+spell_cost(smite, 35).
+spell_cooldown(smite, 6).
+spell_dmg(smite, 30).
+spell_apply_tgt(smite, [stunned(1, 0), holy_fire(4, 15)]).
+
+spell_type(divine_aegis, buff).
+spell_affinity(divine_aegis, [angel]).
+spell_cost(divine_aegis, 50).
+spell_cooldown(divine_aegis, 20).
+spell_apply_self(divine_aegis, [divine_protection(8, 75)]).
+
+spell_type(last_judgement, damage).
+spell_affinity(last_judgement, [angel]).
+spell_cost(last_judgement, 55).
+spell_cooldown(last_judgement, 15).
+spell_dmg(last_judgement, 40).
+spell_apply_tgt(last_judgement, [marked(5, 0)]).
+
+spell_type(divine_retribution, damage).
+spell_affinity(divine_retribution, [angel]).
+spell_cost(divine_retribution, 45).
+spell_cooldown(divine_retribution, 8).
+spell_dmg(divine_retribution, 25).
+spell_apply_tgt(divine_retribution, [stunned(2, 0)]).
+
+spell_type(mass_heal, group_heal).
+spell_affinity(mass_heal, [angel, human]).
+spell_cost(mass_heal, 50).
+spell_cooldown(mass_heal, 10).
+spell_dmg(mass_heal, 40).
+
+% ==========================================
+% FIRE / INFERNAL / DEMON SPELLS
+% ==========================================
+spell_type(inferno, area).
+spell_affinity(inferno, [demon]).
+spell_cost(inferno, 60).
+spell_cooldown(inferno, 12).
+spell_dmg(inferno, 30).
+spell_apply_tgt(inferno, [burning(6, 12), panicked(2, 0)]).
+
+spell_type(hellfire, damage).
+spell_affinity(hellfire, [demon]).
+spell_cost(hellfire, 45).
+spell_cooldown(hellfire, 8).
+spell_dmg(hellfire, 35).
+spell_apply_tgt(hellfire, [burning(5, 15), soul_rot(5, 10)]).
+
+spell_type(blood_frenzy, buff).
+spell_affinity(blood_frenzy, [orc, demon, wolfkin]).
+spell_cost(blood_frenzy, 30).
+spell_cooldown(blood_frenzy, 15).
+spell_apply_self(blood_frenzy, [bloodlust(6, 40)]).
+
+spell_type(crimson_oath, buff).
+spell_affinity(crimson_oath, [orc, demon]).
+spell_cost(crimson_oath, 20).
+spell_cooldown(crimson_oath, 15).
+spell_apply_self(crimson_oath, [bloodlust(6, 35), bleeding(6, 3)]).
+
+% ==========================================
+% ELVEN / ARCANE / NATURE SPELLS
+% ==========================================
+spell_type(moonfire, damage).
+spell_affinity(moonfire, [high_elf, wood_elf, dark_elf]).
+spell_cost(moonfire, 20).
+spell_cooldown(moonfire, 4).
+spell_dmg(moonfire, 18).
+spell_apply_tgt(moonfire, [holy_fire(3, 10)]).
+
+spell_type(arcane_barrier, buff).
+spell_affinity(arcane_barrier, [high_elf, gnome]).
+spell_cost(arcane_barrier, 25).
+spell_cooldown(arcane_barrier, 10).
+spell_apply_self(arcane_barrier, [magic_barrier(5, 50)]).
+
+spell_type(barkskin, buff).
+spell_affinity(barkskin, [wood_elf, nymph]).
+spell_cost(barkskin, 20).
+spell_cooldown(barkskin, 10).
+spell_apply_self(barkskin, [fortified(5, 30)]).
+
+spell_type(crystal_tomb, cc).
+spell_affinity(crystal_tomb, [high_elf]).
+spell_cost(crystal_tomb, 40).
+spell_cooldown(crystal_tomb, 10).
+spell_dmg(crystal_tomb, 8).
+spell_apply_tgt(crystal_tomb, [frozen(3, 0), fortified(3, 90)]).
+
+spell_type(living_forest, buff).
+spell_affinity(living_forest, [wood_elf, nymph]).
+spell_cost(living_forest, 35).
+spell_cooldown(living_forest, 12).
+spell_apply_self(living_forest, [regeneration(6, 10), thornskin(6, 8)]).
+
+spell_type(blizzard, area).
+spell_affinity(blizzard, [high_elf, dark_elf]).
+spell_cost(blizzard, 40).
+spell_cooldown(blizzard, 8).
+spell_dmg(blizzard, 15).
+spell_apply_tgt(blizzard, [frostbite(4, 5)]).
+
+% ==========================================
+% SHADOW / DARK SPELLS
+% ==========================================
+spell_type(shadow_bolt, damage).
+spell_affinity(shadow_bolt, [dark_elf, demon]).
+spell_cost(shadow_bolt, 25).
+spell_cooldown(shadow_bolt, 4).
+spell_dmg(shadow_bolt, 20).
+spell_apply_tgt(shadow_bolt, [soul_rot(4, 12)]).
+
+spell_type(abyssal_curse, damage).
+spell_affinity(abyssal_curse, [dark_elf, demon]).
+spell_cost(abyssal_curse, 35).
+spell_cooldown(abyssal_curse, 8).
+spell_dmg(abyssal_curse, 12).
+spell_apply_tgt(abyssal_curse, [soul_rot(6, 10), weakened(6, 20)]).
+
+spell_type(toxic_cloud, area).
+spell_affinity(toxic_cloud, [goblin, demon, dark_elf]).
+spell_cost(toxic_cloud, 30).
+spell_cooldown(toxic_cloud, 6).
+spell_dmg(toxic_cloud, 5).
+spell_apply_tgt(toxic_cloud, [poisoned(5, 8)]).
+
+% ==========================================
+% EARTH / LIGHTNING / ARCANE CONTROL
+% ==========================================
+spell_type(colossus, buff).
+spell_affinity(colossus, [dwarf]).
+spell_cost(colossus, 40).
+spell_cooldown(colossus, 15).
+spell_apply_self(colossus, [fortified(6, 40), rooted(6, 0)]).
+
+spell_type(spellbreaker, cc).
+spell_affinity(spellbreaker, [human, high_elf]).
+spell_cost(spellbreaker, 30).
+spell_cooldown(spellbreaker, 8).
+spell_apply_tgt(spellbreaker, [silenced(3, 0)]).
+
+spell_type(chain_lightning, group_harm).
+spell_affinity(chain_lightning, [high_elf, human]).
+spell_cost(chain_lightning, 45).
+spell_cooldown(chain_lightning, 10).
+spell_dmg(chain_lightning, 25).
+
+spell_type(mass_fortify, group_buff).
+spell_affinity(mass_fortify, [dwarf, angel, wood_elf]).
+spell_cost(mass_fortify, 40).
+spell_cooldown(mass_fortify, 15).
+spell_apply_tgt(mass_fortify, [fortified(6, 25)]).
+
+spell_type(choir_of_seraphim, group_buff).
+spell_affinity(choir_of_seraphim, [angel]).
+spell_cost(choir_of_seraphim, 60).
+spell_cooldown(choir_of_seraphim, 18).
+spell_apply_tgt(choir_of_seraphim,
+    [divine_protection(5, 40),
+     regeneration(5, 8),
+     blessed(5, 20)]).
+
+spell_type(heavenly_reckoning, area).
+spell_affinity(heavenly_reckoning, [angel]).
+spell_cost(heavenly_reckoning, 70).
+spell_cooldown(heavenly_reckoning, 15).
+spell_dmg(heavenly_reckoning, 28).
+spell_apply_tgt(heavenly_reckoning,
+    [holy_fire(5, 12),
+     blinded(2, 0)]).
+
+spell_type(frost_nova, cc).
+spell_affinity(frost_nova, [high_elf, human]).
+spell_cost(frost_nova, 30).
+spell_cooldown(frost_nova, 10).
+spell_dmg(frost_nova, 10).
+spell_apply_tgt(frost_nova, [frozen(2, 0)]).
+
+spell_type(entangle, cc).
+spell_affinity(entangle, [wood_elf, nymph]).
+spell_cost(entangle, 25).
+spell_cooldown(entangle, 8).
+spell_dmg(entangle, 5).
+spell_apply_tgt(entangle, [paralysed(2, 0)]).
+
+% Fallbacks
+spell_apply_tgt(_, []).
+spell_apply_self(_, []).
+spell_affinity(_, all).
 
 
 
@@ -407,57 +626,46 @@ elite_mod(titan, max_hp, 3.0).
 
 
 ================================================
-FILE: core/engine.pl
+FILE: core/auth.pl
 ================================================
-:- module(engine, [api_step/2, term_to_json/2, terms_to_json/2, ensure_atom/2]).
-
-:- discontiguous step/3.
-:- discontiguous parse_act/2.
+:- module(auth, [
+    handle_validate_key/3,
+    handle_login/3,
+    handle_register/6
+]).
 
 :- use_module(library(md5)).
 :- use_module('world').
-:- use_module('../systems/move').
-:- use_module('../systems/combat').
-:- use_module('../systems/item').
-:- use_module('../systems/status').
-:- use_module('../systems/ai').
-:- use_module('../systems/prog').
-:- use_module('../systems/env').
+:- use_module('entity').
 
-step(Id, move(Dir), Evts)     :- move:do_move(Id, Dir, Evts), !.
-step(Id, kill(Tgt), Evts)     :- combat:do_kill(Id, Tgt, Evts), !.
-step(Id, cast(Sp, Tgt), Evts) :- combat:do_cast(Id, Sp, Tgt, Evts), !.
-step(Id, loot(IId), Evts)     :- item:do_loot(Id, IId, Evts), !.
-step(Id, equip(Tag), Evts)    :- item:do_equip(Id, Tag, Evts), !.
-step(Id, unequip(Slot), Evts) :- item:do_unequip(Id, Slot, Evts), !.
-step(Id, use(Tag), Evts)      :- item:do_use(Id, Tag, Evts), !.
-step(Id, allocate(Stat), Evts):- prog:do_allocate(Id, Stat, Evts), !.
+handle_validate_key(Id, Key, [key_status(Id, Key, Status)]) :-
+    ( admin_key(Key) -> Status = valid ; Status = invalid ).
 
-step(_, ai_tick, Evts)        :- ai:do_ai_tick(Evts), !.
-step(Id, tick, Evts)          :- status:do_tick(Id, Evts), !.
-step(Id, look, Evts)          :- do_look(Id, Evts), !.
-step(Id, status, Evts)        :- do_status(Id, Evts), !.
-step(Id, inventory, Evts)     :- do_inventory(Id, Evts), !.
-step(Id, bounties, Evts)      :- do_bounties(Id, Evts), !.
-step(Id, pay_bounty, Evts)    :- combat:do_pay_bounty(Id, Evts), !.
-step(Id, time, Evts)          :- do_time(Id, Evts), !.
-step(Id, admin_cmd(Sub, Arg), Evts) :- do_admin(Id, Sub, Arg, Evts), !.
-
-step(Id, ensure_player(Pass, Key, Race, Stats), Evts) :-
+% Strict Login logic
+handle_login(Id, Pass, Evts) :-
     hash_pass(Pass, Hash),
     ( world:get_entity(Id, Player) ->
         ( get_dict(pass_hash, Player, StoredHash) ->
-            ( StoredHash == Hash ->
+            ( same_hash(StoredHash, Hash) ->
                 Evts = [player_status(Id, exists)]
             ;
                 Evts = [error(invalid_password(Id))]
             )
         ;
+            % Legacy password assignment
             NPlayer = Player.put(pass_hash, Hash),
             world:put_entity(NPlayer),
             world:save_db('world_state.json'),
             Evts = [player_status(Id, exists)]
         )
+    ;
+        Evts = [error(account_does_not_exist(Id))]
+    ).
+
+% Strict Registration logic
+handle_register(Id, Pass, Key, Race, Stats, Evts) :-
+    ( world:get_entity(Id, _) ->
+        Evts = [error(account_already_exists(Id))]
     ;
         ( (is_restricted(Race), \+ admin_key(Key)) ->
             Evts = [error(restricted_race_denied(Id, Race))]
@@ -472,9 +680,28 @@ step(Id, ensure_player(Pass, Key, Race, Stats), Evts) :-
                 Evts = [error(stat_allocation_invalid(Id))]
             )
         )
-    ), !.
+    ).
 
-step(Id, ActTerm, [error(unhandled_action(Id, ActTerm))]).
+% Type-agnostic hash equality check (Atom vs String)
+same_hash(H1, H2) :-
+    nonvar(H1), nonvar(H2),
+    atom_string(H1, S1),
+    atom_string(H2, S2),
+    S1 == S2.
+
+admin_key(RawKey) :-
+    nonvar(RawKey),
+    ( atom(RawKey) -> atom_string(RawKey, StrKey) ; StrKey = RawKey ),
+    string(StrKey), normalize_space(string(CleanKey), StrKey),
+    CleanKey \== "", is_admin_key_string(CleanKey).
+
+is_admin_key_string("daotobavirus_supreme").
+is_admin_key_string("SOL_ADMIN_1337").
+is_admin_key_string("admin123").
+is_admin_key_string("placeholder").
+
+is_restricted(angel).
+is_restricted(demon).
 
 chk_alloc(Stats, IsAdmin, CleanStats) :-
     ( get_dict(str, Stats, S1) -> S is max(10, S1) ; S = 10 ),
@@ -485,282 +712,110 @@ chk_alloc(Stats, IsAdmin, CleanStats) :-
     ( get_dict(cha, Stats, Ch1)-> Ch is max(10, Ch1); Ch = 10 ),
     ( get_dict(luk, Stats, L1) -> L is max(10, L1) ; L = 10 ),
     Spent is (S - 10) + (D - 10) + (C - 10) + (I - 10) + (W - 10) + (Ch - 10) + (L - 10),
-    ( IsAdmin == true -> MaxPts = 1000 ; MaxPts = 15 ),
+    ( IsAdmin == true -> MaxPts = 10000 ; MaxPts = 15 ),
     Spent =< MaxPts,
     CleanStats = dict{str: S, dex: D, con: C, int: I, wis: W, cha: Ch, luk: L}.
 
-hash_pass(Pass, Hash) :-
-    ( atom(Pass) ; string(Pass) ),
-    Pass \== "", !,
+hash_pass(Pass, HashStr) :-
+    ( atom(Pass) ; string(Pass) ), Pass \== "", !,
     atom_string(Pass, Str),
-    md5_hash(Str, Hash, []).
+    md5_hash(Str, RawHash, []),
+    atom_string(RawHash, HashStr).
 hash_pass(_, "nohash").
-
-admin_key("placeholder").
-
-is_restricted(angel).
-is_restricted(demon).
-
-is_public_event(moved(_,_,_)).
-is_public_event(hit(_,_,_,_,_)).
-is_public_event(crit(_,_,_,_,_)).
-is_public_event(dead(_,_)).
-is_public_event(cast(_,_,_)).
-is_public_event(cast_crit(_,_,_)).
-is_public_event(healed(_,_,_,_)).
-is_public_event(dodged(_,_)).
-is_public_event(flurry(_,_)).
-is_public_event(say(_,_)).
-is_public_event(npc_arrived(_)).
-is_public_event(guard_reinforcement(_)).
-is_public_event(bounty_paid(_,_)).
-is_public_event(env_msg(_)).
-
-split_events([], [], []).
-split_events([E|Es], [E|Pubs], Privs) :- is_public_event(E), !, split_events(Es, Pubs, Privs).
-split_events([E|Es], Pubs, [E|Privs]) :- split_events(Es, Pubs, Privs).
-
-api_step(Req, Res) :-
-    ( catch(api_step_internal(Req, Res), Err, format_exception_res(Err, Req, Res)) ->
-        true
-    ;
-        Res = json{status: "error", error: "Goal evaluation failed catastrophically."}
-    ).
-
-api_step_internal(Req, Res) :-
-    ( get_dict(actor, Req, RawActor) -> ensure_atom(RawActor, ActorId) ; ActorId = unknown ),
-    ( get_dict(action, Req, ActionDict) -> true ; ActionDict = dict{} ),
-    ( parse_act(ActionDict, ActTerm) ->
-        ( step(ActorId, ActTerm, DirectEvts) ->
-            split_events(DirectEvts, PubEvts, PrivEvts),
-
-            ( world:get_entity(ActorId, Actor), get_dict(room, Actor, RoomId) ->
-                world:push_room_events(RoomId, PubEvts)
-            ;
-                true
-            ),
-
-            terms_to_json(PrivEvts, JsonPrivs),
-            Res = json{status: "ok", events: JsonPrivs}
-        ;
-            Res = json{status: "error", error: "Action handler failed during execution", action: ActionDict}
-        )
-    ;
-        Res = json{status: "error", error: "Malformed or unknown action payload format", action: ActionDict}
-    ).
-
-format_exception_res(Err, Req, json{status: "exception", error: ErrorMsg, req: Req}) :-
-    message_to_string(Err, ErrorMsg).
-
-ensure_atom(Var, unknown) :- var(Var), !.
-ensure_atom(Atom, CleanAtom) :-
-    atom(Atom), !,
-    normalize_space(atom(CleanAtom), Atom).
-ensure_atom(String, CleanAtom) :-
-    string(String), !,
-    normalize_space(atom(CleanAtom), String).
-ensure_atom(Number, Atom) :-
-    number(Number), !,
-    atom_number(Atom, Number).
-ensure_atom(_, unknown).
-
-extract_target(D, Tgt) :-
-    ( get_dict(target, D, Raw), Raw \== "" -> ensure_atom(Raw, Tgt)
-    ; get_dict(args, D, [Raw|_]), Raw \== "" -> ensure_atom(Raw, Tgt)
-    ; get_dict(item, D, Raw), Raw \== "" -> ensure_atom(Raw, Tgt)
-    ; get_dict(stat, D, Raw), Raw \== "" -> ensure_atom(Raw, Tgt)
-    ; Tgt = none ).
-
-extract_dir(D, Dir) :-
-    ( get_dict(dir, D, Raw), Raw \== "" -> ensure_atom(Raw, Dir)
-    ; get_dict(args, D, [Raw|_]), Raw \== "" -> ensure_atom(Raw, Dir)
-    ; Dir = north ).
-
-parse_act(D, move(Dir)) :-
-    ( get_dict(type, D, "move") ; get_dict(type, D, "go") ),
-    extract_dir(D, Dir).
-
-parse_act(D, kill(Tgt)) :-
-    ( get_dict(type, D, "kill") ; get_dict(type, D, "attack") ; get_dict(type, D, "k") ),
-    extract_target(D, Tgt).
-
-parse_act(D, cast(S, T)):-
-    ( get_dict(type, D, "cast") ; get_dict(type, D, "c") ),
-    ( get_dict(spell, D, RawS), RawS \== "" -> ensure_atom(RawS, S)
-    ; get_dict(args, D, [RawS|_]), RawS \== "" -> ensure_atom(RawS, S)
-    ; S = fireball ),
-    ( get_dict(target, D, RawT), RawT \== "" -> ensure_atom(RawT, T)
-    ; get_dict(args, D, [_, RawT|_]), RawT \== "" -> ensure_atom(RawT, T)
-    ; T = none ).
-
-parse_act(D, loot(IId)) :-
-    ( get_dict(type, D, "loot") ; get_dict(type, D, "get") ; get_dict(type, D, "take") ; get_dict(type, D, "g") ),
-    extract_target(D, IId).
-
-parse_act(D, equip(I))  :-
-    get_dict(type, D, "equip"),
-    extract_target(D, I).
-
-parse_act(D, unequip(S)):-
-    get_dict(type, D, "unequip"),
-    extract_target(D, S).
-
-parse_act(D, use(I))    :-
-    get_dict(type, D, "use"),
-    extract_target(D, I).
-
-parse_act(D, allocate(S)) :-
-    ( get_dict(type, D, "allocate") ; get_dict(type, D, "train") ; get_dict(type, D, "add_stat") ),
-    extract_target(D, S).
-
-parse_act(D, look)          :- get_dict(type, D, "look").
-parse_act(D, status)        :- get_dict(type, D, "status").
-parse_act(D, inventory)     :- get_dict(type, D, "inventory").
-parse_act(D, bounties)      :- ( get_dict(type, D, "bounties") ; get_dict(type, D, "bounty") ).
-parse_act(D, pay_bounty)    :- ( get_dict(type, D, "pay_bounty") ; get_dict(type, D, "pay") ; get_dict(type, D, "pardon") ).
-parse_act(D, time)          :- ( get_dict(type, D, "time") ; get_dict(type, D, "weather") ; get_dict(type, D, "env") ).
-parse_act(D, ai_tick)       :- get_dict(type, D, "ai_tick").
-parse_act(D, tick)          :- get_dict(type, D, "tick").
-
-parse_act(D, ensure_player(Pass, Key, Race, Stats)) :-
-    get_dict(type, D, "ensure_player"),
-    ( get_dict(pass, D, RawP) -> ensure_atom(RawP, Pass) ; Pass = "" ),
-    ( get_dict(key, D, RawK) -> ensure_atom(RawK, Key) ; Key = "" ),
-    ( get_dict(race, D, RawR) -> ensure_atom(RawR, Race) ; Race = human ),
-    ( get_dict(stats, D, SDict), is_dict(SDict) -> Stats = SDict ; Stats = dict{} ).
-
-parse_act(D, admin_cmd(SubCmd, Arg)) :-
-    get_dict(type, D, "admin"),
-    ( get_dict(sub, D, RawS) -> ensure_atom(RawS, SubCmd) ; SubCmd = none ),
-    ( get_dict(target, D, RawA) -> ensure_atom(RawA, Arg) ; Arg = none ).
-
-is_plyr(E) :- is_dict(E, plyr), !.
-is_plyr(E) :- is_dict(E), get_dict(tag, E, player).
-
-is_item(E) :- is_dict(E, item), !.
-is_item(E) :- is_dict(E), get_dict(qty, E, _).
-
-is_mob(E) :- is_dict(E, mob), !.
-is_mob(E) :- is_dict(E), \+ is_plyr(E), \+ is_item(E), get_dict(hp, E, _).
-
-do_look(Id, Evts) :-
-    ( world:get_entity(Id, A) ->
-        get_dict(room, A, RoomId),
-        ( world:get_room(RoomId, Node) ->
-            get_dict(id, Node, RId),
-            ( get_dict(desc, Node, Desc) -> true ; Desc = "A room." ),
-            ( get_dict(props, Node, Props) -> true ; Props = [] ),
-            ( get_dict(exits, Node, ExitsDict), dict_keys(ExitsDict, Exits) -> true ; Exits = [] ),
-            world:room_entities(RId, Ents),
-            get_dict(hp, A, SelfHp), get_dict(max_hp, A, SelfMaxHp),
-            get_dict(mp, A, SelfMp), get_dict(max_mp, A, SelfMaxMp),
-            SelfStats = dict{hp: SelfHp, max_hp: SelfMaxHp, mp: SelfMp, max_mp: SelfMaxMp},
-
-            ( get_dict(type, Node, outdoor) ->
-                world:env_state(EnvState),
-                env:env_desc(EnvState, EnvDesc)
-            ;
-                EnvDesc = ""
-            ),
-
-            findall(dict{id: OId, hp: OHp, max_hp: OMaxHp, bounty: OBty},
-                    (member(O, Ents), is_plyr(O), get_dict(id, O, OId), OId \== Id,
-                     get_dict(hp, O, OHp), get_dict(max_hp, O, OMaxHp), (get_dict(bounty, O, OBty) -> true ; OBty = 0)), OData),
-            findall(dict{id: MId, name: MName, tag: MTag, hp: MHp, max_hp: MMaxHp},
-                    (member(M, Ents), is_mob(M), get_dict(hp, M, MHp), MHp > 0,
-                     get_dict(id, M, MId), (get_dict(name, M, MName) -> true ; MName = MTag),
-                     get_dict(tag, M, MTag), (get_dict(max_hp, M, MMaxHp) -> true ; MMaxHp = MHp)), MData),
-            findall(dict{id: IId, tag: ITag, qty: IQty},
-                    (member(I, Ents), is_item(I), get_dict(id, I, IId),
-                     get_dict(tag, I, ITag), get_dict(qty, I, IQty)), IData),
-            Evts = [look(RId, Desc, Props, Exits, OData, MData, IData, SelfStats, EnvDesc)]
-        ;
-            Evts = [error(room_not_found(RoomId))]
-        )
-    ;
-        Evts = [error(actor_not_found(Id))]
-    ).
-
-do_status(Id, [status_info(Id, Lvl, Xp, ReqXp, StatPoints, Stats, Health, Bty)]) :-
-    world:get_entity(Id, A), !,
-    get_dict(hp, A, Hp), get_dict(max_hp, A, MaxHp),
-    get_dict(mp, A, Mp), get_dict(max_mp, A, MaxMp),
-    get_dict(lvl, A, Lvl), get_dict(xp, A, Xp),
-    ReqXp is Lvl * Lvl * 100,
-    ( get_dict(stat_points, A, StatPoints) -> true ; StatPoints = 0 ),
-    ( get_dict(bounty, A, Bty) -> true ; Bty = 0 ),
-    entity:get_stat(A, str, Str), entity:get_stat(A, dex, Dex),
-    entity:get_stat(A, con, Con), entity:get_stat(A, int, Int),
-    entity:get_stat(A, wis, Wis), entity:get_stat(A, cha, Cha),
-    entity:get_stat(A, luk, Luk),
-    Stats = dict{str: Str, dex: Dex, con: Con, int: Int, wis: Wis, cha: Cha, luk: Luk},
-    Health = dict{hp: Hp, max_hp: MaxHp, mp: Mp, max_mp: MaxMp}.
-do_status(Id, [error(actor_not_found(Id))]).
-
-do_inventory(Id, [inventory_info(Id, Inv, Eq)]) :-
-    world:get_entity(Id, A), !,
-    get_dict(inv, A, Inv), get_dict(equip, A, Eq).
-do_inventory(Id, [error(actor_not_found(Id))]).
-
-do_bounties(Id, [bounty_report(Id, List)]) :-
-    world:get_bounty_leaderboard(10, List).
-
-do_time(Id, [time_report(Id, Desc)]) :-
-    world:env_state(Env),
-    env:env_desc(Env, Desc).
-
-do_admin(Id, god, _, [admin_msg(Id, "God mode granted!")]) :-
-    world:get_entity(Id, A),
-    entity:check_admin(A), !,
-    NA = A.put(hp, 999999).put(max_hp, 999999),
-    world:put_entity(NA).
-do_admin(Id, SubCmd, _, [error(unhandled_admin_cmd(Id, SubCmd))]).
 
 default_player(Id, Pass, Race, IsAdmin, Stats, P) :-
     hash_pass(Pass, Hash),
     get_dict(str, Stats, S), get_dict(dex, Stats, D), get_dict(con, Stats, C),
     get_dict(int, Stats, I), get_dict(wis, Stats, W), get_dict(cha, Stats, Ch), get_dict(luk, Stats, L),
-
     TmpP = dict{race: Race, con: C, int: I},
-    entity:get_stat(TmpP, con, TotalCon),
-    entity:get_stat(TmpP, int, TotalInt),
-
-    MaxHp is max(10, 50 + (TotalCon - 10) * 5),
-    MaxMp is max(10, 20 + (TotalInt - 10) * 5),
-
+    entity:get_stat(TmpP, con, TotalCon), entity:get_stat(TmpP, int, TotalInt),
+    MaxHp is max(10, 50 + (TotalCon - 10) * 5), MaxMp is max(10, 20 + (TotalInt - 10) * 5),
     P = plyr{
         id: Id, tag: player, class: fighter, race: Race, lvl: 1, xp: 0,
         stat_points: 0, bounty: 0, pass_hash: Hash, admin: IsAdmin,
-        hp: MaxHp, max_hp: MaxHp, mp: MaxMp, max_mp: MaxMp,
+        hp: MaxHp, max_hp: MaxHp, mp: MaxMp, max_mp: MaxMp, affs: dict{},
         str: S, dex: D, con: C, int: I, wis: W, cha: Ch, luk: L,
         room: square, equip: equip{wpn: fists, shield: none, body: none},
         inv: [stack{tag: gold, qty: 100}], cds: cds{}
     }.
 
-terms_to_json([], []) :- !.
-terms_to_json([H|T], [JH|JT]) :- term_to_json(H, JH), terms_to_json(T, JT).
 
-term_to_json(Var, null) :- var(Var), !.
-term_to_json(Dict, JsonDict) :-
-    is_dict(Dict), !,
-    dict_pairs(Dict, _, Pairs),
-    map_pairs(Pairs, JsonPairs),
-    dict_pairs(JsonDict, json, JsonPairs).
-term_to_json(List, JsonList) :-
-    is_list(List), !,
-    terms_to_json(List, JsonList).
-term_to_json(Atom, AtomStr) :-
-    atom(Atom), \+ number(Atom), \+ member(Atom, [true, false, null]), !,
-    atom_string(Atom, AtomStr).
-term_to_json(Compound, json{type: TypeStr, args: JsonArgs}) :-
-    compound(Compound), !,
-    Compound =.. [Functor|Args],
-    atom_string(Functor, TypeStr),
-    terms_to_json(Args, JsonArgs).
-term_to_json(Val, Val).
 
-map_pairs([], []).
-map_pairs([K-V|T], [K-JV|NT]) :- term_to_json(V, JV), map_pairs(T, NT).
+================================================
+FILE: core/engine.pl
+================================================
+:- module(engine, [api_step/2]).
+
+:- reexport('json_io', [term_to_json/2, terms_to_json/2]).
+:- reexport('parser', [ensure_atom/2]).
+
+:- use_module('world').
+:- use_module('events').
+:- use_module('parser').
+:- use_module('json_io').
+:- use_module('auth').
+
+:- use_module('../systems/move').
+:- use_module('../systems/combat').
+:- use_module('../systems/item').
+:- use_module('../systems/status').
+:- use_module('../systems/ai').
+:- use_module('../systems/prog').
+:- use_module('../systems/env').
+:- use_module('../systems/info').
+:- use_module('../systems/admin').
+
+% ROUTER
+step(Id, validate_key(Key), Evts)                 :- auth:handle_validate_key(Id, Key, Evts), !.
+step(Id, login(Pass), Evts)                        :- auth:handle_login(Id, Pass, Evts), !.
+step(Id, register(Pass, Key, Race, S), Evts)       :- auth:handle_register(Id, Pass, Key, Race, S, Evts), !.
+step(Id, respawn, Evts)                            :- status:do_respawn(Id, Evts), !.
+
+step(Id, move(Dir), Evts)     :- move:do_move(Id, Dir, Evts), !.
+step(Id, kill(Tgt), Evts)     :- combat:do_kill(Id, Tgt, Evts), !.
+step(Id, cast(Sp, Tgt), Evts) :- combat:do_cast(Id, Sp, Tgt, Evts), !.
+step(Id, pay_bounty, Evts)    :- combat:do_pay_bounty(Id, Evts), !.
+
+step(Id, loot(IId), Evts)     :- item:do_loot(Id, IId, Evts), !.
+step(Id, equip(Tag), Evts)    :- item:do_equip(Id, Tag, Evts), !.
+step(Id, unequip(Slot), Evts) :- item:do_unequip(Id, Slot, Evts), !.
+step(Id, use(Tag), Evts)      :- item:do_use(Id, Tag, Evts), !.
+
+step(Id, allocate(Stat), Evts):- prog:do_allocate(Id, Stat, Evts), !.
+
+step(Id, look, Evts)          :- info:do_look(Id, Evts), !.
+step(Id, status, Evts)        :- info:do_status(Id, Evts), !.
+step(Id, inventory, Evts)     :- info:do_inventory(Id, Evts), !.
+step(Id, bounties, Evts)      :- info:do_bounties(Id, Evts), !.
+step(Id, time, Evts)          :- info:do_time(Id, Evts), !.
+
+step(Id, admin_cmd(Sub, Arg), Evts) :- admin:do_admin(Id, Sub, Arg, Evts), !.
+
+step(_, ai_tick, Evts)        :- ai:do_ai_tick(Evts), !.
+step(Id, tick, Evts)          :- status:do_tick(Id, Evts), !.
+
+step(Id, ActTerm, [error(unhandled_action(Id, ActTerm))]).
+
+api_step(Req, Res) :-
+    ( catch(api_step_internal(Req, Res), Err, format_exception_res(Err, Req, Res)) -> true
+    ; Res = json{status: "error", error: "Goal evaluation failed catastrophically."} ).
+
+api_step_internal(Req, Res) :-
+    ( get_dict(actor, Req, RawActor) -> parser:ensure_atom(RawActor, ActorId) ; ActorId = unknown ),
+    ( get_dict(action, Req, ActionDict) -> true ; ActionDict = dict{} ),
+    ( parser:parse_act(ActionDict, ActTerm) ->
+        ( step(ActorId, ActTerm, DirectEvts) ->
+            events:split_events(DirectEvts, PubEvts, PrivEvts),
+            ( world:get_entity(ActorId, Actor), get_dict(room, Actor, RoomId) ->
+                world:push_room_events(RoomId, PubEvts)
+            ; true ),
+            json_io:terms_to_json(PrivEvts, JsonPrivs),
+            Res = json{status: "ok", events: JsonPrivs}
+        ; Res = json{status: "error", error: "Action handler failed during execution", action: ActionDict} )
+    ; Res = json{status: "error", error: "Malformed or unknown action payload format", action: ActionDict} ).
+
+format_exception_res(Err, Req, json{status: "exception", error: ErrorMsg, req: Req}) :-
+    message_to_string(Err, ErrorMsg).
 
 
 
@@ -781,7 +836,11 @@ FILE: core/entity.pl
     mark_combat/2,
     has_trait/2,
     check_pass/2,
-    check_admin/1
+    check_admin/1,
+    has_aff/2,
+    get_aff/3,
+    apply_aff/5,
+    remove_aff/3
 ]).
 
 :- use_module(library(lists)).
@@ -901,6 +960,183 @@ mark_combat(Ent, NEnt) :-
     NCds = Cds.put(combat, 3),
     NEnt = Ent.put(cds, NCds).
 
+% ==========================================
+% STATUS EFFECTS (AFFLICTIONS & BUFFS) API
+% ==========================================
+
+% Check if entity currently has a specific affliction
+has_aff(Ent, AffTag) :-
+    is_dict(Ent),
+    get_dict(affs, Ent, Affs),
+    get_dict(AffTag, Affs, _).
+
+% Retrieve affliction details (Duration and Magnitude)
+get_aff(Ent, AffTag, dict{dur: Dur, mag: Mag}) :-
+    is_dict(Ent),
+    get_dict(affs, Ent, Affs),
+    get_dict(AffTag, Affs, AffNode),
+    get_dict(dur, AffNode, Dur),
+    get_dict(mag, AffNode, Mag).
+
+% Apply or refresh an affliction on an entity
+apply_aff(Ent, AffTag, Dur, Mag, NEnt) :-
+    is_dict(Ent),
+    ( get_dict(affs, Ent, Affs) -> true ; Affs = dict{} ),
+    ( get_dict(AffTag, Affs, CurAff) ->
+        get_dict(dur, CurAff, CurDur),
+        NDur is max(CurDur, Dur),
+        NAffNode = dict{dur: NDur, mag: Mag}
+    ;
+        NAffNode = dict{dur: Dur, mag: Mag}
+    ),
+    NAffs = Affs.put(AffTag, NAffNode),
+    NEnt = Ent.put(affs, NAffs).
+
+% Forcefully remove an affliction
+remove_aff(Ent, AffTag, NEnt) :-
+    is_dict(Ent),
+    ( get_dict(affs, Ent, Affs) ->
+        ( del_dict(AffTag, Affs, _, NAffs) -> NEnt = Ent.put(affs, NAffs) ; NEnt = Ent )
+    ; NEnt = Ent ).
+
+
+
+================================================
+FILE: core/events.pl
+================================================
+:- module(events, [split_events/3, is_public_event/1]).
+
+is_public_event(moved(_,_,_)).
+is_public_event(hit(_,_,_,_,_)).
+is_public_event(crit(_,_,_,_,_)).
+is_public_event(dead(_,_)).
+
+% Spell casting events
+is_public_event(cast(_,_,_)).
+is_public_event(cast_area(_,_)).
+is_public_event(cast_group(_,_)).
+is_public_event(healed(_,_,_,_)).
+
+is_public_event(dodged(_,_)).
+is_public_event(flurry(_,_)).
+is_public_event(say(_,_)).
+is_public_event(npc_arrived(_)).
+is_public_event(guard_reinforcement(_)).
+is_public_event(bounty_paid(_,_)).
+is_public_event(env_msg(_)).
+
+% Status effects
+is_public_event(aff_applied(_,_)).
+is_public_event(aff_tick(_,_,_)).
+is_public_event(aff_faded(_,_)).
+
+split_events([], [], []).
+split_events([E|Es], [E|Pubs], Privs) :- is_public_event(E), !, split_events(Es, Pubs, Privs).
+split_events([E|Es], Pubs, [E|Privs]) :- split_events(Es, Pubs, Privs).
+
+
+
+================================================
+FILE: core/json_io.pl
+================================================
+:- module(json_io, [term_to_json/2, terms_to_json/2]).
+
+terms_to_json([], []) :- !.
+terms_to_json([H|T], [JH|JT]) :- term_to_json(H, JH), terms_to_json(T, JT).
+
+term_to_json(Var, null) :- var(Var), !.
+term_to_json(Dict, JsonDict) :-
+    is_dict(Dict), !,
+    dict_pairs(Dict, _, Pairs),
+    map_pairs(Pairs, JsonPairs),
+    dict_pairs(JsonDict, json, JsonPairs).
+term_to_json(List, JsonList) :-
+    is_list(List), !,
+    terms_to_json(List, JsonList).
+term_to_json(Atom, AtomStr) :-
+    atom(Atom), \+ number(Atom), \+ member(Atom, [true, false, null]), !,
+    atom_string(Atom, AtomStr).
+term_to_json(Compound, json{type: TypeStr, args: JsonArgs}) :-
+    compound(Compound), !,
+    Compound =.. [Functor|Args],
+    atom_string(Functor, TypeStr),
+    terms_to_json(Args, JsonArgs).
+term_to_json(Val, Val).
+
+map_pairs([], []).
+map_pairs([K-V|T], [K-JV|NT]) :- term_to_json(V, JV), map_pairs(T, NT).
+
+
+
+================================================
+FILE: core/parser.pl
+================================================
+:- module(parser, [parse_act/2, ensure_atom/2]).
+
+ensure_atom(Var, unknown) :- var(Var), !.
+ensure_atom(Atom, CleanAtom) :-
+    atom(Atom), !, normalize_space(atom(CleanAtom), Atom).
+ensure_atom(String, CleanAtom) :-
+    string(String), !, normalize_space(atom(CleanAtom), String).
+ensure_atom(Number, Atom) :-
+    number(Number), !, atom_number(Atom, Number).
+ensure_atom(_, unknown).
+
+extract_target(D, Tgt) :-
+    ( get_dict(target, D, Raw), Raw \== "" -> ensure_atom(Raw, Tgt)
+    ; get_dict(args, D, [Raw|_]), Raw \== "" -> ensure_atom(Raw, Tgt)
+    ; get_dict(item, D, Raw), Raw \== "" -> ensure_atom(Raw, Tgt)
+    ; get_dict(stat, D, Raw), Raw \== "" -> ensure_atom(Raw, Tgt)
+    ; Tgt = none ).
+
+extract_dir(D, Dir) :-
+    ( get_dict(dir, D, Raw), Raw \== "" -> ensure_atom(Raw, Dir)
+    ; get_dict(args, D, [Raw|_]), Raw \== "" -> ensure_atom(Raw, Dir)
+    ; Dir = north ).
+
+parse_act(D, validate_key(Key)) :-
+    get_dict(type, D, "validate_key"),
+    ( get_dict(key, D, RawK) -> ensure_atom(RawK, Key) ; Key = "" ).
+
+parse_act(D, login(Pass)) :-
+    get_dict(type, D, "login"),
+    ( get_dict(pass, D, RawP) -> ensure_atom(RawP, Pass) ; Pass = "" ).
+
+parse_act(D, register(Pass, Key, Race, Stats)) :-
+    get_dict(type, D, "register"),
+    ( get_dict(pass, D, RawP) -> ensure_atom(RawP, Pass) ; Pass = "" ),
+    ( get_dict(key, D, RawK) -> ensure_atom(RawK, Key) ; Key = "" ),
+    ( get_dict(race, D, RawR) -> ensure_atom(RawR, Race) ; Race = human ),
+    ( get_dict(stats, D, SDict), is_dict(SDict) -> Stats = SDict ; Stats = dict{} ).
+
+parse_act(D, admin_cmd(SubCmd, Arg)) :-
+    get_dict(type, D, "admin"),
+    ( get_dict(sub, D, RawS) -> ensure_atom(RawS, SubCmd) ; SubCmd = none ),
+    ( get_dict(target, D, RawA) -> ensure_atom(RawA, Arg) ; Arg = none ).
+
+parse_act(D, move(Dir)) :- ( get_dict(type, D, "move") ; get_dict(type, D, "go") ), extract_dir(D, Dir).
+parse_act(D, kill(Tgt)) :- ( get_dict(type, D, "kill") ; get_dict(type, D, "attack") ; get_dict(type, D, "k") ), extract_target(D, Tgt).
+parse_act(D, cast(S, T)):-
+    ( get_dict(type, D, "cast") ; get_dict(type, D, "c") ),
+    ( get_dict(spell, D, RawS), RawS \== "" -> ensure_atom(RawS, S) ; get_dict(args, D, [RawS|_]), RawS \== "" -> ensure_atom(RawS, S) ; S = fireball ),
+    ( get_dict(target, D, RawT), RawT \== "" -> ensure_atom(RawT, T) ; get_dict(args, D, [_, RawT|_]), RawT \== "" -> ensure_atom(RawT, T) ; T = none ).
+
+parse_act(D, loot(IId))     :- ( get_dict(type, D, "loot") ; get_dict(type, D, "get") ; get_dict(type, D, "take") ; get_dict(type, D, "g") ), extract_target(D, IId).
+parse_act(D, equip(I))      :- get_dict(type, D, "equip"), extract_target(D, I).
+parse_act(D, unequip(S))    :- get_dict(type, D, "unequip"), extract_target(D, S).
+parse_act(D, use(I))        :- get_dict(type, D, "use"), extract_target(D, I).
+parse_act(D, allocate(S))   :- ( get_dict(type, D, "allocate") ; get_dict(type, D, "train") ; get_dict(type, D, "add_stat") ), extract_target(D, S).
+
+parse_act(D, look)          :- get_dict(type, D, "look").
+parse_act(D, status)        :- get_dict(type, D, "status").
+parse_act(D, inventory)     :- get_dict(type, D, "inventory").
+parse_act(D, bounties)      :- ( get_dict(type, D, "bounties") ; get_dict(type, D, "bounty") ).
+parse_act(D, pay_bounty)    :- ( get_dict(type, D, "pay_bounty") ; get_dict(type, D, "pay") ; get_dict(type, D, "pardon") ).
+parse_act(D, time)          :- ( get_dict(type, D, "time") ; get_dict(type, D, "weather") ; get_dict(type, D, "env") ).
+parse_act(D, ai_tick)       :- get_dict(type, D, "ai_tick").
+parse_act(D, tick)          :- get_dict(type, D, "tick").
+parse_act(D, respawn)       :- get_dict(type, D, "respawn").
+
 
 
 ================================================
@@ -946,7 +1182,7 @@ start_ticker :-
 
 ticker_loop :-
     sleep(1.0),
-    catch(run_world_tick, _, true),
+    catch(ignore(run_world_tick), Err, format('Ticker Error: ~w~n', [Err])),
     ticker_loop.
 
 run_world_tick :-
@@ -1379,6 +1615,21 @@ Wyrmwood
 
 
 ================================================
+FILE: systems/admin.pl
+================================================
+:- module(admin, [do_admin/4]).
+
+:- use_module('../core/world').
+:- use_module('../core/entity').
+
+do_admin(Id, god, _, [admin_msg(Id, "God mode granted!")]) :-
+    world:get_entity(Id, A), entity:check_admin(A), !,
+    NA = A.put(hp, 999999).put(max_hp, 999999), world:put_entity(NA).
+do_admin(Id, SubCmd, _, [error(unhandled_admin_cmd(Id, SubCmd))]).
+
+
+
+================================================
 FILE: systems/ai.pl
 ================================================
 :- module(ai, [do_ai_tick/1, check_and_spawn_settlement_npc/1]).
@@ -1419,11 +1670,16 @@ is_settlement_room(Room) :-
       get_dict(props, Room, Props), (member(safe, Props) ; member(landmark, Props)) ;
       get_dict(region, Room, shire) ), !.
 
-valid_guard_move(Mob, NextRoomId) :-
-    get_dict(tag, Mob, RawTag), to_atom(RawTag, guard), !,
+% Keep town NPCs inside safe settlement boundaries
+valid_npc_move(Mob, NextRoomId) :-
     world:get_room(NextRoomId, NextRoom),
-    is_settlement_room(NextRoom).
-valid_guard_move(_, _).
+    ( is_guard(Mob) ->
+        is_settlement_room(NextRoom)
+    ; is_town_npc(Mob) ->
+        is_settlement_room(NextRoom)
+    ;
+        true
+    ).
 
 is_guard(Mob) :-
     get_dict(tag, Mob, RawTag), to_atom(RawTag, Tag),
@@ -1448,6 +1704,7 @@ highest_bounty(Ents, TopId) :-
     keysort(Pairs, Sorted),
     reverse(Sorted, [_-TopId|_]).
 
+% Guard attacks criminals
 act_mob(Mob, Evts) :-
     is_guard(Mob),
     get_dict(room, Mob, Room),
@@ -1457,6 +1714,7 @@ act_mob(Mob, Evts) :-
     combat:do_kill(MId, TgtId, Evts),
     world:push_room_events(Room, Evts).
 
+% Mobs respond to threats
 act_mob(Mob, Evts) :-
     get_dict(threats, Mob, Threats),
     dict_keys(Threats, Keys), Keys \== [],
@@ -1470,6 +1728,7 @@ act_mob(Mob, Evts) :-
     combat:do_kill(MId, TgtId, Evts),
     world:push_room_events(Room, Evts).
 
+% Guard attacks hostile monsters in room
 act_mob(Mob, Evts) :-
     is_guard(Mob),
     get_dict(room, Mob, Room),
@@ -1484,6 +1743,7 @@ act_mob(Mob, Evts) :-
     combat:do_kill(GuardId, MonId, Evts),
     world:push_room_events(Room, Evts).
 
+% Hostile mob attacks player
 act_mob(Mob, Evts) :-
     get_dict(room, Mob, Room),
     \+ is_safe_room(Room),
@@ -1495,50 +1755,42 @@ act_mob(Mob, Evts) :-
     combat:do_kill(MId, PId, Evts),
     world:push_room_events(Room, Evts).
 
+% Controlled random wandering within valid boundaries
 act_mob(Mob, Evts) :-
-    random_between(1, 100, R), R =< 20, !,
+    random_between(1, 100, R), R =< 15, !,
     get_dict(room, Mob, Room),
     world:get_room(Room, RoomNode),
     get_dict(exits, RoomNode, ExitsDict),
     dict_keys(ExitsDict, Exits), Exits \== [],
     random_member(Dir, Exits),
     get_dict(Dir, ExitsDict, NextRoomId),
-    valid_guard_move(Mob, NextRoomId), !,
+    valid_npc_move(Mob, NextRoomId), !,
     get_dict(id, Mob, MId),
     move:do_move(MId, Dir, Evts),
     world:push_room_events(Room, Evts).
 
+% Global replenishment with hard settlement cap
 replenish_settlements :-
-    findall(RId, (world:get_room(RId, Room), is_settlement_room(Room)), SettlementRooms),
-    list_to_set(SettlementRooms, UniqueSettlements),
-    forall(member(SRoomId, UniqueSettlements), check_and_spawn_settlement_npc(SRoomId)).
-
-check_and_spawn_settlement_npc(RoomId) :-
-    world:room_entities(RoomId, Ents),
-    include(is_mob_entity, Ents, Mobs),
-    include(is_guard, Mobs, Guards),
-    length(Mobs, Count),
-    length(Guards, GuardCount),
-    ( GuardCount =:= 0, Count < 4 ->
-        spawn:gen_guard_npc(RoomId, NewNpc),
-        world:put_entity(NewNpc),
-        get_dict(name, NewNpc, Name),
-        world:push_room_event(RoomId, guard_reinforcement(Name))
-    ; Count < 4 ->
+    findall(M, (
+        world:db_entity(_, M),
+        is_dict(M, mob),
+        get_dict(hp, M, Hp), Hp > 0,
+        get_dict(room, M, RId),
+        world:get_room(RId, RNode),
+        is_settlement_room(RNode)
+    ), TownMobs),
+    length(TownMobs, TotalTownMobs),
+    ( TotalTownMobs < 6 ->
         random_between(1, 100, Roll),
-        ( Roll =< 40 ->
-            spawn:gen_town_npc(RoomId, NewNpc),
+        ( Roll =< 5 ->
+            spawn:gen_town_npc(square, NewNpc),
             world:put_entity(NewNpc),
             get_dict(name, NewNpc, Name),
-            world:push_room_event(RoomId, npc_arrived(Name))
-        ;
-            true
-        )
-    ;
-        true
-    ).
+            world:push_room_event(square, npc_arrived(Name))
+        ; true )
+    ; true ).
 
-is_mob_entity(E) :- is_dict(E, mob).
+check_and_spawn_settlement_npc(_) :- true.
 
 
 
@@ -1547,7 +1799,7 @@ FILE: systems/combat.pl
 ================================================
 :- module(combat, [
     do_kill/3, do_cast/4, do_pay_bounty/2,
-    is_town_npc/1, is_innocent/1
+    is_town_npc/1, is_innocent/1, resolve_death/3
 ]).
 
 :- use_module('../core/world').
@@ -1557,6 +1809,9 @@ FILE: systems/combat.pl
 :- use_module('prog').
 :- use_module('loot').
 :- use_module('ai').
+:- use_module('status').
+:- use_module(library(apply)).
+:- use_module(library(lists)).
 
 to_atom(Var, unknown) :- var(Var), !.
 to_atom(Atom, Atom) :- atom(Atom), !.
@@ -1564,413 +1819,375 @@ to_atom(String, Atom) :- string(String), !, atom_string(Atom, String).
 to_atom(Number, Atom) :- number(Number), !, atom_number(Atom, Number).
 to_atom(_, unknown).
 
-roll_dice(Min, Max, Val) :-
-    random_between(Min, Max, Val).
+roll_dice(Min, Max, Val) :- random_between(Min, Max, Val).
 
 get_weapon_tag(Ent, WTag) :-
-    ( get_dict(equip, Ent, Eq), is_dict(Eq), get_dict(wpn, Eq, Raw), Raw \== none ->
-        to_atom(Raw, WTag)
-    ; get_dict(tag, Ent, RawTag) ->
-        to_atom(RawTag, WTag)
-    ;
-        WTag = fists
-    ).
+    ( get_dict(equip, Ent, Eq), is_dict(Eq), get_dict(wpn, Eq, Raw), Raw \== none -> to_atom(Raw, WTag)
+    ; get_dict(tag, Ent, RawTag) -> to_atom(RawTag, WTag)
+    ; WTag = fists ).
 
+% --- Defense & Mitigation ---
 chk_dodge(Src, Tgt) :-
-    entity:get_stat(Tgt, dex, TDex),
-    entity:get_stat(Tgt, luk, TLuk),
-    entity:get_stat(Src, dex, SDex),
-    ( entity:has_trait(Tgt, elusive) -> Bonus1 = 20
-    ; entity:has_trait(Tgt, quick)   -> Bonus1 = 10
-    ; Bonus1 = 0 ),
+    \+ status:is_rooted(Tgt, _),
+    entity:get_stat(Tgt, dex, TDex), entity:get_stat(Tgt, luk, TLuk), entity:get_stat(Src, dex, SDex),
+    ( entity:has_trait(Tgt, elusive) -> Bonus1 = 20 ; entity:has_trait(Tgt, quick) -> Bonus1 = 10 ; Bonus1 = 0 ),
     Rate is max(0, min(65, floor((TDex * 1.2 + TLuk * 0.5) - (SDex * 0.6)) + Bonus1)),
-    roll_dice(1, 100, Roll),
-    Roll =< Rate.
+    roll_dice(1, 100, Roll), Roll =< Rate.
 
+calc_mitigation(Tgt, RawDmg, FinalDmg) :-
+    entity:get_stat(Tgt, con, TCon), Red is floor(TCon * 0.25), Final1 is max(1, RawDmg - Red),
+    ( entity:get_aff(Tgt, fortified, dict{mag: FMag}) -> FMult = (100 - FMag)/100 ; FMult = 1.0 ),
+    ( entity:get_aff(Tgt, divine_protection, dict{mag: DMag}) -> DMult = (100 - DMag)/100 ; DMult = 1.0 ),
+    FinalDmg is max(1, floor(Final1 * FMult * DMult)).
+
+calc_spell_mitigation(Tgt, RawDmg, FinalDmg) :-
+    entity:get_stat(Tgt, wis, TWis), Red is floor(TWis * 0.25), Final1 is max(1, RawDmg - Red),
+    ( entity:get_aff(Tgt, magic_barrier, dict{mag: MMag}) -> MMult = (100 - MMag)/100 ; MMult = 1.0 ),
+    ( entity:get_aff(Tgt, divine_protection, dict{mag: DMag}) -> DMult = (100 - DMag)/100 ; DMult = 1.0 ),
+    ( entity:get_aff(Tgt, fortified, dict{mag: FMag}) -> FMult = (100 - FMag)/100 ; FMult = 1.0 ),
+    FinalDmg is max(1, floor(Final1 * MMult * DMult * FMult)).
+
+% --- Offense & Output ---
 chk_melee_crit(Src, WTag, IsCrit, FinalMult) :-
-    entity:get_stat(Src, str, SStr),
-    entity:get_stat(Src, luk, SLuk),
-    combat_config:wpn_trait(WTag, Trait),
-    ( Trait == precision -> Prec = 15 ; Prec = 0 ),
-    ( entity:has_trait(Src, feral) -> Feral = 15 ; Feral = 0 ),
+    entity:get_stat(Src, str, SStr), entity:get_stat(Src, luk, SLuk), combat_config:wpn_trait(WTag, Trait),
+    ( Trait == precision -> Prec = 15 ; Prec = 0 ), ( entity:has_trait(Src, feral) -> Feral = 15 ; Feral = 0 ),
     Rate is max(5, min(85, floor(SStr * 0.4 + SLuk * 0.5 + Prec + Feral))),
     roll_dice(1, 100, Roll),
-    ( Roll =< Rate ->
-        IsCrit = true,
-        combat_config:wpn_crit_mult(WTag, BaseMult),
-        ( entity:has_trait(Src, celestial) -> FinalMult is BaseMult * 1.5 ; FinalMult = BaseMult )
-    ;
-        IsCrit = false,
-        FinalMult = 1.0
-    ).
+    ( Roll =< Rate -> IsCrit = true, combat_config:wpn_crit_mult(WTag, BaseMult),
+      ( entity:has_trait(Src, celestial) -> FinalMult is BaseMult * 1.5 ; FinalMult = BaseMult )
+    ; IsCrit = false, FinalMult = 1.0 ).
 
-chk_spell_crit(Src, IsCrit, Mult) :-
-    entity:get_stat(Src, int, SInt),
-    entity:get_stat(Src, wis, SWis),
-    entity:get_stat(Src, luk, SLuk),
+chk_spell_crit(Src, Sp, Tgt, IsCrit, Mult) :-
+    is_holy_spell(Sp, Src),
+    entity:has_aff(Tgt, marked), !,
+    IsCrit = true,
+    ( entity:has_trait(Src, celestial) -> Mult = 2.5 ; Mult = 2.0 ).
+
+chk_spell_crit(Src, _Sp, _Tgt, IsCrit, Mult) :-
+    entity:get_stat(Src, int, SInt), entity:get_stat(Src, wis, SWis), entity:get_stat(Src, luk, SLuk),
     Rate is max(5, min(75, floor(SInt * 0.3 + SWis * 0.3 + SLuk * 0.4))),
     roll_dice(1, 100, Roll),
     ( Roll =< Rate -> IsCrit = true, Mult = 1.8 ; IsCrit = false, Mult = 1.0 ).
 
-calc_mitigation(Tgt, RawDmg, FinalDmg) :-
-    entity:get_stat(Tgt, con, TCon),
-    Red is floor(TCon * 0.25),
-    FinalDmg is max(1, RawDmg - Red).
+is_holy_spell(last_judgement, _).
+is_holy_spell(smite, _).
+is_holy_spell(divine_retribution, _).
+is_holy_spell(_, Src) :- entity:has_trait(Src, celestial).
 
 calc_melee_raw(Src, WTag, RawDmg) :-
     ( combat_config:wpn_dmg(WTag, [dmg(_, Base)|_]) -> true ; Base = 4 ),
-    combat_config:wpn_trait(WTag, Trait),
-    entity:get_stat(Src, str, Str),
+    combat_config:wpn_trait(WTag, Trait), entity:get_stat(Src, str, Str),
     ( Trait == reliable -> roll_dice(3, 6, Var) ; roll_dice(1, 10, Var) ),
-    RawDmg is Base + Var + floor(Str * 0.4).
+    Raw1 is Base + Var + floor(Str * 0.4),
+    ( entity:get_aff(Src, bloodlust, dict{mag: BMag}) -> BMult = (100 + BMag)/100 ; BMult = 1.0 ),
+    ( entity:get_aff(Src, weakened, dict{mag: WMag}) -> WMult = (100 - WMag)/100 ; WMult = 1.0 ),
+    RawDmg is floor(Raw1 * BMult * WMult).
 
 chk_flurry(Src, WTag) :-
-    combat_config:wpn_trait(WTag, Trait),
-    ( Trait == flurry ; entity:has_trait(Src, quick) ),
-    entity:get_stat(Src, dex, SDex),
-    entity:get_stat(Src, luk, SLuk),
+    combat_config:wpn_trait(WTag, Trait), ( Trait == flurry ; entity:has_trait(Src, quick) ),
+    entity:get_stat(Src, dex, SDex), entity:get_stat(Src, luk, SLuk),
     Rate is max(10, min(60, floor(SDex * 0.6 + SLuk * 0.3))),
-    roll_dice(1, 100, Roll),
-    Roll =< Rate.
+    roll_dice(1, 100, Roll), Roll =< Rate.
+
+% --- Targeting & Factions ---
+is_valid_combat_target(Ent) :- is_dict(Ent, plyr).
+is_valid_combat_target(Ent) :- is_dict(Ent, mob).
+
+is_town_npc(Ent) :- get_dict(tag, Ent, RawTag), to_atom(RawTag, Tag), member(Tag, [guard, peasant, merchant, priest, miner]), !.
+is_town_npc(Ent) :- get_dict(fac, Ent, RawFac), to_atom(RawFac, Fac), member(Fac, [guard, citizen, merchant]), !.
+
+is_innocent(Ent) :- is_town_npc(Ent) ; is_dict(Ent, plyr).
+is_crime(Tgt) :- is_innocent(Tgt), ( get_dict(bounty, Tgt, B) -> B =< 0 ; true ).
+
+is_enemy(Actor, Tgt) :-
+    get_dict(id, Actor, AId), get_dict(id, Tgt, TId), AId \== TId,
+    ( is_dict(Actor, plyr) -> is_dict(Tgt, mob), \+ is_innocent(Tgt)
+    ; is_dict(Tgt, plyr) ; is_town_npc(Tgt) ).
+
+is_friendly(Actor, Tgt) :-
+    get_dict(id, Actor, AId), get_dict(id, Tgt, TId),
+    ( AId == TId ; is_dict(Actor, plyr), is_dict(Tgt, plyr)
+    ; is_dict(Actor, plyr), is_innocent(Tgt)
+    ; is_dict(Actor, mob), is_dict(Tgt, mob), \+ is_enemy(Actor, Tgt) ).
 
 resolve_target(Actor, self, Target) :- !, Target = Actor.
 resolve_target(Actor, none, Target) :-
-    get_dict(room, Actor, Room),
-    world:room_entities(Room, Ents),
-    member(Target, Ents),
-    ( is_dict(Target, mob) ; is_dict(Target, plyr) ),
-    get_dict(id, Target, TId), get_dict(id, Actor, AId), TId \== AId,
-    entity:is_alive(Target), !.
+    get_dict(room, Actor, Room), world:room_entities(Room, Ents), member(Target, Ents),
+    is_valid_combat_target(Target), get_dict(id, Target, TId), get_dict(id, Actor, AId), TId \== AId, entity:is_alive(Target), !.
 resolve_target(Actor, TgtQuery, Target) :-
-    get_dict(room, Actor, Room),
-    world:room_entities(Room, Ents),
-    member(Target, Ents),
-    ( get_dict(id, Target, TgtQuery) ; get_dict(tag, Target, TgtQuery) ),
-    entity:is_alive(Target), !.
+    get_dict(room, Actor, Room), world:room_entities(Room, Ents), member(Target, Ents),
+    ( get_dict(id, Target, TgtQuery) ; get_dict(tag, Target, TgtQuery) ), entity:is_alive(Target), !.
 
-is_town_npc(Ent) :-
-    get_dict(tag, Ent, RawTag), to_atom(RawTag, Tag),
-    member(Tag, [guard, peasant, merchant, priest, miner]), !.
-is_town_npc(Ent) :-
-    get_dict(fac, Ent, RawFac), to_atom(RawFac, Fac),
-    member(Fac, [guard, citizen, merchant]), !.
+% --- AoE and Group Targeting logic ---
+get_room_targets(Actor, Type, Targets) :-
+    get_dict(room, Actor, Room), world:room_entities(Room, Ents),
+    include(entity:is_alive, Ents, AliveEnts),
+    filter_targets(Actor, AliveEnts, Type, Targets).
 
-is_innocent(Ent) :-
-    is_town_npc(Ent) ; is_dict(Ent, plyr).
+filter_targets(Actor, Ents, area, Targets) :-
+    get_dict(id, Actor, AId),
+    findall(E, (member(E, Ents), is_valid_combat_target(E), get_dict(id, E, EId), EId \== AId), Targets).
+filter_targets(Actor, Ents, group_harm, Targets) :-
+    findall(E, (member(E, Ents), is_valid_combat_target(E), is_enemy(Actor, E)), Targets).
+filter_targets(Actor, Ents, group_heal, Targets) :-
+    findall(E, (member(E, Ents), is_valid_combat_target(E), is_friendly(Actor, E)), Targets).
+filter_targets(Actor, Ents, group_buff, Targets) :-
+    findall(E, (member(E, Ents), is_valid_combat_target(E), is_friendly(Actor, E)), Targets).
 
-is_crime(Tgt) :-
-    is_innocent(Tgt),
-    ( get_dict(bounty, Tgt, B) -> B =< 0 ; true ).
+% --- Helpers ---
+apply_affliction_list(Ent, [], Ent).
+apply_affliction_list(Ent, [Aff|Rest], NEnt) :-
+    Aff =.. [AffTag, Dur, Mag], entity:apply_aff(Ent, AffTag, Dur, Mag, TmpEnt),
+    apply_affliction_list(TmpEnt, Rest, NEnt).
+
+extract_aff_tags([], []).
+extract_aff_tags([Aff|Rest], [Tag|TRest]) :- Aff =.. [Tag, _, _], extract_aff_tags(Rest, TRest).
+
+aff_event(TgtId, Tag, aff_applied(TgtId, Tag)).
 
 do_pay_bounty(Id, Evts) :-
     ( world:get_entity(Id, Actor) ->
         ( (get_dict(bounty, Actor, B), B > 0) ->
             ( entity:rem_item(Actor, gold, B, A1) ->
-                entity:clear_bounty(A1, FinalA),
-                world:put_entity(FinalA),
-                world:save_db('world_state.json'),
-                clear_local_threats(Id, FinalA),
-                Evts = [bounty_paid(Id, B)]
-            ;
-                Evts = [error(insufficient_gold_for_bounty(Id, B))]
-            )
-        ;
-            Evts = [error(no_bounty_to_pay(Id))]
-        )
-    ;
-        Evts = [error(actor_not_found(Id))]
-    ), !.
+                entity:clear_bounty(A1, FinalA), world:put_entity(FinalA), world:save_db('world_state.json'),
+                clear_local_threats(Id, FinalA), Evts = [bounty_paid(Id, B)]
+            ; Evts = [error(insufficient_gold_for_bounty(Id, B))] )
+        ; Evts = [error(no_bounty_to_pay(Id))] )
+    ; Evts = [error(actor_not_found(Id))] ), !.
 
 clear_local_threats(PId, Player) :-
-    get_dict(room, Player, Room),
-    world:room_entities(Room, Ents),
-    forall(member(M, Ents), (
-        ( is_dict(M, mob) ->
-            entity:rem_threat(M, PId, NM),
-            world:put_entity(NM)
-        ; true )
-    )).
+    get_dict(room, Player, Room), world:room_entities(Room, Ents),
+    forall(member(M, Ents), ( ( is_dict(M, mob) -> entity:rem_threat(M, PId, NM), world:put_entity(NM) ; true ) )).
 
-do_kill(Id, _TgtQuery, [error(actor_not_found(Id))]) :-
-    \+ world:get_entity(Id, _), !.
-
+% --- Melee Combat Core ---
+do_kill(Id, _TgtQuery, [error(actor_not_found(Id))]) :- \+ world:get_entity(Id, _), !.
 do_kill(Id, TgtQuery, Evts) :-
     world:get_entity(Id, Actor),
-    resolve_target(Actor, TgtQuery, Tgt), !,
-    get_dict(id, Tgt, TgtId),
-    ( TgtId \== Id ->
-        get_weapon_tag(Actor, WTag),
-        apply_damage(Id, Actor, Tgt, WTag, Evts)
-    ;
-        Evts = [error(cannot_attack_self(Id))]
+    ( status:is_cced(Actor, CC) -> Evts = [error(cc_prevented(Id, CC))]
+    ; status:is_panicked(Actor, CC) -> Evts = [error(cc_prevented(Id, CC))]
+    ; resolve_target(Actor, TgtQuery, Tgt), !, get_dict(id, Tgt, TgtId),
+      ( TgtId \== Id -> get_weapon_tag(Actor, WTag), apply_damage(Id, Actor, Tgt, WTag, Evts)
+      ; Evts = [error(cannot_attack_self(Id))] )
     ).
-
-do_kill(Id, TgtQuery, [error(target_not_found(Id, TgtQuery, room(Room)))]) :-
-    world:get_entity(Id, Actor),
-    get_dict(room, Actor, Room).
-
-do_cast(Id, _Sp, _TgtQuery, [error(actor_not_found(Id))]) :-
-    \+ world:get_entity(Id, _), !.
-
-do_cast(Id, Sp, _TgtQuery, [error(unknown_spell(Id, Sp))]) :-
-    \+ combat_config:spell_cost(Sp, _), !.
-
-do_cast(Id, Sp, _TgtQuery, [error(insufficient_mp(Id, Sp, mp_available(Mp), mp_required(Cost)))]) :-
-    world:get_entity(Id, Actor),
-    combat_config:spell_cost(Sp, Cost),
-    get_dict(mp, Actor, Mp),
-    Mp < Cost, !.
-
-do_cast(Id, Sp, TgtQuery, Evts) :-
-    world:get_entity(Id, Actor),
-    combat_config:spell_cost(Sp, Cost),
-    get_dict(mp, Actor, Mp),
-    Mp >= Cost,
-    ( (Sp == mend, (TgtQuery == none ; TgtQuery == self)) ->
-        Tgt = Actor
-    ;
-        resolve_target(Actor, TgtQuery, Tgt)
-    ), !,
-    NMp is Mp - Cost,
-    NActor = Actor.put(mp, NMp),
-    world:put_entity(NActor),
-    execute_spell(Sp, Id, NActor, Tgt, Cost, Evts).
-
-do_cast(Id, Sp, TgtQuery, [error(target_not_found(Id, TgtQuery, room(Room)))]) :-
-    world:get_entity(Id, Actor),
-    get_dict(room, Actor, Room).
-
-execute_spell(mend, Id, _Actor, Tgt, _Cost, [cast(Id, mend, TgtId), healed(TgtId, HealAmt, CurHp, MaxHp)]) :- !,
-    get_dict(id, Tgt, TgtId),
-    HealAmt = 30,
-    entity:mod_hp(Tgt, HealAmt, NTgt),
-    get_dict(hp, NTgt, CurHp),
-    ( get_dict(max_hp, NTgt, MaxHp) -> true ; MaxHp = CurHp ),
-    world:put_entity(NTgt).
-
-execute_spell(Sp, Id, Actor, Tgt, _Cost, Evts) :-
-    get_dict(id, Tgt, TgtId),
-    combat_config:spell_dmg(Sp, BaseDmg), !,
-
-    entity:mark_combat(Actor, CbtActor),
-    entity:mark_combat(Tgt, CbtTgt),
-    world:put_entity(CbtActor),
-
-    get_weapon_tag(CbtActor, WTag),
-    combat_config:wpn_trait(WTag, Trait),
-    ( Trait == catalyst -> Mult1 = 1.25 ; Mult1 = 1.0 ),
-
-    entity:get_stat(CbtActor, int, Int),
-    RawDmg is floor((BaseDmg + floor(Int * 0.5)) * Mult1),
-
-    chk_spell_crit(CbtActor, IsCrit, CritMult),
-    DmgWithCrit is floor(RawDmg * CritMult),
-    calc_mitigation(CbtTgt, DmgWithCrit, FinalDmg),
-
-    entity:mod_hp(CbtTgt, -FinalDmg, NTgt),
-    get_dict(hp, NTgt, CurHp),
-    ( get_dict(max_hp, NTgt, MaxHp) -> true ; MaxHp = CurHp ),
-
-    ( IsCrit == true ->
-        CastEvt = cast_crit(Id, Sp, TgtId)
-    ;
-        CastEvt = cast(Id, Sp, TgtId)
-    ),
-
-    ( entity:is_alive(NTgt) ->
-        world:put_entity(NTgt),
-        Evts = [CastEvt, hit(Id, TgtId, FinalDmg, CurHp, MaxHp)]
-    ;
-        handle_death(CbtActor, NTgt, DeathEvts),
-        ( get_dict(name, NTgt, TgtName) -> true ; TgtName = TgtId ),
-        Evts = [CastEvt, hit(Id, TgtId, FinalDmg, 0, MaxHp), dead(TgtId, TgtName) | DeathEvts]
-    ).
-
-execute_spell(Sp, Id, _Actor, _Tgt, _Cost, [error(spell_not_implemented(Id, Sp))]).
+do_kill(Id, TgtQuery, [error(target_not_found(Id, TgtQuery, room(Room)))]) :- world:get_entity(Id, Actor), get_dict(room, Actor, Room).
 
 apply_damage(SrcId, SrcEnt, Tgt, WTag, Evts) :-
     get_dict(id, Tgt, TgtId),
-
-    entity:mark_combat(SrcEnt, CbtSrc),
-    entity:mark_combat(Tgt, CbtTgt),
-
+    entity:mark_combat(SrcEnt, CbtSrc), entity:mark_combat(Tgt, CbtTgt),
     ( is_crime(CbtTgt), is_dict(CbtSrc, plyr) ->
-        BInc is 50,
-        entity:add_bounty(CbtSrc, BInc, NAttacker),
-        world:save_db('world_state.json'),
-        CrimeEvts = [bounty_gained(SrcId, BInc)]
-    ;
-        CrimeEvts = [], NAttacker = CbtSrc
-    ),
+        BInc is 50, entity:add_bounty(CbtSrc, BInc, NAttacker), world:save_db('world_state.json'), CrimeEvts = [bounty_gained(SrcId, BInc)]
+    ; CrimeEvts = [], NAttacker = CbtSrc ),
     world:put_entity(NAttacker),
 
     ( chk_dodge(NAttacker, CbtTgt) ->
         Evts = [dodged(TgtId, SrcId) | CrimeEvts],
-        ( (is_dict(CbtTgt, mob), is_dict(NAttacker, plyr)) ->
-            entity:add_threat(CbtTgt, SrcId, 5, ThreatTgt),
-            world:put_entity(ThreatTgt)
-        ; true )
+        ( (is_dict(CbtTgt, mob), is_dict(NAttacker, plyr)) -> entity:add_threat(CbtTgt, SrcId, 5, ThreatTgt), world:put_entity(ThreatTgt) ; true )
     ;
-        calc_melee_raw(NAttacker, WTag, RawDmg),
-        chk_melee_crit(NAttacker, WTag, IsCrit, Mult),
-        DmgWithCrit is floor(RawDmg * Mult),
+        calc_melee_raw(NAttacker, WTag, RawDmg), chk_melee_crit(NAttacker, WTag, IsCrit, Mult), DmgWithCrit is floor(RawDmg * Mult),
         calc_mitigation(CbtTgt, DmgWithCrit, FinalDmg),
 
-        entity:mod_hp(CbtTgt, -FinalDmg, NTgt),
-        get_dict(hp, NTgt, CurHp),
-        ( get_dict(max_hp, NTgt, MaxHp) -> true ; MaxHp = CurHp ),
+        entity:mod_hp(CbtTgt, -FinalDmg, NTgt), get_dict(hp, NTgt, CurHp), ( get_dict(max_hp, NTgt, MaxHp) -> true ; MaxHp = CurHp ),
 
-        ( IsCrit == true ->
-            HitEvt = crit(SrcId, TgtId, FinalDmg, CurHp, MaxHp)
-        ;
-            HitEvt = hit(SrcId, TgtId, FinalDmg, CurHp, MaxHp)
-        ),
+        ( IsCrit == true -> HitEvt = crit(SrcId, TgtId, FinalDmg, CurHp, MaxHp) ; HitEvt = hit(SrcId, TgtId, FinalDmg, CurHp, MaxHp) ),
+
+        ( entity:get_aff(CbtTgt, thornskin, dict{mag: TMag}) ->
+            entity:mod_hp(NAttacker, -TMag, NAttackerThorns),
+            get_dict(hp, NAttackerThorns, AttackerHp), ( get_dict(max_hp, NAttackerThorns, AttackerMaxHp) -> true ; AttackerMaxHp = AttackerHp ),
+            ThornEvts = [hit(TgtId, SrcId, TMag, AttackerHp, AttackerMaxHp)]
+        ; NAttackerThorns = NAttacker, ThornEvts = [] ),
+        world:put_entity(NAttackerThorns),
 
         ( entity:is_alive(NTgt) ->
-            ( (is_dict(NTgt, mob), is_dict(NAttacker, plyr)) ->
-                entity:add_threat(NTgt, SrcId, FinalDmg, ThreatTgt)
-            ;
-                ThreatTgt = NTgt
-            ),
+            ( (is_dict(NTgt, mob), is_dict(NAttackerThorns, plyr)) -> entity:add_threat(NTgt, SrcId, FinalDmg, ThreatTgt) ; ThreatTgt = NTgt ),
             world:put_entity(ThreatTgt),
-
-            ( chk_flurry(NAttacker, WTag) ->
-                flurry_strike(SrcId, NAttacker, ThreatTgt, FlurryEvts)
-            ;
-                FlurryEvts = []
-            ),
-
-            ( (is_dict(ThreatTgt, mob), is_dict(NAttacker, plyr)) ->
-                ( is_town_npc(ThreatTgt) ->
-                    town_brawl_retaliate(ThreatTgt, NAttacker, RetalEvts)
-                ;
-                    mob_retaliate(ThreatTgt, NAttacker, RetalEvts)
-                )
-            ;
-                RetalEvts = []
-            ),
-            append([HitEvt | CrimeEvts], FlurryEvts, TmpEvts),
-            append(TmpEvts, RetalEvts, Evts)
+            ( chk_flurry(NAttackerThorns, WTag) -> flurry_strike(SrcId, NAttackerThorns, ThreatTgt, FlurryEvts) ; FlurryEvts = [] ),
+            ( (is_dict(ThreatTgt, mob), is_dict(NAttackerThorns, plyr)) ->
+                ( is_town_npc(ThreatTgt) -> town_brawl_retaliate(ThreatTgt, NAttackerThorns, RetalEvts) ; mob_retaliate(ThreatTgt, NAttackerThorns, RetalEvts) )
+            ; RetalEvts = [] ),
+            append([HitEvt | CrimeEvts], ThornEvts, TmpE1),
+            append(TmpE1, FlurryEvts, TmpE2), append(TmpE2, RetalEvts, Evts)
         ;
-            handle_death(NAttacker, NTgt, DeathEvts),
-            ( get_dict(name, NTgt, TgtName) -> true ; TgtName = TgtId ),
-            append([HitEvt, dead(TgtId, TgtName) | CrimeEvts], DeathEvts, Evts)
+            handle_death(NAttackerThorns, NTgt, DeathEvts), ( get_dict(name, NTgt, TgtName) -> true ; TgtName = TgtId ),
+            append([HitEvt, dead(TgtId, TgtName) | CrimeEvts], ThornEvts, TmpE1),
+            append(TmpE1, DeathEvts, Evts)
         )
     ).
 
 flurry_strike(SrcId, SrcEnt, Tgt, [flurry(SrcId, TgtId), HitEvt]) :-
-    get_dict(id, Tgt, TgtId),
-    get_weapon_tag(SrcEnt, WTag),
-    calc_melee_raw(SrcEnt, WTag, RawDmg),
-    calc_mitigation(Tgt, RawDmg, FinalDmg),
-    entity:mod_hp(Tgt, -FinalDmg, NTgt),
-    get_dict(hp, NTgt, CurHp),
-    ( get_dict(max_hp, NTgt, MaxHp) -> true ; MaxHp = CurHp ),
-    world:put_entity(NTgt),
-    HitEvt = hit(SrcId, TgtId, FinalDmg, CurHp, MaxHp).
+    get_dict(id, Tgt, TgtId), get_weapon_tag(SrcEnt, WTag),
+    calc_melee_raw(SrcEnt, WTag, RawDmg), calc_mitigation(Tgt, RawDmg, FinalDmg),
+    entity:mod_hp(Tgt, -FinalDmg, NTgt), get_dict(hp, NTgt, CurHp), ( get_dict(max_hp, NTgt, MaxHp) -> true ; MaxHp = CurHp ),
+    world:put_entity(NTgt), HitEvt = hit(SrcId, TgtId, FinalDmg, CurHp, MaxHp).
+
+mob_retaliate(Mob, Player, RetalEvts) :-
+    ( \+ entity:is_alive(Player) -> RetalEvts = [] ; status:is_cced(Mob, _) -> RetalEvts = [] ;
+        get_dict(id, Mob, MId), get_dict(id, Player, PId), get_weapon_tag(Mob, WTag),
+        entity:mark_combat(Mob, CbtMob), entity:mark_combat(Player, CbtPlayer),
+        ( chk_dodge(CbtMob, CbtPlayer) ->
+            world:put_entity(CbtMob), world:put_entity(CbtPlayer), RetalEvts = [dodged(PId, MId)]
+        ;
+            calc_melee_raw(CbtMob, WTag, RawDmg), chk_melee_crit(CbtMob, WTag, _, CritMult),
+            DmgWithCrit is floor(RawDmg * CritMult), calc_mitigation(CbtPlayer, DmgWithCrit, FinalDmg),
+            entity:mod_hp(CbtPlayer, -FinalDmg, NPlayer), get_dict(hp, NPlayer, PCurHp), ( get_dict(max_hp, NPlayer, PMaxHp) -> true ; PMaxHp = PCurHp ),
+            world:put_entity(CbtMob),
+            ( entity:is_alive(NPlayer) ->
+                world:put_entity(NPlayer), RetalEvts = [hit(MId, PId, FinalDmg, PCurHp, PMaxHp)]
+            ; handle_death(CbtMob, NPlayer, DeathEvts), ( get_dict(name, NPlayer, PName) -> true ; PName = PId ),
+              RetalEvts = [hit(MId, PId, FinalDmg, 0, PMaxHp), dead(PId, PName) | DeathEvts]
+            )
+        )
+    ).
 
 town_brawl_retaliate(_PrimaryMob, Player, BrawlEvts) :-
-    get_dict(room, Player, Room),
-    world:room_entities(Room, Ents),
-    findall(Mob, (
-        member(Mob, Ents),
-        is_dict(Mob, mob),
-        entity:is_alive(Mob),
-        is_town_npc(Mob)
-    ), TownNpcs),
+    get_dict(room, Player, Room), world:room_entities(Room, Ents),
+    findall(Mob, ( member(Mob, Ents), is_dict(Mob, mob), entity:is_alive(Mob), is_town_npc(Mob) ), TownNpcs),
     brawl_attack_all(TownNpcs, Player, BrawlEvts).
 
 brawl_attack_all([], _, []).
 brawl_attack_all([Mob|Rest], Player, Evts) :-
-    get_dict(id, Player, PId),
-    entity:add_threat(Mob, PId, 10, NMob),
-    mob_retaliate(NMob, Player, SingleEvts),
-    ( world:get_entity(PId, UpdatedPlayer) -> true ; UpdatedPlayer = Player ),
-    brawl_attack_all(Rest, UpdatedPlayer, RestEvts),
-    append(SingleEvts, RestEvts, Evts).
+    ( entity:is_alive(Player) ->
+        get_dict(id, Player, PId), entity:add_threat(Mob, PId, 10, NMob),
+        mob_retaliate(NMob, Player, SingleEvts),
+        ( world:get_entity(PId, UpdatedPlayer) -> true ; UpdatedPlayer = Player ),
+        brawl_attack_all(Rest, UpdatedPlayer, RestEvts), append(SingleEvts, RestEvts, Evts)
+    ; Evts = [] ).
 
-get_mob_base_damage(Mob, BaseDmg) :-
-    ( get_dict(equip, Mob, Eq), is_dict(Eq), get_dict(wpn, Eq, RawWpn), RawWpn \== none ->
-        to_atom(RawWpn, WTag)
-    ; get_dict(tag, Mob, RawTag) ->
-        to_atom(RawTag, WTag)
-    ;
-        WTag = fists
-    ),
-    ( combat_config:wpn_dmg(WTag, [dmg(_, D)|_]) -> BaseDmg = D ; BaseDmg = 4 ).
+% --- Magic & Spell Core ---
+check_affinity(Ent, Sp) :-
+    ( combat_config:spell_affinity(Sp, Affs) -> true ; Affs = all ),
+    ( Affs == all -> true
+    ; get_dict(race, Ent, RawRace), to_atom(RawRace, Race), member(Race, Affs) -> true
+    ; get_dict(class, Ent, RawClass), to_atom(RawClass, Class), member(Class, Affs) -> true ).
 
-mob_retaliate(Mob, Player, RetalEvts) :-
-    get_dict(id, Mob, MId),
-    get_dict(id, Player, PId),
-    get_weapon_tag(Mob, WTag),
-
-    entity:mark_combat(Mob, CbtMob),
-    entity:mark_combat(Player, CbtPlayer),
-
-    ( chk_dodge(CbtMob, CbtPlayer) ->
-        world:put_entity(CbtMob),
-        world:put_entity(CbtPlayer),
-        RetalEvts = [dodged(PId, MId)]
-    ;
-        calc_melee_raw(CbtMob, WTag, RawDmg),
-        chk_melee_crit(CbtMob, WTag, _, CritMult),
-        DmgWithCrit is floor(RawDmg * CritMult),
-        calc_mitigation(CbtPlayer, DmgWithCrit, FinalDmg),
-
-        entity:mod_hp(CbtPlayer, -Dmg, NPlayer),
-        get_dict(hp, NPlayer, PCurHp),
-        ( get_dict(max_hp, NPlayer, PMaxHp) -> true ; PMaxHp = PCurHp ),
-
-        world:put_entity(CbtMob),
-
-        ( entity:is_alive(NPlayer) ->
-            world:put_entity(NPlayer),
-            RetalEvts = [hit(MId, PId, FinalDmg, PCurHp, PMaxHp)]
-        ;
-            handle_death(CbtMob, NPlayer, DeathEvts),
-            ( get_dict(name, NPlayer, PName) -> true ; PName = PId ),
-            RetalEvts = [hit(MId, PId, FinalDmg, 0, PMaxHp), dead(PId, PName) | DeathEvts]
+do_cast(Id, Sp, TgtQuery, Evts) :-
+    world:get_entity(Id, Actor),
+    combat_config:spell_type(Sp, Type),
+    ( status:is_cced(Actor, CC) -> Evts = [error(cc_prevented(Id, CC))]
+    ; status:is_silenced(Actor, CC) -> Evts = [error(cc_prevented(Id, CC))]
+    ; (member(Type, [damage, cc, area, group_harm]), status:is_panicked(Actor, CC)) -> Evts = [error(cc_prevented(Id, CC))]
+    ; \+ check_affinity(Actor, Sp) -> Evts = [error(spell_affinity_denied(Id, Sp))]
+    ; combat_config:spell_cost(Sp, Cost), get_dict(mp, Actor, Mp),
+      ( Mp < Cost -> Evts = [error(insufficient_mp(Id, Sp, mp_available(Mp), mp_required(Cost)))]
+      ; resolve_spell_targets(Actor, Type, TgtQuery, Targets),
+        ( Targets == [] -> Evts = [error(no_valid_targets(Id, Sp))]
+        ; NMp is Mp - Cost, NActor = Actor.put(mp, NMp), world:put_entity(NActor),
+          execute_spell_on_targets(Type, Sp, Id, NActor, Targets, Evts)
         )
+      )
     ).
 
+resolve_spell_targets(Actor, Type, TgtQuery, Targets) :-
+    ( member(Type, [area, group_harm, group_heal, group_buff]) ->
+        get_room_targets(Actor, Type, Targets)
+    ;
+        ( (Type == buff ; Type == heal), (TgtQuery == none ; TgtQuery == self) -> Target = Actor
+        ; resolve_target(Actor, TgtQuery, Target) ),
+        ( nonvar(Target) -> Targets = [Target] ; Targets = [] )
+    ).
+
+execute_spell_on_targets(Type, Sp, Id, Actor, Targets, Evts) :-
+    ( combat_config:spell_apply_self(Sp, SelfAffs) -> true ; SelfAffs = [] ),
+    apply_affliction_list(Actor, SelfAffs, NAct1), world:put_entity(NAct1),
+
+    ( Type == area -> BaseEvt = [cast_area(Id, Sp)]
+    ; member(Type, [group_harm, group_heal, group_buff]) -> BaseEvt = [cast_group(Id, Sp)]
+    ; Targets = [SingleTgt|_], get_dict(id, SingleTgt, TgtId), BaseEvt = [cast(Id, Sp, TgtId)]
+    ; BaseEvt = [] ),
+
+    process_targets(Type, Sp, Id, Targets, TgtEvts),
+    append(BaseEvt, TgtEvts, Evts).
+
+process_targets(_, _, _, [], []).
+process_targets(Type, Sp, Id, [Tgt|Rest], Evts) :-
+    world:get_entity(Id, FreshActor), get_dict(id, Tgt, TgtId),
+    ( world:get_entity(TgtId, FreshTgt) ->
+        process_single_target(Type, Sp, Id, FreshActor, FreshTgt, TgtEvts),
+        process_targets(Type, Sp, Id, Rest, RestEvts),
+        append(TgtEvts, RestEvts, Evts)
+    ; process_targets(Type, Sp, Id, Rest, Evts) ).
+
+process_single_target(Type, Sp, Id, Actor, Tgt, Evts) :-
+    ( member(Type, [damage, cc, area, group_harm]) ->
+        get_dict(id, Tgt, TgtId),
+        ( combat_config:spell_dmg(Sp, BaseDmg) -> true ; BaseDmg = 0 ),
+        entity:mark_combat(Actor, CbtActor), entity:mark_combat(Tgt, CbtTgt),
+
+        ( is_crime(CbtTgt), is_dict(CbtActor, plyr) ->
+            BInc is 50, entity:add_bounty(CbtActor, BInc, NAttacker), world:save_db('world_state.json'),
+            CrimeEvts = [bounty_gained(Id, BInc)]
+        ; CrimeEvts = [], NAttacker = CbtActor ),
+        world:put_entity(NAttacker),
+
+        get_weapon_tag(NAttacker, WTag), combat_config:wpn_trait(WTag, Trait),
+        ( Trait == catalyst -> Mult1 = 1.25 ; Mult1 = 1.0 ),
+        entity:get_stat(NAttacker, int, Int),
+        ( entity:get_aff(NAttacker, empowered, dict{mag: EMag}) -> EMult = (100 + EMag)/100 ; EMult = 1.0 ),
+        ( entity:get_aff(NAttacker, weakened, dict{mag: WMag}) -> WMult = (100 - WMag)/100 ; WMult = 1.0 ),
+        RawDmg is floor((BaseDmg + floor(Int * 0.5)) * Mult1 * EMult * WMult),
+
+        chk_spell_crit(NAttacker, Sp, CbtTgt, IsCrit, CritMult), DmgWithCrit is floor(RawDmg * CritMult),
+        calc_spell_mitigation(CbtTgt, DmgWithCrit, FinalDmg),
+
+        entity:mod_hp(CbtTgt, -FinalDmg, NTgt1),
+        ( combat_config:spell_apply_tgt(Sp, TgtAffs) -> true ; TgtAffs = [] ),
+        apply_affliction_list(NTgt1, TgtAffs, NTgt),
+        get_dict(hp, NTgt, CurHp), ( get_dict(max_hp, NTgt, MaxHp) -> true ; MaxHp = CurHp ),
+
+        ( IsCrit == true -> CritEvt = [cast_crit(Id, Sp, TgtId)] ; CritEvt = [] ),
+        ( BaseDmg > 0 -> HitEvt = [hit(Id, TgtId, FinalDmg, CurHp, MaxHp)] ; HitEvt = [] ),
+        append(CritEvt, HitEvt, CastEvt),
+
+        extract_aff_tags(TgtAffs, TgtTags), maplist(aff_event(TgtId), TgtTags, AffEvts),
+
+        ( entity:is_alive(NTgt) ->
+            world:put_entity(NTgt),
+            append(CastEvt, AffEvts, TmpE1), append(TmpE1, CrimeEvts, Evts)
+        ; handle_death(NAttacker, NTgt, DeathEvts), ( get_dict(name, NTgt, TgtName) -> true ; TgtName = TgtId ),
+          append(CastEvt, [dead(TgtId, TgtName) | AffEvts], TmpE2),
+          append(TmpE2, CrimeEvts, TmpE3), append(TmpE3, DeathEvts, Evts) )
+
+    ; member(Type, [heal, group_heal]) ->
+        get_dict(id, Tgt, TgtId),
+        ( combat_config:spell_dmg(Sp, BaseHeal) -> true ; BaseHeal = 30 ),
+        entity:get_stat(Actor, int, Int), HealAmt is BaseHeal + floor(Int * 0.5),
+        entity:mod_hp(Tgt, HealAmt, NTgt1),
+        ( combat_config:spell_apply_tgt(Sp, TgtAffs) -> true ; TgtAffs = [] ),
+        apply_affliction_list(NTgt1, TgtAffs, NTgt), world:put_entity(NTgt),
+        get_dict(hp, NTgt, CurHp), ( get_dict(max_hp, NTgt, MaxHp) -> true ; MaxHp = CurHp ),
+        extract_aff_tags(TgtAffs, TgtTags), maplist(aff_event(TgtId), TgtTags, AffEvts),
+        append([healed(TgtId, HealAmt, CurHp, MaxHp)], AffEvts, Evts)
+
+    ; member(Type, [buff, group_buff]) ->
+        get_dict(id, Tgt, TgtId),
+        ( combat_config:spell_apply_tgt(Sp, TgtAffs) -> true ; TgtAffs = [] ),
+        apply_affliction_list(Tgt, TgtAffs, NTgt), world:put_entity(NTgt),
+        extract_aff_tags(TgtAffs, TgtTags), maplist(aff_event(TgtId), TgtTags, Evts)
+    ).
+
+% --- Death Resolving ---
 handle_death(SrcEnt, DeadTgt, Evts) :-
     ( get_dict(bounty, DeadTgt, B), B > 0, is_dict(SrcEnt, plyr) ->
-        get_dict(id, SrcEnt, SrcId),
-        entity:add_item(SrcEnt, gold, B, NSrc),
-        world:put_entity(NSrc),
+        get_dict(id, SrcEnt, SrcId), entity:add_item(SrcEnt, gold, B, NSrc), world:put_entity(NSrc),
         BountyEvts = [bounty_claimed(SrcId, DeadTgt.id, B)]
-    ;
-        BountyEvts = [], NSrc = SrcEnt
-    ),
-    entity:clear_bounty(DeadTgt, CleanTgt),
-    world:put_entity(CleanTgt),
-    world:save_db('world_state.json'),
+    ; BountyEvts = [], NSrc = SrcEnt ),
+    entity:clear_bounty(DeadTgt, CleanTgt), world:put_entity(CleanTgt), world:save_db('world_state.json'),
     resolve_death(NSrc, CleanTgt, BaseEvts),
     append(BountyEvts, BaseEvts, Evts).
 
-resolve_death(_SrcEnt, DeadTgt, [respawned(TgtId, square)]) :-
+resolve_death(_SrcEnt, DeadTgt, []) :-
     is_dict(DeadTgt, plyr), !,
-    get_dict(id, DeadTgt, TgtId),
-    get_dict(max_hp, DeadTgt, MaxHp),
-    get_dict(max_mp, DeadTgt, MaxMp),
-    Reborn = DeadTgt.put(hp, MaxHp).put(mp, MaxMp).put(room, square),
-    world:put_entity(Reborn).
+    Reborn = DeadTgt.put(hp, 0), world:put_entity(Reborn).
 
 resolve_death(SrcEnt, DeadMob, Evts) :-
-    get_dict(id, DeadMob, MobId),
-    get_dict(room, DeadMob, RoomId),
+    get_dict(id, DeadMob, MobId), get_dict(room, DeadMob, RoomId),
     world:del_entity(MobId),
     ( is_dict(DeadMob, mob) ->
-        get_dict(tag, DeadMob, RawTag), to_atom(RawTag, Tag),
-        spawn_config:mob_xp(Tag, Xp),
-        get_dict(id, SrcEnt, RawSrcId), to_atom(RawSrcId, SrcId),
-        prog:add_xp(SrcId, Xp, XpEvts),
+        get_dict(tag, DeadMob, RawTag), to_atom(RawTag, Tag), spawn_config:mob_xp(Tag, Xp),
+        ( SrcEnt \== environment -> get_dict(id, SrcEnt, RawSrcId), to_atom(RawSrcId, SrcId), prog:add_xp(SrcId, Xp, XpEvts) ; XpEvts = [] ),
         loot:gen_drops(DeadMob, DropEvts),
         ( catch(ai:check_and_spawn_settlement_npc(RoomId), _, fail) -> true ; true ),
         append(XpEvts, DropEvts, Evts)
-    ;
-        Evts = []
-    ).
+    ; Evts = [] ).
 
 
 
@@ -2009,9 +2226,9 @@ msg_time(evening,   "The sun begins to set, painting the sky in hues of orange a
 msg_time(night,     "Darkness falls as the stars emerge.").
 
 chk_weath(W, NW, [env_msg(Msg)]) :-
-    random_between(1, 100, R), R =< 2, !,
+    random_between(1, 100, R), R =< 2,
     pick_weath(NW),
-    W \== NW,
+    W \== NW, !,
     msg_weath(NW, Msg).
 chk_weath(W, W, []).
 
@@ -2033,6 +2250,80 @@ env_desc(Cur, Desc) :-
 time_fmt(T, Str) :-
     H is T div 60, M is T mod 60,
     format(string(Str), "~|~`0t~w~2+:~|~`0t~w~2+", [H, M]).
+
+
+
+================================================
+FILE: systems/info.pl
+================================================
+:- module(info, [do_look/2, do_status/2, do_inventory/2, do_bounties/2, do_time/2]).
+
+:- use_module('../core/world').
+:- use_module('../core/entity').
+:- use_module('env').
+
+is_plyr(E) :- is_dict(E, plyr), !.
+is_plyr(E) :- is_dict(E), get_dict(tag, E, player).
+
+is_item(E) :- is_dict(E, item), !.
+is_item(E) :- is_dict(E), get_dict(qty, E, _).
+
+is_mob(E) :- is_dict(E, mob), !.
+is_mob(E) :- is_dict(E), \+ is_plyr(E), \+ is_item(E), get_dict(hp, E, _).
+
+do_look(Id, Evts) :-
+    ( world:get_entity(Id, A) ->
+        get_dict(room, A, RoomId),
+        ( world:get_room(RoomId, Node) ->
+            get_dict(id, Node, RId),
+            ( get_dict(desc, Node, Desc) -> true ; Desc = "A room." ),
+            ( get_dict(props, Node, Props) -> true ; Props = [] ),
+            ( get_dict(exits, Node, ExitsDict), dict_keys(ExitsDict, Exits) -> true ; Exits = [] ),
+            world:room_entities(RId, Ents),
+            get_dict(hp, A, SelfHp), get_dict(max_hp, A, SelfMaxHp),
+            get_dict(mp, A, SelfMp), get_dict(max_mp, A, SelfMaxMp),
+            ( get_dict(affs, A, SelfAffs) -> true ; SelfAffs = dict{} ),
+            SelfStats = dict{hp: SelfHp, max_hp: SelfMaxHp, mp: SelfMp, max_mp: SelfMaxMp, affs: SelfAffs},
+
+            ( get_dict(type, Node, outdoor) -> world:env_state(EnvState), env:env_desc(EnvState, EnvDesc) ; EnvDesc = "" ),
+
+            findall(dict{id: OId, hp: OHp, max_hp: OMaxHp, bounty: OBty, affs: OAffs},
+                    (member(O, Ents), is_plyr(O), get_dict(id, O, OId), OId \== Id,
+                     get_dict(hp, O, OHp), get_dict(max_hp, O, OMaxHp), (get_dict(bounty, O, OBty) -> true ; OBty = 0), (get_dict(affs, O, OAffs) -> true ; OAffs = dict{})), OData),
+            findall(dict{id: MId, name: MName, tag: MTag, hp: MHp, max_hp: MMaxHp, affs: MAffs},
+                    (member(M, Ents), is_mob(M), get_dict(hp, M, MHp), MHp > 0,
+                     get_dict(id, M, MId), (get_dict(name, M, MName) -> true ; MName = MTag),
+                     get_dict(tag, M, MTag), (get_dict(max_hp, M, MMaxHp) -> true ; MMaxHp = MHp), (get_dict(affs, M, MAffs) -> true ; MAffs = dict{})), MData),
+            findall(dict{id: IId, tag: ITag, qty: IQty},
+                    (member(I, Ents), is_item(I), get_dict(id, I, IId),
+                     get_dict(tag, I, ITag), get_dict(qty, I, IQty)), IData),
+            Evts = [look(RId, Desc, Props, Exits, OData, MData, IData, SelfStats, EnvDesc)]
+        ; Evts = [error(room_not_found(RoomId))] )
+    ; Evts = [error(actor_not_found(Id))] ).
+
+do_status(Id, [status_info(Id, Lvl, Xp, ReqXp, StatPoints, Stats, Health, Bty)]) :-
+    world:get_entity(Id, A), !,
+    get_dict(hp, A, Hp), get_dict(max_hp, A, MaxHp),
+    get_dict(mp, A, Mp), get_dict(max_mp, A, MaxMp),
+    get_dict(lvl, A, Lvl), get_dict(xp, A, Xp),
+    ( get_dict(affs, A, Affs) -> true ; Affs = dict{} ),
+    ReqXp is Lvl * Lvl * 100,
+    ( get_dict(stat_points, A, StatPoints) -> true ; StatPoints = 0 ),
+    ( get_dict(bounty, A, Bty) -> true ; Bty = 0 ),
+    entity:get_stat(A, str, Str), entity:get_stat(A, dex, Dex),
+    entity:get_stat(A, con, Con), entity:get_stat(A, int, Int),
+    entity:get_stat(A, wis, Wis), entity:get_stat(A, cha, Cha),
+    entity:get_stat(A, luk, Luk),
+    Stats = dict{str: Str, dex: Dex, con: Con, int: Int, wis: Wis, cha: Cha, luk: Luk},
+    Health = dict{hp: Hp, max_hp: MaxHp, mp: Mp, max_mp: MaxMp, affs: Affs}.
+do_status(Id, [error(actor_not_found(Id))]).
+
+do_inventory(Id, [inventory_info(Id, Inv, Eq)]) :-
+    world:get_entity(Id, A), !, get_dict(inv, A, Inv), get_dict(equip, A, Eq).
+do_inventory(Id, [error(actor_not_found(Id))]).
+
+do_bounties(Id, [bounty_report(Id, List)]) :- world:get_bounty_leaderboard(10, List).
+do_time(Id, [time_report(Id, Desc)]) :- world:env_state(Env), env:env_desc(Env, Desc).
 
 
 
@@ -2167,6 +2458,7 @@ FILE: systems/move.pl
 
 :- use_module('../core/world').
 :- use_module('../worldgen/chunks').
+:- use_module('status').
 
 resolve_dir(n, north) :- !.
 resolve_dir(s, south) :- !.
@@ -2180,15 +2472,19 @@ do_move(Id, _DirQuery, [error(actor_not_found(Id))]) :-
     \+ world:get_entity(Id, _), !.
 
 do_move(Id, DirQuery, Evts) :-
-    resolve_dir(DirQuery, Dir),
     world:get_entity(Id, Actor),
-    world:get_room(Actor.room, CurRoom),
-    get_dict(exits, CurRoom, Exits),
-    get_dict(Dir, Exits, NextRoomId), !,
-    chunks:ensure_chunk(NextRoomId),
-    NActor = Actor.put(room, NextRoomId),
-    world:put_entity(NActor),
-    Evts = [moved(Id, Dir, NextRoomId)].
+    ( status:is_rooted(Actor, CC) ->
+        Evts = [error(cc_prevented(Id, CC))]
+    ;
+        resolve_dir(DirQuery, Dir),
+        world:get_room(Actor.room, CurRoom),
+        get_dict(exits, CurRoom, Exits),
+        get_dict(Dir, Exits, NextRoomId), !,
+        chunks:ensure_chunk(NextRoomId),
+        NActor = Actor.put(room, NextRoomId),
+        world:put_entity(NActor),
+        Evts = [moved(Id, Dir, NextRoomId)]
+    ).
 
 do_move(Id, DirQuery, [error(no_exit(Id, DirQuery, available_exits(AvailableExits)))]) :-
     resolve_dir(DirQuery, _),
@@ -2258,7 +2554,7 @@ do_allocate(Id, StatQuery, [error(invalid_stat(Id, StatQuery))]) :-
     to_atom(StatQuery, Stat),
     \+ valid_stat(Stat), !.
 
-do_allocate(Id, StatQuery, [error(no_stat_points(Id))]) :-
+do_allocate(Id, _StatQuery, [error(no_stat_points(Id))]) :-
     world:get_entity(Id, Actor),
     ( get_dict(stat_points, Actor, Points) -> true ; Points = 0 ),
     Points =< 0, !.
@@ -2296,22 +2592,65 @@ apply_stat_side_effects(_, A, A).
 ================================================
 FILE: systems/status.pl
 ================================================
-:- module(status, [do_tick/2]).
+:- module(status, [
+    do_tick/2,
+    is_cced/2,
+    is_silenced/2,
+    is_rooted/2,
+    is_panicked/2,
+    do_respawn/2
+]).
 
 :- use_module('../core/world').
 :- use_module('../core/entity').
+:- use_module('combat').
+
+% Crowd Control checks
+is_cced(Ent, CC) :-
+    ( entity:has_aff(Ent, stunned) -> CC = stunned
+    ; entity:has_aff(Ent, frozen) -> CC = frozen
+    ; entity:has_aff(Ent, paralysed) -> CC = paralysed
+    ).
+
+is_silenced(Ent, CC) :-
+    ( entity:has_aff(Ent, silenced) -> CC = silenced
+    ; is_cced(Ent, CC)
+    ).
+
+is_rooted(Ent, CC) :-
+    ( entity:has_aff(Ent, rooted) -> CC = rooted
+    ; is_cced(Ent, CC)
+    ).
+
+is_panicked(Ent, CC) :-
+    ( entity:has_aff(Ent, panicked) -> CC = panicked
+    ; is_cced(Ent, CC)
+    ).
+
+% Unconditional respawn for dead or reviving player
+do_respawn(Id, Evts) :-
+    world:get_entity(Id, Actor),
+    get_dict(max_hp, Actor, MaxHp), get_dict(max_mp, Actor, MaxMp),
+    Reborn = Actor.put(hp, MaxHp).put(mp, MaxMp).put(room, square).put(affs, dict{}),
+    world:put_entity(Reborn),
+    Evts = [respawned(Id, square)].
 
 do_tick(Id, Evts) :-
     ( world:get_entity(Id, Actor) ->
         tick_regen(Actor, Act1, RegenEvts),
         tick_cds(Act1, Act2),
-        tick_affs(Act2, ActFinal, AffEvts),
-
-        world:put_entity(ActFinal),
-        append(RegenEvts, AffEvts, Evts)
-    ;
-        Evts = []
-    ).
+        tick_affs(Act2, Act3, AffEvts),
+        ( entity:is_alive(Act3) ->
+            world:put_entity(Act3),
+            append(RegenEvts, AffEvts, Evts)
+        ;
+            combat:resolve_death(environment, Act3, DeathEvts),
+            get_dict(id, Act3, TgtId),
+            ( get_dict(name, Act3, TgtName) -> true ; TgtName = TgtId ),
+            append(RegenEvts, AffEvts, TmpEvts),
+            append(TmpEvts, [dead(TgtId, TgtName) | DeathEvts], Evts)
+        )
+    ; Evts = [] ).
 
 regen_mult(Act, HpMult, MpMult) :-
     ( entity:has_trait(Act, troll_regen) -> HpMult1 = 4.0
@@ -2319,8 +2658,11 @@ regen_mult(Act, HpMult, MpMult) :-
     ; HpMult1 = 1.0 ),
     ( entity:has_trait(Act, keen_mind)   -> MpMult1 = 1.8
     ; MpMult1 = 1.0 ),
-    HpMult = HpMult1,
-    MpMult = MpMult1.
+    HpMult = HpMult1, MpMult = MpMult1.
+
+% Do not regenerate health if dead (HP =< 0)
+tick_regen(Act, Act, []) :-
+    get_dict(hp, Act, Hp), Hp =< 0, !.
 
 tick_regen(Act, NAct, Evts) :-
     ( get_dict(cds, Act, Cds), get_dict(combat, Cds, CCd), CCd > 0 ->
@@ -2331,41 +2673,68 @@ tick_regen(Act, NAct, Evts) :-
         ( get_dict(mp, Act, Mp) -> true ; Mp = 20 ),
         ( get_dict(max_mp, Act, MaxMp) -> true ; MaxMp = 20 ),
 
-        entity:get_stat(Act, con, Con),
-        entity:get_stat(Act, wis, Wis),
-
+        entity:get_stat(Act, con, Con), entity:get_stat(Act, wis, Wis),
         regen_mult(Act, HpMult, MpMult),
-
-        BaseHp is 2 + floor(Con * 0.2),
-        BaseMp is 2 + floor(Wis * 0.2),
-
-        HpRegen is floor(BaseHp * HpMult),
-        MpRegen is floor(BaseMp * MpMult),
+        BaseHp is 2 + floor(Con * 0.2), BaseMp is 2 + floor(Wis * 0.2),
+        HpRegen is floor(BaseHp * HpMult), MpRegen is floor(BaseMp * MpMult),
 
         ( Hp < MaxHp -> NHp is min(MaxHp, Hp + HpRegen) ; NHp = Hp ),
         ( Mp < MaxMp -> NMp is min(MaxMp, Mp + MpRegen) ; NMp = Mp ),
 
         NAct = Act.put(hp, NHp).put(mp, NMp),
         ( (Hp \== NHp ; Mp \== NMp) ->
-            get_dict(id, Act, ActId),
-            Evts = [regenerated(ActId, NHp, NMp)]
-        ;
-            Evts = []
-        )
+            get_dict(id, Act, ActId), Evts = [regenerated(ActId, NHp, NMp)]
+        ; Evts = [] )
     ).
 
 tick_cds(Act, NAct) :-
     ( get_dict(cds, Act, Cds) -> true ; Cds = dict{} ),
-    dict_pairs(Cds, Tag, Pairs),
-    dec_pairs(Pairs, NPairs),
-    dict_pairs(NCds, Tag, NPairs),
-    NAct = Act.put(cds, NCds).
+    dict_pairs(Cds, Tag, Pairs), dec_pairs(Pairs, NPairs),
+    dict_pairs(NCds, Tag, NPairs), NAct = Act.put(cds, NCds).
 
 dec_pairs([], []).
 dec_pairs([_-V|T], NT) :- V =< 1, !, dec_pairs(T, NT).
 dec_pairs([K-V|T], [K-NV|NT]) :- NV is V - 1, dec_pairs(T, NT).
 
-tick_affs(Act, Act, []).
+tick_affs(Act, NAct, Evts) :-
+    ( get_dict(affs, Act, Affs) -> dict_pairs(Affs, _, Pairs) ; Pairs = [] ),
+    process_aff_pairs(Pairs, Act, NAct, Evts).
+
+process_aff_pairs([], Act, Act, []).
+process_aff_pairs([AffTag-AffNode|Rest], Act, FinalAct, Evts) :-
+    get_dict(dur, AffNode, Dur), get_dict(mag, AffNode, Mag),
+    NDur is Dur - 1,
+
+    ( is_dot(AffTag) ->
+        entity:mod_hp(Act, -Mag, Act1), get_dict(id, Act1, AId),
+        TickEvt = [aff_tick(AId, AffTag, Mag)]
+    ; AffTag == regeneration ->
+        entity:mod_hp(Act, Mag, Act1), get_dict(id, Act1, AId),
+        get_dict(hp, Act1, CurHp), ( get_dict(max_hp, Act1, MaxHp) -> true ; MaxHp = CurHp ),
+        TickEvt = [healed(AId, Mag, CurHp, MaxHp)]
+    ;
+        Act1 = Act, TickEvt = []
+    ),
+
+    get_dict(id, Act1, AId2),
+
+    ( NDur =< 0 ->
+        entity:remove_aff(Act1, AffTag, Act2), FadeEvt = [aff_faded(AId2, AffTag)]
+    ;
+        NAffNode = AffNode.put(dur, NDur), get_dict(affs, Act1, CurAffs),
+        NAffs = CurAffs.put(AffTag, NAffNode), Act2 = Act1.put(affs, NAffs), FadeEvt = []
+    ),
+
+    process_aff_pairs(Rest, Act2, FinalAct, RestEvts),
+    append(TickEvt, FadeEvt, E1), append(E1, RestEvts, Evts).
+
+is_dot(poisoned).
+is_dot(bleeding).
+is_dot(burning).
+is_dot(frostbite).
+is_dot(soul_rot).
+is_dot(holy_fire).
+is_dot(venom).
 
 
 

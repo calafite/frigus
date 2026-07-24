@@ -32,7 +32,7 @@ gen_dun(Theme, Lvl, Size, EntryId, Dun) :-
     init_room(RootId, Theme, Lvl, Root),
     add_exit(Root, up, EntryId, FRoot),
     build_path(Theme, Lvl, Size, FRoot, up, NRooms, Mobs, Items),
-    Dun = dict{rooms: [FEntry | NRooms], mobs: Mobs, items: Items}.
+    Dun = dict{rooms: [FEntry  |NRooms], mobs: Mobs, items: Items}.
 
 build_path(_, _, 0, R, _, [R], [], []) :- !.
 build_path(Theme, Lvl, Len, Cur, PrevDir, Rooms, Mobs, Items) :-

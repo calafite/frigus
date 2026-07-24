@@ -24,7 +24,7 @@ add_xp(ActorId, Amt, Evts) :-
     NXp is CurXp + Amt,
     check_level_up(Actor, NXp, NActor, LvlEvts),
     world:put_entity(NActor),
-    Evts = [xp_gained(ActorId, Amt) | LvlEvts].
+    Evts = [xp_gained(ActorId, Amt)  |LvlEvts].
 add_xp(_, _, []).
 
 check_level_up(A, Xp, NA, Evts) :-
@@ -42,7 +42,7 @@ check_level_up(A, Xp, NA, Evts) :-
     NMaxHp is MaxHp + 10, NMaxMp is MaxMp + 5,
 
     TmpA = A.put(lvl, NLvl).put(stat_points, NPoints).put(max_hp, NMaxHp).put(hp, NMaxHp).put(max_mp, NMaxMp).put(mp, NMaxMp),
-    Evts = [lvl_up(AId, NLvl) | RestEvts],
+    Evts = [lvl_up(AId, NLvl)  |RestEvts],
     check_level_up(TmpA, NXp, NA, RestEvts).
 check_level_up(A, Xp, NA, []) :-
     NA = A.put(xp, Xp).

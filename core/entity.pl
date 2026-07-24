@@ -1,23 +1,23 @@
 :- module(entity, [
-    is_alive/1,
-    get_stat/3,
-    mod_hp/3,
-    has_item/2,
-    add_item/4,
-    rem_item/4,
-    add_threat/4,
-    rem_threat/3,
-    add_bounty/3,
-    clear_bounty/2,
-    mark_combat/2,
-    has_trait/2,
-    check_pass/2,
-    check_admin/1,
-    has_aff/2,
-    get_aff/3,
-    apply_aff/5,
-    remove_aff/3
-]).
+              is_alive/1,
+              get_stat/3,
+              mod_hp/3,
+              has_item/2,
+              add_item/4,
+              rem_item/4,
+              add_threat/4,
+              rem_threat/3,
+              add_bounty/3,
+              clear_bounty/2,
+              mark_combat/2,
+              has_trait/2,
+              check_pass/2,
+              check_admin/1,
+              has_aff/2,
+              get_aff/3,
+              apply_aff/5,
+              remove_aff/3
+                  ]).
 
 :- use_module(library(lists)).
 :- use_module('../config/spawn').
@@ -37,11 +37,11 @@ get_stat(Ent, Stat, Total) :-
     is_dict(Ent), !,
     ( get_dict(Stat, Ent, Base) -> true ; Base = 10 ),
     ( get_dict(race, Ent, RawRace) ->
-        to_atom(RawRace, Race),
-        findall(B, spawn_config:race_bonus(Race, Stat, B), BList),
-        sum_list(BList, Bonus)
+          to_atom(RawRace, Race),
+          findall(B, spawn_config:race_bonus(Race, Stat, B), BList),
+          sum_list(BList, Bonus)
     ;
-        Bonus = 0
+      Bonus = 0
     ),
     Total is Base + Bonus.
 get_stat(_, _, 10).
@@ -117,7 +117,7 @@ add_threat(Ent, _, _, Ent).
 rem_threat(Ent, TgtId, NEnt) :-
     is_dict(Ent),
     ( get_dict(threats, Ent, Th) ->
-        ( del_dict(TgtId, Th, _, NTh) -> NEnt = Ent.put(threats, NTh) ; NEnt = Ent )
+          ( del_dict(TgtId, Th, _, NTh) -> NEnt = Ent.put(threats, NTh) ; NEnt = Ent )
     ; NEnt = Ent ).
 
 add_bounty(Ent, Val, NEnt) :-
@@ -159,11 +159,11 @@ apply_aff(Ent, AffTag, Dur, Mag, NEnt) :-
     is_dict(Ent),
     ( get_dict(affs, Ent, Affs) -> true ; Affs = dict{} ),
     ( get_dict(AffTag, Affs, CurAff) ->
-        get_dict(dur, CurAff, CurDur),
-        NDur is max(CurDur, Dur),
-        NAffNode = dict{dur: NDur, mag: Mag}
+          get_dict(dur, CurAff, CurDur),
+          NDur is max(CurDur, Dur),
+          NAffNode = dict{dur: NDur, mag: Mag}
     ;
-        NAffNode = dict{dur: Dur, mag: Mag}
+      NAffNode = dict{dur: Dur, mag: Mag}
     ),
     NAffs = Affs.put(AffTag, NAffNode),
     NEnt = Ent.put(affs, NAffs).
@@ -172,5 +172,5 @@ apply_aff(Ent, AffTag, Dur, Mag, NEnt) :-
 remove_aff(Ent, AffTag, NEnt) :-
     is_dict(Ent),
     ( get_dict(affs, Ent, Affs) ->
-        ( del_dict(AffTag, Affs, _, NAffs) -> NEnt = Ent.put(affs, NAffs) ; NEnt = Ent )
+          ( del_dict(AffTag, Affs, _, NAffs) -> NEnt = Ent.put(affs, NAffs) ; NEnt = Ent )
     ; NEnt = Ent ).

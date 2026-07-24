@@ -1,6 +1,6 @@
 :- module(spawn, [
-    gen_mob/5, gen_grp/4, gen_town_npc/2, gen_guard_npc/2, gen_citizen_npc/2
-]).
+              gen_mob/5, gen_grp/4, gen_town_npc/2, gen_guard_npc/2, gen_citizen_npc/2
+                 ]).
 
 :- use_module('../core/world').
 :- use_module('../config/world').
@@ -28,15 +28,15 @@ gen_mob(Theme, Lvl, Tier, RId, Mob) :-
     BaseDex is 10 + (Lvl * 2),
     BaseInt is 10 + (Lvl * 2),
     ( Tier == boss ->
-        H1 is BaseHp * 6, S1 is BaseStr * 4, D1 is BaseDex * 4, I1 is BaseInt * 4,
-        atomic_list_concat([Base, ' boss'], ' ', Name),
-        Props = [dict{prop: boss, val: 1.0}]
+          H1 is BaseHp * 6, S1 is BaseStr * 4, D1 is BaseDex * 4, I1 is BaseInt * 4,
+          atomic_list_concat([Base, ' boss'], ' ', Name),
+          Props = [dict{prop: boss, val: 1.0}]
     ; Tier == elite ->
-        H1 is BaseHp * 2, S1 is BaseStr * 2, D1 is BaseDex * 2, I1 is BaseInt * 2,
-        atomic_list_concat(['elite ', Base], Name),
-        Props = [dict{prop: elite, val: 1.0}]
+          H1 is BaseHp * 2, S1 is BaseStr * 2, D1 is BaseDex * 2, I1 is BaseInt * 2,
+          atomic_list_concat(['elite ', Base], Name),
+          Props = [dict{prop: elite, val: 1.0}]
     ;
-        H1 = BaseHp, S1 = BaseStr, D1 = BaseDex, I1 = BaseInt, Name = Base, Props = []
+      H1 = BaseHp, S1 = BaseStr, D1 = BaseDex, I1 = BaseInt, Name = Base, Props = []
     ),
     Mob = mob{id: Id, tag: Base, name: Name, lvl: Lvl, hp: H1, max_hp: H1, str: S1, dex: D1, int: I1, room: RId, props: Props}.
 
@@ -62,7 +62,7 @@ gen_citizen_npc(RoomId, Npc) :-
 gen_town_npc(RoomId, Npc) :-
     random_between(1, 100, Roll),
     ( Roll =< 60 ->
-        gen_guard_npc(RoomId, Npc)
+          gen_guard_npc(RoomId, Npc)
     ;
-        gen_citizen_npc(RoomId, Npc)
+      gen_citizen_npc(RoomId, Npc)
     ).

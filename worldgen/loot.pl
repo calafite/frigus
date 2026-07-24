@@ -26,8 +26,8 @@ gen_item(_Lvl, Tier, Type, Item) :-
 gen_chest(Lvl, RId, Items) :-
     random_between(1, 100, R),
     ( R =< 30 ->
-        random_between(1, 2, Count),
-        findall(I, (between(1, Count, _), roll_tier(T), gen_item(Lvl, T, none, I0), I = I0.put(room, RId)), Items)
+          random_between(1, 2, Count),
+          findall(I, (between(1, Count, _), roll_tier(T), gen_item(Lvl, T, none, I0), I = I0.put(room, RId)), Items)
     ;
-        Items = []
+      Items = []
     ).

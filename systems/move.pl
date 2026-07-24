@@ -2,6 +2,7 @@
 
 :- use_module('../core/world').
 :- use_module('../worldgen/chunks').
+:- use_module('status').
 
 resolve_dir(n, north) :- !.
 resolve_dir(s, south) :- !.
@@ -15,15 +16,19 @@ do_move(Id, _DirQuery, [error(actor_not_found(Id))]) :-
     \+ world:get_entity(Id, _), !.
 
 do_move(Id, DirQuery, Evts) :-
-    resolve_dir(DirQuery, Dir),
     world:get_entity(Id, Actor),
-    world:get_room(Actor.room, CurRoom),
-    get_dict(exits, CurRoom, Exits),
-    get_dict(Dir, Exits, NextRoomId), !,
-    chunks:ensure_chunk(NextRoomId),
-    NActor = Actor.put(room, NextRoomId),
-    world:put_entity(NActor),
-    Evts = [moved(Id, Dir, NextRoomId)].
+    ( status:is_rooted(Actor, CC) ->
+          Evts = [error(cc_prevented(Id, CC))]
+    ;
+      resolve_dir(DirQuery, Dir),
+      world:get_room(Actor.room, CurRoom),
+      get_dict(exits, CurRoom, Exits),
+      get_dict(Dir, Exits, NextRoomId), !,
+      chunks:ensure_chunk(NextRoomId),
+      NActor = Actor.put(room, NextRoomId),
+      world:put_entity(NActor),
+      Evts = [moved(Id, Dir, NextRoomId)]
+    ).
 
 do_move(Id, DirQuery, [error(no_exit(Id, DirQuery, available_exits(AvailableExits)))]) :-
     resolve_dir(DirQuery, _),

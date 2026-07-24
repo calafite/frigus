@@ -40,11 +40,11 @@ is_settlement_room(Room) :-
 valid_npc_move(Mob, NextRoomId) :-
     world:get_room(NextRoomId, NextRoom),
     ( is_guard(Mob) ->
-        is_settlement_room(NextRoom)
+          is_settlement_room(NextRoom)
     ; is_town_npc(Mob) ->
-        is_settlement_room(NextRoom)
+          is_settlement_room(NextRoom)
     ;
-        true
+      true
     ).
 
 is_guard(Mob) :-
@@ -61,11 +61,11 @@ is_hostile_mob(Mob) :-
 
 highest_bounty(Ents, TopId) :-
     findall(B-Id, (
-        member(E, Ents),
-        get_dict(bounty, E, B), B > 0,
-        get_dict(id, E, Id),
-        entity:is_alive(E)
-    ), Pairs),
+                member(E, Ents),
+                get_dict(bounty, E, B), B > 0,
+                get_dict(id, E, Id),
+                entity:is_alive(E)
+                  ), Pairs),
     Pairs \== [],
     keysort(Pairs, Sorted),
     reverse(Sorted, [_-TopId|_]).
@@ -138,22 +138,22 @@ act_mob(Mob, Evts) :-
 % Global replenishment with hard settlement cap
 replenish_settlements :-
     findall(M, (
-        world:db_entity(_, M),
-        is_dict(M, mob),
-        get_dict(hp, M, Hp), Hp > 0,
-        get_dict(room, M, RId),
-        world:get_room(RId, RNode),
-        is_settlement_room(RNode)
-    ), TownMobs),
+                world:db_entity(_, M),
+                is_dict(M, mob),
+                get_dict(hp, M, Hp), Hp > 0,
+                get_dict(room, M, RId),
+                world:get_room(RId, RNode),
+                is_settlement_room(RNode)
+               ), TownMobs),
     length(TownMobs, TotalTownMobs),
     ( TotalTownMobs < 6 ->
-        random_between(1, 100, Roll),
-        ( Roll =< 5 ->
-            spawn:gen_town_npc(square, NewNpc),
-            world:put_entity(NewNpc),
-            get_dict(name, NewNpc, Name),
-            world:push_room_event(square, npc_arrived(Name))
-        ; true )
+          random_between(1, 100, Roll),
+          ( Roll =< 5 ->
+                spawn:gen_town_npc(square, NewNpc),
+                world:put_entity(NewNpc),
+                get_dict(name, NewNpc, Name),
+                world:push_room_event(square, npc_arrived(Name))
+          ; true )
     ; true ).
 
 check_and_spawn_settlement_npc(_) :- true.
