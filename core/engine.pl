@@ -44,7 +44,7 @@ step(Id, ActTerm, [error(unhandled_action(Id, ActTerm))]).
 
 is_public_event(moved(_,_,_)).
 is_public_event(hit(_,_,_,_,_)).
-is_public_event(dead(_)).
+is_public_event(dead(_,_)).
 is_public_event(cast(_,_,_)).
 is_public_event(healed(_,_,_,_)).
 is_public_event(say(_,_)).

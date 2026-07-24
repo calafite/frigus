@@ -147,17 +147,21 @@ execute_spell(Sp, Id, _Actor, _Tgt, _Cost, [error(spell_not_implemented(Id, Sp))
 apply_damage(SrcId, SrcEnt, Tgt, Dmg, Evts) :-
     get_dict(id, Tgt, TgtId),
 
-    ( is_crime(Tgt), is_dict(SrcEnt, plyr) ->
+    entity:mark_combat(SrcEnt, CbtSrc),
+    entity:mark_combat(Tgt, CbtTgt),
+
+    ( is_crime(CbtTgt), is_dict(CbtSrc, plyr) ->
         BInc is Dmg * 5,
-        entity:add_bounty(SrcEnt, BInc, NAttacker),
-        world:put_entity(NAttacker),
+        entity:add_bounty(CbtSrc, BInc, NAttacker),
         world:save_db('world_state.json'),
         CrimeEvts = [bounty_gained(SrcId, BInc)]
     ;
-        CrimeEvts = [], NAttacker = SrcEnt
+        CrimeEvts = [], NAttacker = CbtSrc
     ),
 
-    entity:mod_hp(Tgt, -Dmg, NTgt),
+    world:put_entity(NAttacker),
+
+    entity:mod_hp(CbtTgt, -Dmg, NTgt),
     get_dict(hp, NTgt, CurHp),
     ( get_dict(max_hp, NTgt, MaxHp) -> true ; MaxHp = CurHp ),
 
@@ -180,7 +184,8 @@ apply_damage(SrcId, SrcEnt, Tgt, Dmg, Evts) :-
         append([hit(SrcId, TgtId, Dmg, CurHp, MaxHp) | CrimeEvts], RetalEvts, Evts)
     ;
         handle_death(NAttacker, NTgt, DeathEvts),
-        append([hit(SrcId, TgtId, Dmg, 0, MaxHp), dead(TgtId) | CrimeEvts], DeathEvts, Evts)
+        ( get_dict(name, NTgt, TgtName) -> true ; TgtName = TgtId ),
+        append([hit(SrcId, TgtId, Dmg, 0, MaxHp), dead(TgtId, TgtName) | CrimeEvts], DeathEvts, Evts)
     ).
 
 town_brawl_retaliate(_PrimaryMob, Player, BrawlEvts) :-
@@ -198,7 +203,6 @@ brawl_attack_all([], _, []).
 brawl_attack_all([Mob|Rest], Player, Evts) :-
     get_dict(id, Player, PId),
     entity:add_threat(Mob, PId, 10, NMob),
-    world:put_entity(NMob),
     mob_retaliate(NMob, Player, SingleEvts),
     ( world:get_entity(PId, UpdatedPlayer) -> true ; UpdatedPlayer = Player ),
     brawl_attack_all(Rest, UpdatedPlayer, RestEvts),
@@ -220,15 +224,23 @@ mob_retaliate(Mob, Player, RetalEvts) :-
     get_mob_base_damage(Mob, BaseDmg),
     entity:get_stat(Mob, str, Str),
     Dmg is BaseDmg + floor(Str * 0.5),
-    entity:mod_hp(Player, -Dmg, NPlayer),
+
+    entity:mark_combat(Mob, CbtMob),
+    entity:mark_combat(Player, CbtPlayer),
+
+    entity:mod_hp(CbtPlayer, -Dmg, NPlayer),
     get_dict(hp, NPlayer, PCurHp),
     ( get_dict(max_hp, NPlayer, PMaxHp) -> true ; PMaxHp = PCurHp ),
+
+    world:put_entity(CbtMob),
+
     ( entity:is_alive(NPlayer) ->
         world:put_entity(NPlayer),
         RetalEvts = [hit(MId, PId, Dmg, PCurHp, PMaxHp)]
     ;
-        handle_death(Mob, NPlayer, DeathEvts),
-        RetalEvts = [hit(MId, PId, Dmg, 0, PMaxHp), dead(PId) | DeathEvts]
+        handle_death(CbtMob, NPlayer, DeathEvts),
+        ( get_dict(name, NPlayer, PName) -> true ; PName = PId ),
+        RetalEvts = [hit(MId, PId, Dmg, 0, PMaxHp), dead(PId, PName) | DeathEvts]
     ).
 
 handle_death(SrcEnt, DeadTgt, Evts) :-

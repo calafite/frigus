@@ -16,26 +16,30 @@ do_tick(Id, Evts) :-
     ).
 
 tick_regen(Act, NAct, Evts) :-
-    ( get_dict(hp, Act, Hp) -> true ; Hp = 50 ),
-    ( get_dict(max_hp, Act, MaxHp) -> true ; MaxHp = 50 ),
-    ( get_dict(mp, Act, Mp) -> true ; Mp = 20 ),
-    ( get_dict(max_mp, Act, MaxMp) -> true ; MaxMp = 20 ),
-    entity:get_stat(Act, con, Con),
-    entity:get_stat(Act, wis, Wis),
-    HpRegen is 2 + floor(Con * 0.2),
-    MpRegen is 2 + floor(Wis * 0.2),
-    ( Hp < MaxHp -> NHp is min(MaxHp, Hp + HpRegen) ; NHp = Hp ),
-    ( Mp < MaxMp -> NMp is min(MaxMp, Mp + MpRegen) ; NMp = Mp ),
-    NAct = Act.put(hp, NHp).put(mp, NMp),
-    ( (Hp \== NHp ; Mp \== NMp) ->
-        get_dict(id, Act, ActId),
-        Evts = [regenerated(ActId, NHp, NMp)]
+    ( get_dict(cds, Act, Cds), get_dict(combat, Cds, CCd), CCd > 0 ->
+        NAct = Act, Evts = []
     ;
-        Evts = []
+        ( get_dict(hp, Act, Hp) -> true ; Hp = 50 ),
+        ( get_dict(max_hp, Act, MaxHp) -> true ; MaxHp = 50 ),
+        ( get_dict(mp, Act, Mp) -> true ; Mp = 20 ),
+        ( get_dict(max_mp, Act, MaxMp) -> true ; MaxMp = 20 ),
+        entity:get_stat(Act, con, Con),
+        entity:get_stat(Act, wis, Wis),
+        HpRegen is 2 + floor(Con * 0.2),
+        MpRegen is 2 + floor(Wis * 0.2),
+        ( Hp < MaxHp -> NHp is min(MaxHp, Hp + HpRegen) ; NHp = Hp ),
+        ( Mp < MaxMp -> NMp is min(MaxMp, Mp + MpRegen) ; NMp = Mp ),
+        NAct = Act.put(hp, NHp).put(mp, NMp),
+        ( (Hp \== NHp ; Mp \== NMp) ->
+            get_dict(id, Act, ActId),
+            Evts = [regenerated(ActId, NHp, NMp)]
+        ;
+            Evts = []
+        )
     ).
 
 tick_cds(Act, NAct) :-
-    get_dict(cds, Act, Cds),
+    ( get_dict(cds, Act, Cds) -> true ; Cds = dict{} ),
     dict_pairs(Cds, Tag, Pairs),
     dec_pairs(Pairs, NPairs),
     dict_pairs(NCds, Tag, NPairs),

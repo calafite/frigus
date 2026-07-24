@@ -8,7 +8,8 @@
     add_threat/4,
     rem_threat/3,
     add_bounty/3,
-    clear_bounty/2
+    clear_bounty/2,
+    mark_combat/2
 ]).
 
 :- use_module(library(lists)).
@@ -94,3 +95,9 @@ add_bounty(Ent, Val, NEnt) :-
 clear_bounty(Ent, NEnt) :-
     is_dict(Ent),
     NEnt = Ent.put(bounty, 0).
+
+mark_combat(Ent, NEnt) :-
+    is_dict(Ent),
+    ( get_dict(cds, Ent, Cds) -> true ; Cds = dict{} ),
+    NCds = Cds.put(combat, 3),
+    NEnt = Ent.put(cds, NCds).
