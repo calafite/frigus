@@ -38,6 +38,19 @@ step(Id, ensure_player, [player_status(Id, Status)]) :-
 
 step(Id, ActTerm, [error(unhandled_action(Id, ActTerm))]).
 
+is_public_event(moved(_,_,_)).
+is_public_event(hit(_,_,_,_,_)).
+is_public_event(dead(_)).
+is_public_event(cast(_,_,_)).
+is_public_event(healed(_,_,_,_)).
+is_public_event(say(_,_)).
+is_public_event(npc_arrived(_)).
+is_public_event(guard_reinforcement(_)).
+
+split_events([], [], []).
+split_events([E|Es], [E|Pubs], Privs) :- is_public_event(E), !, split_events(Es, Pubs, Privs).
+split_events([E|Es], Pubs, [E|Privs]) :- split_events(Es, Pubs, Privs).
+
 api_step(Req, Res) :-
     ( catch(api_step_internal(Req, Res), Err, format_exception_res(Err, Req, Res)) ->
         true
@@ -56,14 +69,16 @@ api_step_internal(Req, Res) :-
                 TickEvts = []
             ),
             append(DirectEvts, TickEvts, AllEvts),
+            split_events(AllEvts, PubEvts, PrivEvts),
+
             ( world:get_entity(ActorId, Actor), get_dict(room, Actor, RoomId) ->
-                world:push_room_events(RoomId, AllEvts),
-                world:pop_room_events(RoomId, StreamEvts)
+                world:push_room_events(RoomId, PubEvts)
             ;
-                StreamEvts = AllEvts
+                true
             ),
-            terms_to_json(StreamEvts, JsonEvts),
-            Res = json{status: "ok", events: JsonEvts}
+
+            terms_to_json(PrivEvts, JsonPrivs),
+            Res = json{status: "ok", events: JsonPrivs}
         ;
             Res = json{status: "error", error: "Action handler failed during execution", action: ActionDict}
         )

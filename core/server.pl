@@ -1,4 +1,4 @@
-:- module(server, [start_server/1]).
+:- module(server, [start_server/1, flush_and_send_room_events/1]).
 
 :- use_module(library(http/thread_httpd)).
 :- use_module(library(http/http_dispatch)).
@@ -42,7 +42,15 @@ ticker_loop :-
 
 run_world_tick :-
     ai:do_ai_tick(_),
-    forall(active_client(_, ActorId), status:do_tick(ActorId, _)),
+    forall(active_client(_, ActorId), (
+        status:do_tick(ActorId, TickEvts),
+        ( TickEvts \== [] ->
+            ( world:get_entity(ActorId, A) ->
+                get_dict(room, A, RoomId),
+                world:push_room_events(RoomId, TickEvts)
+            ; true )
+        ; true )
+    )),
     broadcast_room_events.
 
 broadcast_room_events :-
@@ -77,7 +85,7 @@ process_ws_message(WebSocket, Req) :-
         retractall(active_client(WebSocket, _)),
         assertz(active_client(WebSocket, ActorId))
     ;
-        true
+        ActorId = unknown
     ),
     ( catch(engine:api_step(Req, Res), Err, (
             message_to_string(Err, Msg),
@@ -87,7 +95,13 @@ process_ws_message(WebSocket, Req) :-
     ;
         Res = json{status: "error", error: "Request handler goal failed"}
     ),
-    ws_send(WebSocket, json(Res)).
+    ws_send(WebSocket, json(Res)),
+
+    ( ActorId \== unknown, world:get_entity(ActorId, Actor), get_dict(room, Actor, RoomId) ->
+        flush_and_send_room_events(RoomId)
+    ;
+        true
+    ).
 
 handle_step(Request) :-
     http_read_json_dict(Request, Req),
