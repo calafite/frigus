@@ -55,6 +55,19 @@ is_hostile_mob(Mob) :-
     spawn_config:is_aggressive(AtomTag).
 
 act_mob(Mob, Evts) :-
+    get_dict(threats, Mob, Threats),
+    dict_keys(Threats, Keys), Keys \== [],
+    get_dict(room, Mob, Room),
+    world:room_entities(Room, Ents),
+    member(Tgt, Ents),
+    get_dict(id, Tgt, TgtId),
+    member(TgtId, Keys),
+    entity:is_alive(Tgt), !,
+    get_dict(id, Mob, MId),
+    combat:do_kill(MId, TgtId, Evts),
+    world:push_room_events(Room, Evts).
+
+act_mob(Mob, Evts) :-
     is_guard(Mob),
     get_dict(room, Mob, Room),
     world:room_entities(Room, Ents),
