@@ -60,6 +60,7 @@ parse_act(D, inventory)     :- get_dict(type, D, "inventory").
 parse_act(D, bounties)      :- ( get_dict(type, D, "bounties") ; get_dict(type, D, "bounty") ).
 parse_act(D, pay_bounty)    :- ( get_dict(type, D, "pay_bounty") ; get_dict(type, D, "pay") ; get_dict(type, D, "pardon") ).
 parse_act(D, time)          :- ( get_dict(type, D, "time") ; get_dict(type, D, "weather") ; get_dict(type, D, "env") ).
+parse_act(D, help)          :- ( get_dict(type, D, "help") ; get_dict(type, D, "local_help") ).
 parse_act(D, ai_tick)       :- get_dict(type, D, "ai_tick").
 parse_act(D, tick)          :- get_dict(type, D, "tick").
 parse_act(D, respawn)       :- get_dict(type, D, "respawn").

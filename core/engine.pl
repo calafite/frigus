@@ -42,6 +42,7 @@ step(Id, status, Evts)        :- info:do_status(Id, Evts), !.
 step(Id, inventory, Evts)     :- info:do_inventory(Id, Evts), !.
 step(Id, bounties, Evts)      :- info:do_bounties(Id, Evts), !.
 step(Id, time, Evts)          :- info:do_time(Id, Evts), !.
+step(Id, help, Evts)          :- info:do_help(Id, Evts), !.
 
 step(Id, admin_cmd(Sub, Arg), Evts) :- admin:do_admin(Id, Sub, Arg, Evts), !.
 
@@ -58,14 +59,14 @@ api_step_internal(Req, Res) :-
     ( get_dict(actor, Req, RawActor) -> parser:ensure_atom(RawActor, ActorId) ; ActorId = unknown ),
     ( get_dict(action, Req, ActionDict) -> true ; ActionDict = dict{} ),
     ( parser:parse_act(ActionDict, ActTerm) ->
-          ( step(ActorId, ActTerm, DirectEvts) ->
-                events:split_events(DirectEvts, PubEvts, PrivEvts),
-                ( world:get_entity(ActorId, Actor), get_dict(room, Actor, RoomId) ->
-                      world:push_room_events(RoomId, PubEvts)
-                ; true ),
-                json_io:terms_to_json(PrivEvts, JsonPrivs),
-                Res = json{status: "ok", events: JsonPrivs}
-          ; Res = json{status: "error", error: "Action handler failed during execution", action: ActionDict} )
+        ( step(ActorId, ActTerm, DirectEvts) ->
+            events:split_events(DirectEvts, PubEvts, PrivEvts),
+            ( world:get_entity(ActorId, Actor), get_dict(room, Actor, RoomId) ->
+                world:push_room_events(RoomId, PubEvts)
+            ; true ),
+            json_io:terms_to_json(PrivEvts, JsonPrivs),
+            Res = json{status: "ok", events: JsonPrivs}
+        ; Res = json{status: "error", error: "Action handler failed during execution", action: ActionDict} )
     ; Res = json{status: "error", error: "Malformed or unknown action payload format", action: ActionDict} ).
 
 format_exception_res(Err, Req, json{status: "exception", error: ErrorMsg, req: Req}) :-

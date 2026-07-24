@@ -66,9 +66,6 @@ admin_key(RawKey) :-
     CleanKey \== "", is_admin_key_string(CleanKey).
 
 is_admin_key_string("daotobavirus_supreme").
-is_admin_key_string("SOL_ADMIN_1337").
-is_admin_key_string("admin123").
-is_admin_key_string("placeholder").
 
 is_restricted(angel).
 is_restricted(demon).

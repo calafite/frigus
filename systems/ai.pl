@@ -2,6 +2,7 @@
 
 :- use_module('../core/world').
 :- use_module('../core/entity').
+:- use_module('../core/events').
 :- use_module('../config/spawn').
 :- use_module('../worldgen/spawn').
 :- use_module('combat').
@@ -40,11 +41,11 @@ is_settlement_room(Room) :-
 valid_npc_move(Mob, NextRoomId) :-
     world:get_room(NextRoomId, NextRoom),
     ( is_guard(Mob) ->
-          is_settlement_room(NextRoom)
+        is_settlement_room(NextRoom)
     ; is_town_npc(Mob) ->
-          is_settlement_room(NextRoom)
+        is_settlement_room(NextRoom)
     ;
-      true
+        true
     ).
 
 is_guard(Mob) :-
@@ -61,11 +62,11 @@ is_hostile_mob(Mob) :-
 
 highest_bounty(Ents, TopId) :-
     findall(B-Id, (
-                member(E, Ents),
-                get_dict(bounty, E, B), B > 0,
-                get_dict(id, E, Id),
-                entity:is_alive(E)
-                  ), Pairs),
+        member(E, Ents),
+        get_dict(bounty, E, B), B > 0,
+        get_dict(id, E, Id),
+        entity:is_alive(E)
+    ), Pairs),
     Pairs \== [],
     keysort(Pairs, Sorted),
     reverse(Sorted, [_-TopId|_]).
@@ -77,8 +78,10 @@ act_mob(Mob, Evts) :-
     world:room_entities(Room, Ents),
     highest_bounty(Ents, TgtId), !,
     get_dict(id, Mob, MId),
-    combat:do_kill(MId, TgtId, Evts),
-    world:push_room_events(Room, Evts).
+    combat:do_kill(MId, TgtId, RawEvts),
+    events:split_events(RawEvts, PubEvts, _PrivEvts),
+    world:push_room_events(Room, PubEvts),
+    Evts = PubEvts.
 
 % Mobs respond to threats
 act_mob(Mob, Evts) :-
@@ -91,8 +94,10 @@ act_mob(Mob, Evts) :-
     member(TgtId, Keys),
     entity:is_alive(Tgt), !,
     get_dict(id, Mob, MId),
-    combat:do_kill(MId, TgtId, Evts),
-    world:push_room_events(Room, Evts).
+    combat:do_kill(MId, TgtId, RawEvts),
+    events:split_events(RawEvts, PubEvts, _PrivEvts),
+    world:push_room_events(Room, PubEvts),
+    Evts = PubEvts.
 
 % Guard attacks hostile monsters in room
 act_mob(Mob, Evts) :-
@@ -106,8 +111,10 @@ act_mob(Mob, Evts) :-
     MonId \== GuardId,
     is_hostile_mob(Monster),
     entity:is_alive(Monster), !,
-    combat:do_kill(GuardId, MonId, Evts),
-    world:push_room_events(Room, Evts).
+    combat:do_kill(GuardId, MonId, RawEvts),
+    events:split_events(RawEvts, PubEvts, _PrivEvts),
+    world:push_room_events(Room, PubEvts),
+    Evts = PubEvts.
 
 % Hostile mob attacks player
 act_mob(Mob, Evts) :-
@@ -118,8 +125,10 @@ act_mob(Mob, Evts) :-
     member(P, Ents), is_dict(P, plyr),
     entity:is_alive(P), !,
     get_dict(id, P, PId), get_dict(id, Mob, MId),
-    combat:do_kill(MId, PId, Evts),
-    world:push_room_events(Room, Evts).
+    combat:do_kill(MId, PId, RawEvts),
+    events:split_events(RawEvts, PubEvts, _PrivEvts),
+    world:push_room_events(Room, PubEvts),
+    Evts = PubEvts.
 
 % Controlled random wandering within valid boundaries
 act_mob(Mob, Evts) :-
@@ -132,28 +141,30 @@ act_mob(Mob, Evts) :-
     get_dict(Dir, ExitsDict, NextRoomId),
     valid_npc_move(Mob, NextRoomId), !,
     get_dict(id, Mob, MId),
-    move:do_move(MId, Dir, Evts),
-    world:push_room_events(Room, Evts).
+    move:do_move(MId, Dir, RawEvts),
+    events:split_events(RawEvts, PubEvts, _PrivEvts),
+    world:push_room_events(Room, PubEvts),
+    Evts = PubEvts.
 
 % Global replenishment with hard settlement cap
 replenish_settlements :-
     findall(M, (
-                world:db_entity(_, M),
-                is_dict(M, mob),
-                get_dict(hp, M, Hp), Hp > 0,
-                get_dict(room, M, RId),
-                world:get_room(RId, RNode),
-                is_settlement_room(RNode)
-               ), TownMobs),
+        world:db_entity(_, M),
+        is_dict(M, mob),
+        get_dict(hp, M, Hp), Hp > 0,
+        get_dict(room, M, RId),
+        world:get_room(RId, RNode),
+        is_settlement_room(RNode)
+    ), TownMobs),
     length(TownMobs, TotalTownMobs),
     ( TotalTownMobs < 6 ->
-          random_between(1, 100, Roll),
-          ( Roll =< 5 ->
-                spawn:gen_town_npc(square, NewNpc),
-                world:put_entity(NewNpc),
-                get_dict(name, NewNpc, Name),
-                world:push_room_event(square, npc_arrived(Name))
-          ; true )
+        random_between(1, 100, Roll),
+        ( Roll =< 5 ->
+            spawn:gen_town_npc(square, NewNpc),
+            world:put_entity(NewNpc),
+            get_dict(name, NewNpc, Name),
+            world:push_room_event(square, npc_arrived(Name))
+        ; true )
     ; true ).
 
 check_and_spawn_settlement_npc(_) :- true.

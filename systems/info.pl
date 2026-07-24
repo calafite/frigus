@@ -1,4 +1,4 @@
-:- module(info, [do_look/2, do_status/2, do_inventory/2, do_bounties/2, do_time/2]).
+:- module(info, [do_look/2, do_status/2, do_inventory/2, do_bounties/2, do_time/2, do_help/2]).
 
 :- use_module('../core/world').
 :- use_module('../core/entity').
@@ -27,7 +27,7 @@ do_look(Id, Evts) :-
             ( get_dict(affs, A, SelfAffs) -> true ; SelfAffs = dict{} ),
             SelfStats = dict{hp: SelfHp, max_hp: SelfMaxHp, mp: SelfMp, max_mp: SelfMaxMp, affs: SelfAffs},
 
-            world:env_state(EnvState), env:local_env_desc(Node, EnvState, EnvDesc),
+            ( world:env_state(EnvState), catch(env:local_env_desc(Node, EnvState, EnvDesc), _, EnvDesc = "") -> true ; EnvDesc = "" ),
 
             findall(dict{id: OId, hp: OHp, max_hp: OMaxHp, bounty: OBty, affs: OAffs},
                     (member(O, Ents), is_plyr(O), get_dict(id, O, OId), OId \== Id,
@@ -66,3 +66,20 @@ do_inventory(Id, [error(actor_not_found(Id))]).
 
 do_bounties(Id, [bounty_report(Id, List)]) :- world:get_bounty_leaderboard(10, List).
 do_time(Id, [time_report(Id, Desc)]) :- world:env_state(Env), env:env_desc(Env, Desc).
+
+do_help(Id, [help_info(Id, Text)]) :-
+    Text = "<div style='border: 1px solid var(--accent); padding: 12px; border-radius: 6px; background: var(--bg-surface); margin: 6px 0;'>
+      <strong style='color: var(--accent); font-size: 1.05rem;'>--- COMMAND HELP ---</strong><br>
+      <div style='margin-top: 8px; line-height: 1.6;'>
+        • <strong>look / l</strong> — Inspect current location<br>
+        • <strong>n / s / e / w / u / d</strong> — Directional movement<br>
+        • <strong>go &lt;exit&gt;</strong> — Move to custom exit (e.g. <i>go wild</i>)<br>
+        • <strong>k / kill &lt;target&gt;</strong> — Attack target (e.g. <i>k goblin</i>)<br>
+        • <strong>c / cast &lt;spell&gt; [target]</strong> — Cast spell (e.g. <i>c mend</i>, <i>c fireball orc</i>)<br>
+        • <strong>get / g &lt;item&gt;</strong> — Pick up item from ground<br>
+        • <strong>equip / unequip</strong> — Manage weapon and armor slots<br>
+        • <strong>use &lt;item&gt;</strong> — Consume potion or food<br>
+        • <strong>train / allocate &lt;stat&gt;</strong> — Train stat points (e.g. <i>train str</i>)<br>
+        • <strong>status / inv / time / bounty</strong> — View character & realm status
+      </div>
+    </div>".
