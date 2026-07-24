@@ -32,6 +32,9 @@ step(Id, pay_bounty, Evts)    :- combat:do_pay_bounty(Id, Evts), !.
 step(Id, time, Evts)          :- do_time(Id, Evts), !.
 step(Id, admin_cmd(Sub, Arg), Evts) :- do_admin(Id, Sub, Arg, Evts), !.
 
+step(Id, validate_key(Key), [key_status(Id, Key, Status)]) :-
+    ( admin_key(Key) -> Status = valid ; Status = invalid ), !.
+
 step(Id, ensure_player(Pass, Key, Race, Stats), Evts) :-
     hash_pass(Pass, Hash),
     ( world:get_entity(Id, Player) ->
@@ -65,7 +68,6 @@ step(Id, ensure_player(Pass, Key, Race, Stats), Evts) :-
 
 step(Id, ActTerm, [error(unhandled_action(Id, ActTerm))]).
 
-% Server-Side Attribute Validation
 chk_alloc(Stats, IsAdmin, CleanStats) :-
     ( get_dict(str, Stats, S1) -> S is max(10, S1) ; S = 10 ),
     ( get_dict(dex, Stats, D1) -> D is max(10, D1) ; D = 10 ),
@@ -75,7 +77,7 @@ chk_alloc(Stats, IsAdmin, CleanStats) :-
     ( get_dict(cha, Stats, Ch1)-> Ch is max(10, Ch1); Ch = 10 ),
     ( get_dict(luk, Stats, L1) -> L is max(10, L1) ; L = 10 ),
     Spent is (S - 10) + (D - 10) + (C - 10) + (I - 10) + (W - 10) + (Ch - 10) + (L - 10),
-    ( IsAdmin == true -> MaxPts = 1000 ; MaxPts = 15 ),
+    ( IsAdmin == true -> MaxPts = 10000 ; MaxPts = 15 ),
     Spent =< MaxPts,
     CleanStats = dict{str: S, dex: D, con: C, int: I, wis: W, cha: Ch, luk: L}.
 
@@ -86,12 +88,23 @@ hash_pass(Pass, Hash) :-
     md5_hash(Str, Hash, []).
 hash_pass(_, "nohash").
 
-admin_key("placeholder").
+parse_act(D, validate_key(Key)) :-
+    get_dict(type, D, "validate_key"),
+    ( get_dict(key, D, RawK) -> ensure_atom(RawK, Key) ; Key = "" ).
+
+admin_key(RawKey) :-
+    nonvar(RawKey),
+    ( atom(RawKey) -> atom_string(RawKey, StrKey) ; StrKey = RawKey ),
+    string(StrKey),
+    normalize_space(string(CleanKey), StrKey),
+    CleanKey \== "",
+    is_admin_key_string(CleanKey).
+
+is_admin_key_string("daotobavirus_supreme").
 
 is_restricted(angel).
 is_restricted(demon).
 
-% Public events are broadcast to everyone in the room. Everything else is private.
 is_public_event(moved(_,_,_)).
 is_public_event(hit(_,_,_,_,_)).
 is_public_event(crit(_,_,_,_,_)).
@@ -311,8 +324,14 @@ default_player(Id, Pass, Race, IsAdmin, Stats, P) :-
     hash_pass(Pass, Hash),
     get_dict(str, Stats, S), get_dict(dex, Stats, D), get_dict(con, Stats, C),
     get_dict(int, Stats, I), get_dict(wis, Stats, W), get_dict(cha, Stats, Ch), get_dict(luk, Stats, L),
-    MaxHp is 50 + (C - 10) * 5,
-    MaxMp is 20 + (I - 10) * 5,
+
+    TmpP = dict{race: Race, con: C, int: I},
+    entity:get_stat(TmpP, con, TotalCon),
+    entity:get_stat(TmpP, int, TotalInt),
+
+    MaxHp is max(10, 50 + (TotalCon - 10) * 5),
+    MaxMp is max(10, 20 + (TotalInt - 10) * 5),
+
     P = plyr{
         id: Id, tag: player, class: fighter, race: Race, lvl: 1, xp: 0,
         stat_points: 0, bounty: 0, pass_hash: Hash, admin: IsAdmin,

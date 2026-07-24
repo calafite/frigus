@@ -36,11 +36,16 @@ is_settlement_room(Room) :-
       get_dict(props, Room, Props), (member(safe, Props) ; member(landmark, Props)) ;
       get_dict(region, Room, shire) ), !.
 
-valid_guard_move(Mob, NextRoomId) :-
-    get_dict(tag, Mob, RawTag), to_atom(RawTag, guard), !,
+% Keep town NPCs inside safe settlement boundaries
+valid_npc_move(Mob, NextRoomId) :-
     world:get_room(NextRoomId, NextRoom),
-    is_settlement_room(NextRoom).
-valid_guard_move(_, _).
+    ( is_guard(Mob) ->
+        is_settlement_room(NextRoom)
+    ; is_town_npc(Mob) ->
+        is_settlement_room(NextRoom)
+    ;
+        true
+    ).
 
 is_guard(Mob) :-
     get_dict(tag, Mob, RawTag), to_atom(RawTag, Tag),
@@ -48,6 +53,10 @@ is_guard(Mob) :-
 is_guard(Mob) :-
     get_dict(props, Mob, Props),
     member(protector, Props), !.
+
+is_town_npc(Mob) :-
+    get_dict(tag, Mob, RawTag), to_atom(RawTag, Tag),
+    member(Tag, [guard, peasant, merchant, priest, miner]), !.
 
 is_hostile_mob(Mob) :-
     get_dict(tag, Mob, Tag),
@@ -65,6 +74,7 @@ highest_bounty(Ents, TopId) :-
     keysort(Pairs, Sorted),
     reverse(Sorted, [_-TopId|_]).
 
+% Guard attacks criminals
 act_mob(Mob, Evts) :-
     is_guard(Mob),
     get_dict(room, Mob, Room),
@@ -74,6 +84,7 @@ act_mob(Mob, Evts) :-
     combat:do_kill(MId, TgtId, Evts),
     world:push_room_events(Room, Evts).
 
+% Mobs respond to threats
 act_mob(Mob, Evts) :-
     get_dict(threats, Mob, Threats),
     dict_keys(Threats, Keys), Keys \== [],
@@ -87,6 +98,7 @@ act_mob(Mob, Evts) :-
     combat:do_kill(MId, TgtId, Evts),
     world:push_room_events(Room, Evts).
 
+% Guard attacks hostile monsters in room
 act_mob(Mob, Evts) :-
     is_guard(Mob),
     get_dict(room, Mob, Room),
@@ -101,6 +113,7 @@ act_mob(Mob, Evts) :-
     combat:do_kill(GuardId, MonId, Evts),
     world:push_room_events(Room, Evts).
 
+% Hostile mob attacks player
 act_mob(Mob, Evts) :-
     get_dict(room, Mob, Room),
     \+ is_safe_room(Room),
@@ -112,47 +125,39 @@ act_mob(Mob, Evts) :-
     combat:do_kill(MId, PId, Evts),
     world:push_room_events(Room, Evts).
 
+% Controlled random wandering within valid boundaries
 act_mob(Mob, Evts) :-
-    random_between(1, 100, R), R =< 20, !,
+    random_between(1, 100, R), R =< 15, !,
     get_dict(room, Mob, Room),
     world:get_room(Room, RoomNode),
     get_dict(exits, RoomNode, ExitsDict),
     dict_keys(ExitsDict, Exits), Exits \== [],
     random_member(Dir, Exits),
     get_dict(Dir, ExitsDict, NextRoomId),
-    valid_guard_move(Mob, NextRoomId), !,
+    valid_npc_move(Mob, NextRoomId), !,
     get_dict(id, Mob, MId),
     move:do_move(MId, Dir, Evts),
     world:push_room_events(Room, Evts).
 
+% Global replenishment with hard settlement cap
 replenish_settlements :-
-    findall(RId, (world:get_room(RId, Room), is_settlement_room(Room)), SettlementRooms),
-    list_to_set(SettlementRooms, UniqueSettlements),
-    forall(member(SRoomId, UniqueSettlements), check_and_spawn_settlement_npc(SRoomId)).
-
-check_and_spawn_settlement_npc(RoomId) :-
-    world:room_entities(RoomId, Ents),
-    include(is_mob_entity, Ents, Mobs),
-    include(is_guard, Mobs, Guards),
-    length(Mobs, Count),
-    length(Guards, GuardCount),
-    ( GuardCount =:= 0, Count < 4 ->
-        spawn:gen_guard_npc(RoomId, NewNpc),
-        world:put_entity(NewNpc),
-        get_dict(name, NewNpc, Name),
-        world:push_room_event(RoomId, guard_reinforcement(Name))
-    ; Count < 4 ->
+    findall(M, (
+        world:db_entity(_, M),
+        is_dict(M, mob),
+        get_dict(hp, M, Hp), Hp > 0,
+        get_dict(room, M, RId),
+        world:get_room(RId, RNode),
+        is_settlement_room(RNode)
+    ), TownMobs),
+    length(TownMobs, TotalTownMobs),
+    ( TotalTownMobs < 6 ->
         random_between(1, 100, Roll),
-        ( Roll =< 40 ->
-            spawn:gen_town_npc(RoomId, NewNpc),
+        ( Roll =< 5 ->
+            spawn:gen_town_npc(square, NewNpc),
             world:put_entity(NewNpc),
             get_dict(name, NewNpc, Name),
-            world:push_room_event(RoomId, npc_arrived(Name))
-        ;
-            true
-        )
-    ;
-        true
-    ).
+            world:push_room_event(square, npc_arrived(Name))
+        ; true )
+    ; true ).
 
-is_mob_entity(E) :- is_dict(E, mob).
+check_and_spawn_settlement_npc(_) :- true.

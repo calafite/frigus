@@ -28,10 +28,11 @@ clean_entity(Ent, CleanEnt) :-
     get_dict(id, Ent, RawId), to_atom(RawId, Id),
     ( get_dict(room, Ent, RawRoom) -> to_atom(RawRoom, Room) ; Room = square ),
     ( get_dict(tag, Ent, RawTag) -> to_atom(RawTag, Tag) ; Tag = unknown ),
+    ( get_dict(race, Ent, RawRace) -> to_atom(RawRace, Race) ; Race = human ),
     determine_kind(Ent, Kind),
     dict_pairs(Ent, _, Pairs),
     dict_pairs(TaggedEnt, Kind, Pairs),
-    CleanEnt = TaggedEnt.put(id, Id).put(room, Room).put(tag, Tag).
+    CleanEnt = TaggedEnt.put(id, Id).put(room, Room).put(tag, Tag).put(race, Race).
 clean_entity(Ent, Ent).
 
 determine_kind(Ent, plyr) :-

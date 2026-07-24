@@ -30,9 +30,9 @@ msg_time(evening,   "The sun begins to set, painting the sky in hues of orange a
 msg_time(night,     "Darkness falls as the stars emerge.").
 
 chk_weath(W, NW, [env_msg(Msg)]) :-
-    random_between(1, 100, R), R =< 2, !,
+    random_between(1, 100, R), R =< 2,
     pick_weath(NW),
-    W \== NW,
+    W \== NW, !,
     msg_weath(NW, Msg).
 chk_weath(W, W, []).
 

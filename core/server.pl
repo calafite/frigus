@@ -38,7 +38,7 @@ start_ticker :-
 
 ticker_loop :-
     sleep(1.0),
-    catch(run_world_tick, _, true),
+    catch(ignore(run_world_tick), Err, format('Ticker Error: ~w~n', [Err])),
     ticker_loop.
 
 run_world_tick :-

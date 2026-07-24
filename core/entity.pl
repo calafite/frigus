@@ -12,11 +12,22 @@
     mark_combat/2,
     has_trait/2,
     check_pass/2,
-    check_admin/1
+    check_admin/1,
+    % Status Effects API
+    has_aff/2,
+    get_aff/3,
+    apply_aff/4,
+    remove_aff/3
 ]).
 
 :- use_module(library(lists)).
 :- use_module('../config/spawn').
+
+to_atom(Var, unknown) :- var(Var), !.
+to_atom(Atom, Atom) :- atom(Atom), !.
+to_atom(String, Atom) :- string(String), !, atom_string(Atom, String).
+to_atom(Number, Atom) :- number(Number), !, atom_number(Atom, Number).
+to_atom(_, unknown).
 
 is_alive(Ent) :-
     is_dict(Ent),
@@ -26,7 +37,8 @@ is_alive(Ent) :-
 get_stat(Ent, Stat, Total) :-
     is_dict(Ent), !,
     ( get_dict(Stat, Ent, Base) -> true ; Base = 10 ),
-    ( get_dict(race, Ent, Race) ->
+    ( get_dict(race, Ent, RawRace) ->
+        to_atom(RawRace, Race),
         findall(B, spawn_config:race_bonus(Race, Stat, B), BList),
         sum_list(BList, Bonus)
     ;
@@ -37,7 +49,8 @@ get_stat(_, _, 10).
 
 has_trait(Ent, Trait) :-
     is_dict(Ent),
-    get_dict(race, Ent, Race),
+    get_dict(race, Ent, RawRace),
+    to_atom(RawRace, Race),
     spawn_config:race_trait(Race, Trait).
 
 check_pass(Ent, Pass) :-
@@ -123,3 +136,43 @@ mark_combat(Ent, NEnt) :-
     ( get_dict(cds, Ent, Cds) -> true ; Cds = dict{} ),
     NCds = Cds.put(combat, 3),
     NEnt = Ent.put(cds, NCds).
+
+% ==========================================
+% STATUS EFFECTS (AFFLICTIONS & BUFFS) API
+% ==========================================
+
+% Check if entity currently has a specific affliction
+has_aff(Ent, AffTag) :-
+    is_dict(Ent),
+    get_dict(affs, Ent, Affs),
+    get_dict(AffTag, Affs, _).
+
+% Retrieve affliction details (Duration and Magnitude)
+get_aff(Ent, AffTag, dict{dur: Dur, mag: Mag}) :-
+    is_dict(Ent),
+    get_dict(affs, Ent, Affs),
+    get_dict(AffTag, Affs, AffNode),
+    get_dict(dur, AffNode, Dur),
+    get_dict(mag, AffNode, Mag).
+
+% Apply or refresh an affliction on an entity
+apply_aff(Ent, AffTag, Dur, Mag, NEnt) :-
+    is_dict(Ent),
+    ( get_dict(affs, Ent, Affs) -> true ; Affs = dict{} ),
+    % If it already exists, refresh duration (keep max magnitude or override)
+    ( get_dict(AffTag, Affs, CurAff) ->
+        get_dict(dur, CurAff, CurDur),
+        NDur is max(CurDur, Dur), % Keep whichever duration is longer
+        NAffNode = dict{dur: NDur, mag: Mag}
+    ;
+        NAffNode = dict{dur: Dur, mag: Mag}
+    ),
+    NAffs = Affs.put(AffTag, NAffNode),
+    NEnt = Ent.put(affs, NAffs).
+
+% Forcefully remove an affliction
+remove_aff(Ent, AffTag, NEnt) :-
+    is_dict(Ent),
+    ( get_dict(affs, Ent, Affs) ->
+        ( del_dict(AffTag, Affs, _, NAffs) -> NEnt = Ent.put(affs, NAffs) ; NEnt = Ent )
+    ; NEnt = Ent ).

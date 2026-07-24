@@ -54,7 +54,7 @@ do_allocate(Id, StatQuery, [error(invalid_stat(Id, StatQuery))]) :-
     to_atom(StatQuery, Stat),
     \+ valid_stat(Stat), !.
 
-do_allocate(Id, StatQuery, [error(no_stat_points(Id))]) :-
+do_allocate(Id, _StatQuery, [error(no_stat_points(Id))]) :-
     world:get_entity(Id, Actor),
     ( get_dict(stat_points, Actor, Points) -> true ; Points = 0 ),
     Points =< 0, !.
