@@ -18,16 +18,21 @@ do_move(Id, _DirQuery, [error(actor_not_found(Id))]) :-
 do_move(Id, DirQuery, Evts) :-
     world:get_entity(Id, Actor),
     ( status:is_rooted(Actor, CC) ->
-          Evts = [error(cc_prevented(Id, CC))]
+        Evts = [error(cc_prevented(Id, CC))]
     ;
-      resolve_dir(DirQuery, Dir),
-      world:get_room(Actor.room, CurRoom),
-      get_dict(exits, CurRoom, Exits),
-      get_dict(Dir, Exits, NextRoomId), !,
-      chunks:ensure_chunk(NextRoomId),
-      NActor = Actor.put(room, NextRoomId),
-      world:put_entity(NActor),
-      Evts = [moved(Id, Dir, NextRoomId)]
+        resolve_dir(DirQuery, Dir),
+        world:get_room(Actor.room, CurRoom),
+        get_dict(exits, CurRoom, Exits),
+        get_dict(Dir, Exits, NextRoomId), !,
+        chunks:ensure_chunk(NextRoomId),
+        NActor = Actor.put(room, NextRoomId),
+        world:put_entity(NActor),
+
+        ( get_dict(name, Actor, DisplayName) -> true
+        ; get_dict(tag, Actor, DisplayName) -> true
+        ; DisplayName = Id ),
+
+        Evts = [moved(Id, Dir, NextRoomId, DisplayName)]
     ).
 
 do_move(Id, DirQuery, [error(no_exit(Id, DirQuery, available_exits(AvailableExits)))]) :-

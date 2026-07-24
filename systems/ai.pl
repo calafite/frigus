@@ -130,9 +130,9 @@ act_mob(Mob, Evts) :-
     world:push_room_events(Room, PubEvts),
     Evts = PubEvts.
 
-% Controlled random wandering within valid boundaries
+% Controlled random wandering within valid boundaries (2% chance per tick to avoid spam)
 act_mob(Mob, Evts) :-
-    random_between(1, 100, R), R =< 15, !,
+    random_between(1, 100, R), R =< 2, !,
     get_dict(room, Mob, Room),
     world:get_room(Room, RoomNode),
     get_dict(exits, RoomNode, ExitsDict),

@@ -1,6 +1,7 @@
 :- module(events, [split_events/3, is_public_event/1]).
 
 is_public_event(moved(_,_,_)).
+is_public_event(moved(_,_,_,_)).
 is_public_event(hit(_,_,_,_,_)).
 is_public_event(crit(_,_,_,_,_)).
 is_public_event(dead(_,_)).
