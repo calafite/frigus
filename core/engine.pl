@@ -1,6 +1,3 @@
-================================================
-FILE: core/engine.pl
-================================================
 :- module(engine, [api_step/2, term_to_json/2, terms_to_json/2, ensure_atom/2]).
 
 :- discontiguous step/3.
@@ -35,7 +32,7 @@ step(Id, pay_bounty, Evts)    :- combat:do_pay_bounty(Id, Evts), !.
 step(Id, time, Evts)          :- do_time(Id, Evts), !.
 step(Id, admin_cmd(Sub, Arg), Evts) :- do_admin(Id, Sub, Arg, Evts), !.
 
-step(Id, ensure_player(Pass, Key, Race), Evts) :-
+step(Id, ensure_player(Pass, Key, Race, Stats), Evts) :-
     hash_pass(Pass, Hash),
     ( world:get_entity(Id, Player) ->
         ( get_dict(pass_hash, Player, StoredHash) ->
@@ -55,16 +52,33 @@ step(Id, ensure_player(Pass, Key, Race), Evts) :-
             Evts = [error(restricted_race_denied(Id, Race))]
         ;
             ( admin_key(Key) -> IsAdmin = true ; IsAdmin = false ),
-            default_player(Id, Pass, Race, IsAdmin, NewPlayer),
-            world:put_entity(NewPlayer),
-            world:save_db('world_state.json'),
-            Evts = [player_status(Id, created)]
+            ( chk_alloc(Stats, IsAdmin, CleanStats) ->
+                default_player(Id, Pass, Race, IsAdmin, CleanStats, NewPlayer),
+                world:put_entity(NewPlayer),
+                world:save_db('world_state.json'),
+                Evts = [player_status(Id, created)]
+            ;
+                Evts = [error(stat_allocation_invalid(Id))]
+            )
         )
     ), !.
 
 step(Id, ActTerm, [error(unhandled_action(Id, ActTerm))]).
 
-% Pass Hashing Helper
+% Server-Side Attribute Validation
+chk_alloc(Stats, IsAdmin, CleanStats) :-
+    ( get_dict(str, Stats, S1) -> S is max(10, S1) ; S = 10 ),
+    ( get_dict(dex, Stats, D1) -> D is max(10, D1) ; D = 10 ),
+    ( get_dict(con, Stats, C1) -> C is max(10, C1) ; C = 10 ),
+    ( get_dict(int, Stats, I1) -> I is max(10, I1) ; I = 10 ),
+    ( get_dict(wis, Stats, W1) -> W is max(10, W1) ; W = 10 ),
+    ( get_dict(cha, Stats, Ch1)-> Ch is max(10, Ch1); Ch = 10 ),
+    ( get_dict(luk, Stats, L1) -> L is max(10, L1) ; L = 10 ),
+    Spent is (S - 10) + (D - 10) + (C - 10) + (I - 10) + (W - 10) + (Ch - 10) + (L - 10),
+    ( IsAdmin == true -> MaxPts = 1000 ; MaxPts = 15 ),
+    Spent =< MaxPts,
+    CleanStats = dict{str: S, dex: D, con: C, int: I, wis: W, cha: Ch, luk: L}.
+
 hash_pass(Pass, Hash) :-
     ( atom(Pass) ; string(Pass) ),
     Pass \== "", !,
@@ -72,10 +86,8 @@ hash_pass(Pass, Hash) :-
     md5_hash(Str, Hash, []).
 hash_pass(_, "nohash").
 
-% Admin Master Keys
 admin_key("placeholder").
 
-% Restricted Lineages
 is_restricted(angel).
 is_restricted(demon).
 
@@ -201,11 +213,12 @@ parse_act(D, time)          :- ( get_dict(type, D, "time") ; get_dict(type, D, "
 parse_act(D, ai_tick)       :- get_dict(type, D, "ai_tick").
 parse_act(D, tick)          :- get_dict(type, D, "tick").
 
-parse_act(D, ensure_player(Pass, Key, Race)) :-
+parse_act(D, ensure_player(Pass, Key, Race, Stats)) :-
     get_dict(type, D, "ensure_player"),
     ( get_dict(pass, D, RawP) -> ensure_atom(RawP, Pass) ; Pass = "" ),
     ( get_dict(key, D, RawK) -> ensure_atom(RawK, Key) ; Key = "" ),
-    ( get_dict(race, D, RawR) -> ensure_atom(RawR, Race) ; Race = human ).
+    ( get_dict(race, D, RawR) -> ensure_atom(RawR, Race) ; Race = human ),
+    ( get_dict(stats, D, SDict), is_dict(SDict) -> Stats = SDict ; Stats = dict{} ).
 
 parse_act(D, admin_cmd(SubCmd, Arg)) :-
     get_dict(type, D, "admin"),
@@ -294,13 +307,17 @@ do_admin(Id, god, _, [admin_msg(Id, "God mode granted!")]) :-
     world:put_entity(NA).
 do_admin(Id, SubCmd, _, [error(unhandled_admin_cmd(Id, SubCmd))]).
 
-default_player(Id, Pass, Race, IsAdmin, P) :-
+default_player(Id, Pass, Race, IsAdmin, Stats, P) :-
     hash_pass(Pass, Hash),
+    get_dict(str, Stats, S), get_dict(dex, Stats, D), get_dict(con, Stats, C),
+    get_dict(int, Stats, I), get_dict(wis, Stats, W), get_dict(cha, Stats, Ch), get_dict(luk, Stats, L),
+    MaxHp is 50 + (C - 10) * 5,
+    MaxMp is 20 + (I - 10) * 5,
     P = plyr{
         id: Id, tag: player, class: fighter, race: Race, lvl: 1, xp: 0,
-        stat_points: 3, bounty: 0, pass_hash: Hash, admin: IsAdmin,
-        hp: 50, max_hp: 50, mp: 20, max_mp: 20,
-        str: 12, dex: 12, con: 12, int: 10, wis: 10, cha: 10, luk: 10,
+        stat_points: 0, bounty: 0, pass_hash: Hash, admin: IsAdmin,
+        hp: MaxHp, max_hp: MaxHp, mp: MaxMp, max_mp: MaxMp,
+        str: S, dex: D, con: C, int: I, wis: W, cha: Ch, luk: L,
         room: square, equip: equip{wpn: fists, shield: none, body: none},
         inv: [stack{tag: gold, qty: 100}], cds: cds{}
     }.
