@@ -4,6 +4,14 @@
     spell_type/2, spell_affinity/2, spell_apply_tgt/2, spell_apply_self/2
 ]).
 
+:- discontiguous spell_type/2.
+:- discontiguous spell_cost/2.
+:- discontiguous spell_cooldown/2.
+:- discontiguous spell_dmg/2.
+:- discontiguous spell_affinity/2.
+:- discontiguous spell_apply_tgt/2.
+:- discontiguous spell_apply_self/2.
+
 % ==========================================
 % WEAPON CONFIGURATION
 % ==========================================

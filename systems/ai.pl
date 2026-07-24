@@ -54,10 +54,6 @@ is_guard(Mob) :-
     get_dict(props, Mob, Props),
     member(protector, Props), !.
 
-is_town_npc(Mob) :-
-    get_dict(tag, Mob, RawTag), to_atom(RawTag, Tag),
-    member(Tag, [guard, peasant, merchant, priest, miner]), !.
-
 is_hostile_mob(Mob) :-
     get_dict(tag, Mob, Tag),
     to_atom(Tag, AtomTag),

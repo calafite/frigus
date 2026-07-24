@@ -1,1 +1,2179 @@
-{"entities": [ {"id":"item_5609031","name":"greatsword","qty":1,"room":"room_6334973","tag":"greatsword","tier":3},  {"id":"item_3065367","name":"battleaxe","qty":1,"room":"room_6334973","tag":"battleaxe","tier":4},  {"id":"item_4715423","name":"dagger","qty":1,"room":"room_9348430","tag":"dagger","tier":2},  {"id":"item_3748945","name":"staff","qty":1,"room":"room_4905480","tag":"staff","tier":3},  {"id":"item_7338278","name":"leather_vest","qty":1,"room":"room_4673393","tag":"leather_vest","tier":4},  {"id":"item_5166810","name":"greatsword","qty":1,"room":"room_8032132","tag":"greatsword","tier":2},  {"id":"item_3831901","name":"amulet","qty":1,"room":"room_8032132","tag":"amulet","tier":2},  {"id":"item_6524385","name":"sword","qty":1,"room":"room_3066886","tag":"sword","tier":4},  {"id":"item_7448321","name":"sword","qty":1,"room":"room_3066886","tag":"sword","tier":1},  {"id":"item_4623385","name":"leather_vest","qty":1,"room":"room_1520909","tag":"leather_vest","tier":1},  {"id":"item_6616776","name":"ring","qty":1,"room":"room_2517003","tag":"ring","tier":2},  {"id":"item_4853591","name":"dagger","qty":1,"room":"room_3691267","tag":"dagger","tier":1},  {"id":"floor_hoe","qty":1,"room":"square","tag":"hoe"},  {"id":"floor_pole","qty":1,"room":"square","tag":"fishing_pole"},  {"id":"floor_flint","qty":1,"room":"square","tag":"flint_and_steel"},  {"id":"floor_skin","qty":1,"room":"square","tag":"empty_waterskin"},  {"dex":10,"equip": {"body":"tunic","shield":"none","wpn":"fists"},"fac":"citizen","hp":30,"id":"peasant_9209185","int":10,"lvl":1,"max_hp":30,"name":"Alix Vane","props": [],"room":"cell_-1_3_-2","str":10,"tag":"peasant"},  {"dex":30,"hp":120,"id":"mob_9462517","int":30,"lvl":10,"max_hp":120,"name":"goblin","props": [],"room":"room_8032132","str":30,"tag":"goblin"},  {"cha":15,"con":25,"dex":20,"equip": {"body":"chainmail","shield":"iron_shield","wpn":"iron_sword"},"fac":"guard","hp":150,"id":"guard_sam","int":12,"luk":12,"lvl":10,"max_hp":150,"max_mp":30,"mems": {},"mp":30,"name":"Captain Sam","props": ["protector" ],"room":"watchtower","route": ["square", "barracks", "prison" ],"route_idx":0,"str":25,"tag":"guard","threats": {},"wander":false,"wis":15},  {"dex":60,"hp":270,"id":"mob_1580097","int":60,"lvl":25,"max_hp":270,"name":"salamander","props": [],"room":"room_2517003","str":60,"tag":"salamander"},  {"dex":10,"hp":20,"id":"mob_3441910","int":10,"lvl":1,"max_hp":20,"name":"Frost Spitfire","room":"cell_4_1_2","str":10,"tag":"wolf"},  {"dex":32,"hp":100,"id":"mob_9144294","int":32,"lvl":3,"max_hp":100,"name":"elite iron_golem","props": [ {"prop":"elite","val":1.0} ],"room":"room_7212210","str":32,"tag":"iron_golem"},  {"dex":16,"hp":50,"id":"mob_5536844","int":16,"lvl":3,"max_hp":50,"name":"giant_spider","props": [],"room":"room_6126476","str":16,"tag":"giant_spider"},  {"dex":10,"hp":20,"id":"mob_1044020","int":10,"lvl":1,"max_hp":20,"name":"Blighted Fiend","room":"cell_-2_2_1","str":10,"tag":"goblin"},  {"dex":10,"hp":20,"id":"mob_9133656","int":10,"lvl":1,"max_hp":20,"name":"Blighted Stalker","room":"cell_-2_1_0","str":10,"tag":"wolf"},  {"dex":10,"hp":20,"id":"mob_2276914","int":10,"lvl":1,"max_hp":20,"name":"Savage Stalker","room":"cell_3_2_2","str":10,"tag":"wolf"},  {"dex":16,"hp":50,"id":"mob_9378771","int":16,"lvl":3,"max_hp":50,"name":"rock_worm","props": [],"room":"room_6082843","str":16,"tag":"rock_worm"},  {"dex":120,"hp":540,"id":"mob_2233623","int":120,"lvl":25,"max_hp":540,"name":"elite salamander","props": [ {"prop":"elite","val":1.0} ],"room":"room_3286322","str":120,"tag":"salamander"},  {"dex":15,"equip": {"body":"chainmail","shield":"wooden_shield","wpn":"iron_sword"},"fac":"guard","hp":100,"id":"guard_1458764","int":10,"lvl":5,"max_hp":100,"name":"Guard Jocelyn Tempest","props": ["protector" ],"room":"square","str":18,"tag":"guard"},  {"dex":10,"hp":20,"id":"mob_9980614","int":10,"lvl":1,"max_hp":20,"name":"Vile Crawler","room":"cell_3_0_-3","str":10,"tag":"wolf"},  {"dex":10,"hp":20,"id":"mob_9814093","int":10,"lvl":1,"max_hp":20,"name":"Bloody Slayer","room":"cell_0_-2_3","str":10,"tag":"wolf"},  {"dex":16,"hp":50,"id":"mob_1707599","int":16,"lvl":3,"max_hp":50,"name":"goblin","props": [],"room":"room_5291786","str":16,"tag":"goblin"},  {"dex":10,"hp":20,"id":"mob_1808277","int":10,"lvl":1,"max_hp":20,"name":"Rabid Beast","room":"cell_7_0_3","str":10,"tag":"wolf"},  {"dex":10,"hp":20,"id":"mob_4715062","int":10,"lvl":1,"max_hp":20,"name":"Vile Spitfire","room":"cell_7_0_3","str":10,"tag":"wolf"},  {"cha":35,"con":50,"dex":45,"equip": {"body":"chainmail","shield":"iron_shield","wpn":"iron_sword"},"fac":"guard","hp":300,"id":"guard_nycolas","int":25,"luk":20,"lvl":40,"max_hp":300,"max_mp":30,"mems": {},"mp":30,"name":"Guard Nycolas","props": ["protector" ],"room":"square","route": ["square", "barracks", "prison" ],"route_idx":0,"str":50,"tag":"guard","threats": {},"wander":false,"wis":25},  {"dex":10,"hp":20,"id":"mob_6012473","int":10,"lvl":1,"max_hp":20,"name":"Vile Spitfire","room":"cell_2_-1_-3","str":10,"tag":"goblin"},  {"dex":16,"hp":50,"id":"mob_2788494","int":16,"lvl":3,"max_hp":50,"name":"goblin","props": [],"room":"room_2775744","str":16,"tag":"goblin"},  {"dex":60,"hp":270,"id":"mob_7892786","int":60,"lvl":25,"max_hp":270,"name":"rock_worm","props": [],"room":"room_3066886","str":60,"tag":"rock_worm"},  {"dex":16,"hp":50,"id":"mob_5625346","int":16,"lvl":3,"max_hp":50,"name":"goblin","props": [],"room":"room_2775744","str":16,"tag":"goblin"},  {"dex":10,"hp":20,"id":"mob_9965810","int":10,"lvl":1,"max_hp":20,"name":"Fiery Devourer","room":"cell_2_-3_3","str":10,"tag":"wolf"},  {"dex":10,"hp":20,"id":"mob_8697101","int":10,"lvl":1,"max_hp":20,"name":"Blighted Stalker","room":"cell_5_-1_4","str":10,"tag":"wolf"},  {"dex":16,"hp":50,"id":"mob_7211409","int":16,"lvl":3,"max_hp":50,"name":"goblin","props": [],"room":"room_2381146","str":16,"tag":"goblin"},  {"dex":10,"hp":20,"id":"mob_8225274","int":10,"lvl":1,"max_hp":20,"name":"Frost Spitfire","room":"cell_3_-5_1","str":10,"tag":"wolf"},  {"dex":16,"hp":50,"id":"mob_3589913","int":16,"lvl":3,"max_hp":50,"name":"goblin","props": [],"room":"room_6126476","str":16,"tag":"goblin"},  {"dex":64,"hp":300,"id":"mob_7278051","int":64,"lvl":3,"max_hp":300,"name":"wolf  boss","props": [ {"prop":"boss","val":1.0} ],"room":"room_2775744","str":64,"tag":"wolf"},  {"dex":10,"hp":20,"id":"mob_6531642","int":10,"lvl":1,"max_hp":20,"name":"Vile Crawler","room":"cell_6_-1_3","str":10,"tag":"wolf"},  {"dex":10,"hp":20,"id":"mob_5296682","int":10,"lvl":1,"max_hp":20,"name":"Vile Fiend","room":"cell_5_0_3","str":10,"tag":"wolf"},  {"dex":60,"hp":270,"id":"mob_1810892","int":60,"lvl":25,"max_hp":270,"name":"salamander","props": [],"room":"room_2517003","str":60,"tag":"salamander"},  {"act_state":"wander","cha":18,"con":12,"dex":12,"equip": {"body":"tunic","shield":"none","wpn":"dagger"},"fac":"merchant","home":"tavern","hp":60,"id":"merchant_silvia","int":14,"inv": [ {"qty":500,"tag":"gold"},  {"qty":10,"tag":"bread"},  {"qty":10,"tag":"apple"},  {"qty":5,"tag":"empty_waterskin"},  {"qty":2,"tag":"flint_and_steel"},  {"qty":2,"tag":"whetstone"} ],"job":"merchant","luk":15,"lvl":5,"max_hp":60,"max_mp":40,"mems": {},"mp":40,"name":"Silvia the Merchant","props": ["merchant" ],"room":"square","str":10,"tag":"merchant","threats": {},"wander":false,"wis":15,"work":"square"},  {"dex":10,"hp":20,"id":"mob_8598077","int":10,"lvl":1,"max_hp":20,"name":"Rabid Fiend","room":"cell_1_-1_1","str":10,"tag":"goblin"},  {"dex":120,"hp":540,"id":"mob_1675377","int":120,"lvl":25,"max_hp":540,"name":"elite salamander","props": [ {"prop":"elite","val":1.0} ],"room":"room_3691267","str":120,"tag":"salamander"},  {"dex":16,"hp":50,"id":"mob_5544954","int":16,"lvl":3,"max_hp":50,"name":"wolf","props": [],"room":"room_6126476","str":16,"tag":"wolf"},  {"dex":10,"hp":20,"id":"mob_1567306","int":10,"lvl":1,"max_hp":20,"name":"Savage Spitfire","room":"cell_1_3_1","str":10,"tag":"wolf"},  {"dex":10,"hp":20,"id":"mob_2426504","int":10,"lvl":1,"max_hp":20,"name":"Blighted Crawler","room":"cell_1_0_-3","str":10,"tag":"goblin"},  {"dex":10,"hp":20,"id":"mob_4939368","int":10,"lvl":1,"max_hp":20,"name":"Savage Crawler","room":"cell_5_0_5","str":10,"tag":"wolf"},  {"dex":10,"hp":20,"id":"mob_5945246","int":10,"lvl":1,"max_hp":20,"name":"Blighted Fiend","room":"cell_3_1_3","str":10,"tag":"wolf"},  {"act_state":"wander","cha":10,"con":14,"dex":10,"equip": {"body":"tunic","shield":"none","wpn":"fists"},"fac":"citizen","home":"tavern","hp":30,"id":"peasant_bob","int":8,"inv": [ {"qty":3,"tag":"wheat_seed"},  {"qty":2,"tag":"bread"} ],"job":"peasant","luk":12,"lvl":1,"max_hp":30,"max_mp":10,"mems": {},"mp":10,"name":"Bob the Farmer","props": [],"room":"room_3066886","str":12,"tag":"peasant","threats": {},"wander":true,"wis":10,"work":"farm_field"},  {"dex":10,"hp":20,"id":"mob_8875225","int":10,"lvl":1,"max_hp":20,"name":"Frost Devourer","room":"cell_5_2_3","str":10,"tag":"wolf"},  {"dex":120,"hp":540,"id":"mob_3943682","int":120,"lvl":25,"max_hp":540,"name":"elite imp","props": [ {"prop":"elite","val":1.0} ],"room":"room_3691267","str":120,"tag":"imp"},  {"dex":10,"hp":20,"id":"mob_5947963","int":10,"lvl":1,"max_hp":20,"name":"Fiery Fiend","room":"cell_2_-3_4","str":10,"tag":"wolf"},  {"dex":10,"hp":20,"id":"mob_6767938","int":10,"lvl":1,"max_hp":20,"name":"Bloody Spitfire","room":"cell_2_-3_4","str":10,"tag":"wolf"},  {"dex":10,"hp":20,"id":"mob_6108753","int":10,"lvl":1,"max_hp":20,"name":"Blighted Fiend","room":"cell_0_1_0","str":10,"tag":"wolf"},  {"dex":10,"hp":20,"id":"mob_5188157","int":10,"lvl":1,"max_hp":20,"name":"Blighted Devourer","room":"cell_2_1_4","str":10,"tag":"wolf"},  {"dex":10,"hp":20,"id":"mob_9496373","int":10,"lvl":1,"max_hp":20,"name":"Rabid Beast","room":"cell_2_1_4","str":10,"tag":"wolf"},  {"dex":10,"hp":20,"id":"mob_3263024","int":10,"lvl":1,"max_hp":20,"name":"Rabid Spitfire","room":"cell_2_0_3","str":10,"tag":"wolf"},  {"dex":10,"hp":20,"id":"mob_5325179","int":10,"lvl":1,"max_hp":20,"name":"Vile Beast","room":"cell_2_0_3","str":10,"tag":"wolf"},  {"dex":10,"hp":20,"id":"mob_1936214","int":10,"lvl":1,"max_hp":20,"name":"Fiery Beast","room":"cell_2_-3_-2","str":10,"tag":"goblin"},  {"dex":10,"hp":20,"id":"mob_9776354","int":10,"lvl":1,"max_hp":20,"name":"Vile Fiend","room":"cell_8_-1_3","str":10,"tag":"wolf"},  {"dex":10,"hp":20,"id":"mob_5720405","int":10,"lvl":1,"max_hp":20,"name":"Rabid Fiend","room":"cell_2_-2_-1","str":10,"tag":"wolf"},  {"dex":30,"hp":120,"id":"mob_5973950","int":30,"lvl":10,"max_hp":120,"name":"skeleton","props": [],"room":"room_3967055","str":30,"tag":"skeleton"},  {"dex":10,"hp":20,"id":"mob_8616796","int":10,"lvl":1,"max_hp":20,"name":"Vile Crawler","room":"cell_4_-4_1","str":10,"tag":"wolf"},  {"dex":10,"hp":20,"id":"mob_8770251","int":10,"lvl":1,"max_hp":20,"name":"Frost Crawler","room":"cell_4_-4_1","str":10,"tag":"wolf"},  {"dex":10,"hp":20,"id":"mob_7114405","int":10,"lvl":1,"max_hp":20,"name":"Fiery Stalker","room":"cell_-3_0_0","str":10,"tag":"goblin"},  {"dex":10,"hp":20,"id":"mob_8911888","int":10,"lvl":1,"max_hp":20,"name":"Bloody Slayer","room":"cell_-1_2_2","str":10,"tag":"wolf"},  {"dex":10,"hp":20,"id":"mob_2766184","int":10,"lvl":1,"max_hp":20,"name":"Vile Devourer","room":"cell_-1_2_2","str":10,"tag":"goblin"},  {"dex":10,"hp":20,"id":"mob_4647310","int":10,"lvl":1,"max_hp":20,"name":"Vile Slayer","room":"cell_2_-2_3","str":10,"tag":"wolf"},  {"dex":10,"hp":20,"id":"mob_3302887","int":10,"lvl":1,"max_hp":20,"name":"Rabid Beast","room":"cell_1_0_-3","str":10,"tag":"goblin"},  {"act_state":"wander","cha":15,"con":12,"dex":10,"equip": {"body":"tunic","shield":"none","wpn":"staff"},"fac":"citizen","home":"temple","hp":80,"id":"priest_luke","int":16,"inv": [ {"qty":100,"tag":"gold"},  {"qty":5,"tag":"holy_water"} ],"job":"citizen","luk":12,"lvl":8,"max_hp":80,"max_mp":80,"mems": {},"mp":80,"name":"Father Luke","props": ["healer" ],"room":"cell_0_0_0","str":10,"tag":"priest","threats": {},"wander":false,"wis":20,"work":"temple"},  {"dex":10,"hp":20,"id":"mob_4300598","int":10,"lvl":1,"max_hp":20,"name":"Savage Crawler","room":"cell_4_-1_4","str":10,"tag":"wolf"},  {"dex":10,"hp":20,"id":"mob_2340686","int":10,"lvl":1,"max_hp":20,"name":"Vile Devourer","room":"cell_4_-1_4","str":10,"tag":"wolf"},  {"dex":32,"hp":100,"id":"mob_7431633","int":32,"lvl":3,"max_hp":100,"name":"elite goblin","props": [ {"prop":"elite","val":1.0} ],"room":"room_6126476","str":32,"tag":"goblin"},  {"dex":10,"hp":20,"id":"mob_9458264","int":10,"lvl":1,"max_hp":20,"name":"Bloody Devourer","room":"cell_4_0_2","str":10,"tag":"wolf"},  {"dex":60,"hp":270,"id":"mob_9175597","int":60,"lvl":25,"max_hp":270,"name":"rock_worm","props": [],"room":"room_3086131","str":60,"tag":"rock_worm"},  {"dex":120,"hp":540,"id":"mob_6213305","int":120,"lvl":25,"max_hp":540,"name":"elite rock_worm","props": [ {"prop":"elite","val":1.0} ],"room":"room_1520909","str":120,"tag":"rock_worm"},  {"dex":60,"hp":270,"id":"mob_9896653","int":60,"lvl":25,"max_hp":270,"name":"rock_worm","props": [],"room":"room_1520909","str":60,"tag":"rock_worm"},  {"dex":10,"hp":20,"id":"mob_5662078","int":10,"lvl":1,"max_hp":20,"name":"Vile Crawler","room":"cell_3_-2_0","str":10,"tag":"wolf"},  {"dex":10,"hp":20,"id":"mob_1109301","int":10,"lvl":1,"max_hp":20,"name":"Fiery Beast","room":"cell_0_-3_2","str":10,"tag":"wolf"},  {"dex":10,"equip": {"body":"tunic","shield":"none","wpn":"fists"},"fac":"citizen","hp":30,"id":"peasant_5459699","int":10,"lvl":1,"max_hp":30,"name":"Sasha de Clare","props": [],"room":"room_3101845","str":10,"tag":"peasant"},  {"dex":16,"hp":50,"id":"mob_9179734","int":16,"lvl":3,"max_hp":50,"name":"wolf","props": [],"room":"room_7212210","str":16,"tag":"wolf"},  {"dex":10,"hp":20,"id":"mob_4468084","int":10,"lvl":1,"max_hp":20,"name":"Blighted Stalker","room":"cell_-1_-3_4","str":10,"tag":"wolf"},  {"dex":10,"hp":20,"id":"mob_8302727","int":10,"lvl":1,"max_hp":20,"name":"Blighted Fiend","room":"cell_2_3_0","str":10,"tag":"wolf"},  {"dex":10,"hp":20,"id":"mob_6440595","int":10,"lvl":1,"max_hp":20,"name":"Rabid Devourer","room":"cell_-1_-1_1","str":10,"tag":"wolf"},  {"dex":120,"hp":540,"id":"mob_7171288","int":120,"lvl":25,"max_hp":540,"name":"elite salamander","props": [ {"prop":"elite","val":1.0} ],"room":"room_3101845","str":120,"tag":"salamander"},  {"dex":30,"hp":120,"id":"mob_4974833","int":30,"lvl":10,"max_hp":120,"name":"goblin","props": [],"room":"room_9348430","str":30,"tag":"goblin"},  {"dex":10,"hp":20,"id":"mob_2801148","int":10,"lvl":1,"max_hp":20,"name":"Rabid Devourer","room":"cell_0_2_1","str":10,"tag":"wolf"},  {"bounty":0,"cds": {},"cha":10,"class":"fighter","con":12,"dex":12,"equip": {"body":"none","shield":"none","wpn":"fists"},"hp":50,"id":"walt","int":10,"inv": [ {"qty":100,"tag":"gold"} ],"luk":10,"lvl":1,"max_hp":50,"max_mp":20,"mp":20,"race":"human","room":"square","stat_points":3,"str":12,"tag":"player","wis":10,"xp":0},  {"dex":16,"hp":50,"id":"mob_6709998","int":16,"lvl":3,"max_hp":50,"name":"wolf","props": [],"room":"room_8417047","str":16,"tag":"wolf"},  {"dex":10,"hp":20,"id":"mob_8825095","int":10,"lvl":1,"max_hp":20,"name":"Bloody Crawler","room":"cell_3_-4_2","str":10,"tag":"wolf"},  {"bounty":0,"dex":30,"hp":0,"id":"mob_4966828","int":30,"lvl":10,"max_hp":120,"name":"wraith","props": [],"room":"square","str":30,"tag":"wraith"} ],"env": {"time":130,"weather":"clear"},"rooms": [ {"desc":"The central town square. A cool mountain river rushes past a stone fountain here.","exits": {"east":"barracks","farm":"farm_field","forest":"forest_trail","mountain":"mountain_trail","north":"tavern","south":"temple","west":"mine_entrance","wild":"cell_0_0_0"},"id":"square","props": ["safe", "landmark", "square", "river" ],"region":"shire","theme":"village","type":"outdoor"},  {"desc":"The Rusty Flagon. A rowdy tavern complete with comfortable beds, heavy oak chairs, and a baking oven.","exits": {"south":"square","upstairs":"tavern_loft"},"furniture": {"stool_1": {"type":"chair","user":"none"},"stool_2": {"type":"chair","user":"none"}},"id":"tavern","props": ["safe", "oven", "tavern" ],"region":"shire","theme":"village","type":"indoor"},  {"desc":"The quiet upper floor of the tavern. Soft straw beds line the walls under a wooden ceiling.","exits": {"downstairs":"tavern"},"id":"tavern_loft","props": ["safe", "bed" ],"region":"shire","theme":"village","type":"indoor"},  {"desc":"Sanctuary of Light. A grand cathedral housing the resplendent Altar of Sol. The air is thick with holy incense.","exits": {"crypt":"graveyard","north":"square"},"id":"temple","props": ["safe", "altar_of_sol", "ritual_circle" ],"region":"shire","theme":"monastery","type":"indoor"},  {"breakables": {"rack_1": {"hp":20,"type":"crate"}},"desc":"The town guard barracks. Weapon racks, shield braces, and training dummies line the stone walls.","exits": {"south":"prison","tower":"watchtower","west":"square"},"id":"barracks","props": ["safe", "training_dummy" ],"region":"shire","theme":"keep","type":"indoor"},  {"desc":"The high watchtower overlooking the shire. Banners flutter loudly in the strong wind.","exits": {"down":"barracks"},"id":"watchtower","props": ["safe", "windy" ],"region":"shire","theme":"keep","type":"outdoor"},  {"desc":"The iron-barred dungeon. It is bleak, secure, and inescapable. Clangs of chains echo through the cells.","exits": {"north":"barracks"},"id":"prison","props": ["prison", "dark" ],"region":"shire","theme":"prison","type":"indoor"},  {"desc":"A tilled farming field. Fertile soil stretches out in neat furrows under the open sky.","exits": {"east":"orchard","south":"windmill","town":"square"},"id":"farm_field","props": ["safe", "tilled" ],"region":"shire","theme":"plains","type":"outdoor"},  {"desc":"A dense apple orchard. Sweet-smelling blossoms hang low from thick, sturdy branches.","exits": {"west":"farm_field"},"id":"orchard","nodes": {"apple_tree": {"qty":5,"tag":"oak_tree"}},"props": ["safe" ],"region":"shire","theme":"grove","type":"outdoor"},  {"desc":"A towering wooden windmill. Large stone gears creak endlessly as they grind wheat into flour.","exits": {"north":"farm_field"},"id":"windmill","props": ["safe" ],"region":"shire","theme":"village","type":"indoor"},  {"desc":"The dark, excavated entrance to an abandoned mine.","exits": {"down":"room_1358073","east":"square"},"id":"mine_entrance","props": [],"theme":"mine","type":"normal"},  {"desc":"collapsed shaft","exits": {"down":"room_3350696","up":"mine_entrance"},"id":"room_1358073","lvl":3,"name":"collapsed shaft","props": [],"theme":"mine","type":"normal"},  {"desc":"abandoned excavation_site","exits": {"south":"room_2229256","up":"room_1358073"},"id":"room_3350696","lvl":3,"name":"abandoned excavation_site","nodes": {"node_iron_vein_478448": {"qty":7,"tag":"iron_vein"}},"props": [],"theme":"mine","type":"normal"},  {"desc":"resource-rich lode","exits": {"north":"room_3350696","south":"room_8703818"},"id":"room_2229256","lvl":3,"name":"resource-rich lode","props": [],"theme":"mine","type":"normal"},  {"desc":"collapsed excavation_site","exits": {"north":"room_2229256","up":"room_7212210"},"id":"room_8703818","lvl":3,"name":"collapsed excavation_site","props": [],"theme":"mine","type":"normal"},  {"desc":"resource-rich shaft","exits": {"down":"room_8703818","west":"room_6082843"},"id":"room_7212210","lvl":3,"name":"resource-rich shaft","nodes": {"node_iron_vein_369727": {"qty":5,"tag":"iron_vein"}},"props": [],"theme":"mine","type":"normal"},  {"desc":"excavated excavation_site","exits": {"east":"room_7212210","south":"room_5517366"},"id":"room_6082843","lvl":3,"name":"excavated excavation_site","props": [],"theme":"mine","type":"normal"},  {"desc":"abandoned lode","exits": {"north":"room_6082843"},"id":"room_5517366","lvl":3,"name":"abandoned lode","props": [],"theme":"mine","type":"normal"},  {"desc":"A sprawling ancient canopy marking the edge of the woods.","exits": {"down":"room_5291786","town":"square"},"id":"forest_trail","props": [],"theme":"forest","type":"normal"},  {"desc":"dense clearing","exits": {"down":"room_8682105","up":"forest_trail"},"id":"room_5291786","lvl":3,"name":"dense clearing","props": [],"theme":"forest","type":"normal"},  {"desc":"verdant thicket","exits": {"north":"room_1692139","up":"room_5291786"},"id":"room_8682105","lvl":3,"name":"verdant thicket","props": [],"theme":"forest","type":"normal"},  {"desc":"verdant canopy","exits": {"down":"room_2381146","south":"room_8682105"},"id":"room_1692139","lvl":3,"name":"verdant canopy","nodes": {"node_oak_tree_172177": {"qty":3,"tag":"oak_tree"}},"props": [],"theme":"forest","type":"normal"},  {"desc":"shadowy glade","exits": {"south":"room_8417047","up":"room_1692139"},"id":"room_2381146","lvl":3,"name":"shadowy glade","props": [],"theme":"forest","type":"normal"},  {"desc":"dense canopy","exits": {"north":"room_2381146","west":"room_2232334"},"id":"room_8417047","lvl":3,"name":"dense canopy","nodes": {"node_oak_tree_646348": {"qty":6,"tag":"oak_tree"}},"props": [],"theme":"forest","type":"normal"},  {"desc":"dense glade","exits": {"east":"room_8417047","west":"room_6334973"},"id":"room_2232334","lvl":3,"name":"dense glade","props": [],"theme":"forest","type":"normal"},  {"desc":"ancient clearing","exits": {"east":"room_2232334","up":"room_2775744"},"id":"room_6334973","lvl":3,"name":"ancient clearing","props": [],"theme":"forest","type":"normal"},  {"desc":"verdant glade","exits": {"down":"room_6126476"},"id":"room_2775744","lvl":3,"name":"verdant glade","props": [],"theme":"forest","type":"normal"},  {"desc":"dense clearing","exits": {"up":"room_2775744"},"id":"room_6126476","lvl":3,"name":"dense clearing","nodes": {"node_oak_tree_356285": {"qty":3,"tag":"oak_tree"}},"props": [],"theme":"forest","type":"normal"},  {"desc":"A dusty catacomb beneath the temple.","exits": {"down":"room_1210676","up":"temple"},"id":"graveyard","props": [],"theme":"crypt","type":"normal"},  {"desc":"desecrated catacomb","exits": {"down":"room_3967055","up":"graveyard"},"id":"room_1210676","lvl":10,"name":"desecrated catacomb","props": [],"theme":"crypt","type":"normal"},  {"desc":"silent vault","exits": {"east":"room_7154126","up":"room_1210676"},"id":"room_3967055","lvl":10,"name":"silent vault","props": [],"theme":"crypt","type":"normal"},  {"desc":"dusty mausoleum","exits": {"east":"room_3080871","west":"room_3967055"},"id":"room_7154126","lvl":10,"name":"dusty mausoleum","props": [],"theme":"crypt","type":"normal"},  {"desc":"echoing tomb","exits": {"south":"room_9348430","west":"room_7154126"},"id":"room_3080871","lvl":10,"name":"echoing tomb","props": [],"theme":"crypt","type":"normal"},  {"desc":"silent tomb","exits": {"east":"room_4905480","north":"room_3080871"},"id":"room_9348430","lvl":10,"name":"silent tomb","props": [],"theme":"crypt","type":"normal"},  {"desc":"desecrated vault","exits": {"up":"room_4673393","west":"room_9348430"},"id":"room_4905480","lvl":10,"name":"desecrated vault","props": [],"theme":"crypt","type":"normal"},  {"desc":"desecrated tomb","exits": {"down":"room_4905480","north":"room_8032132"},"id":"room_4673393","lvl":10,"name":"desecrated tomb","props": [],"theme":"crypt","type":"normal"},  {"desc":"silent vault","exits": {"south":"room_4673393","west":"room_7358191"},"id":"room_8032132","lvl":10,"name":"silent vault","props": [],"theme":"crypt","type":"normal"},  {"desc":"crumbling vault","exits": {"east":"room_8032132"},"id":"room_7358191","lvl":10,"name":"crumbling vault","props": [],"theme":"crypt","type":"normal"},  {"desc":"A steep and magmatic trail ascending into the clouds.","exits": {"down":"room_5140986","town":"square"},"id":"mountain_trail","props": [],"theme":"volcano","type":"normal"},  {"desc":"unstable crater_edge","exits": {"east":"room_3086131","up":"mountain_trail"},"id":"room_5140986","lvl":25,"name":"unstable crater_edge","props": [],"theme":"volcano","type":"normal"},  {"desc":"erupting obsidian_spire","exits": {"down":"room_3066886","west":"room_5140986"},"id":"room_3086131","lvl":25,"name":"erupting obsidian_spire","props": [],"theme":"volcano","type":"normal"},  {"desc":"erupting obsidian_spire","exits": {"down":"room_1325955","up":"room_3086131"},"id":"room_3066886","lvl":25,"name":"erupting obsidian_spire","nodes": {"node_basalt_fissure_593917": {"qty":6,"tag":"basalt_fissure"}},"props": [],"theme":"volcano","type":"normal"},  {"desc":"erupting vent","exits": {"down":"room_3101845","up":"room_3066886"},"id":"room_1325955","lvl":25,"name":"erupting vent","props": [],"theme":"volcano","type":"normal"},  {"desc":"heated vent","exits": {"north":"room_7453528","up":"room_1325955"},"id":"room_3101845","lvl":25,"name":"heated vent","props": [],"theme":"volcano","type":"normal"},  {"desc":"erupting magma_chamber","exits": {"east":"room_5534829","south":"room_3101845"},"id":"room_7453528","lvl":25,"name":"erupting magma_chamber","props": [],"theme":"volcano","type":"normal"},  {"desc":"erupting magma_chamber","exits": {"north":"room_1520909","west":"room_7453528"},"id":"room_5534829","lvl":25,"name":"erupting magma_chamber","nodes": {"node_basalt_fissure_216974": {"qty":7,"tag":"basalt_fissure"}},"props": [],"theme":"volcano","type":"normal"},  {"desc":"unstable vent","exits": {"down":"room_3286322","south":"room_5534829"},"id":"room_1520909","lvl":25,"name":"unstable vent","props": [],"theme":"volcano","type":"normal"},  {"desc":"erupting magma_chamber","exits": {"east":"room_2517003","up":"room_1520909"},"id":"room_3286322","lvl":25,"name":"erupting magma_chamber","props": [],"theme":"volcano","type":"normal"},  {"desc":"magmatic obsidian_spire","exits": {"east":"room_3691267","west":"room_3286322"},"id":"room_2517003","lvl":25,"name":"magmatic obsidian_spire","nodes": {"node_basalt_fissure_581283": {"qty":6,"tag":"basalt_fissure"}},"props": [],"theme":"volcano","type":"normal"},  {"desc":"magmatic magma_chamber","exits": {"west":"room_2517003"},"id":"room_3691267","lvl":25,"name":"magmatic magma_chamber","props": [],"theme":"volcano","type":"normal"},  {"desc":"You find yourself in a misty grove.","exits": {"down":"cell_0_0_-1","east":"cell_1_0_0","north":"cell_0_1_0","south":"cell_0_-1_0","town":"square","up":"cell_0_0_1","west":"cell_-1_0_0"},"id":"cell_0_0_0","name":"misty grove","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a misty grove.","exits": {"down":"cell_0_1_-1","east":"cell_1_1_0","north":"cell_0_2_0","south":"cell_0_0_0","up":"cell_0_1_1","west":"cell_-1_1_0"},"id":"cell_0_1_0","name":"misty grove","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a ancient meadow.","exits": {"down":"cell_0_1_0","east":"cell_1_1_1","north":"cell_0_2_1","south":"cell_0_0_1","up":"cell_0_1_2","west":"cell_-1_1_1"},"id":"cell_0_1_1","name":"ancient meadow","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a damp tunnel.","exits": {"down":"cell_0_1_-2","east":"cell_1_1_-1","north":"cell_0_2_-1","south":"cell_0_0_-1","up":"cell_0_1_0","west":"cell_-1_1_-1"},"id":"cell_0_1_-1","name":"damp tunnel","props": [],"theme":"cavern","type":"outdoor"},  {"desc":"You find yourself in a shadowy ridge.","exits": {"down":"cell_0_-1_-1","east":"cell_1_-1_0","north":"cell_0_0_0","south":"cell_0_-2_0","up":"cell_0_-1_1","west":"cell_-1_-1_0"},"id":"cell_0_-1_0","name":"shadowy ridge","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a echoing chasm.","exits": {"down":"cell_-1_1_-2","east":"cell_0_1_-1","north":"cell_-1_2_-1","south":"cell_-1_0_-1","up":"cell_-1_1_0","west":"cell_-2_1_-1"},"id":"cell_-1_1_-1","name":"echoing chasm","props": [],"theme":"cavern","type":"outdoor"},  {"desc":"You find yourself in a overgrown ridge.","exits": {"down":"cell_0_-1_0","east":"cell_1_-1_1","north":"cell_0_0_1","south":"cell_0_-2_1","up":"cell_0_-1_2","west":"cell_-1_-1_1"},"id":"cell_0_-1_1","name":"overgrown ridge","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a ancient grove.","exits": {"down":"cell_1_-1_0","east":"cell_2_-1_1","north":"cell_1_0_1","south":"cell_1_-2_1","up":"cell_1_-1_2","west":"cell_0_-1_1"},"id":"cell_1_-1_1","name":"ancient grove","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a shadowy meadow.","exits": {"down":"cell_1_0_0","east":"cell_2_0_1","north":"cell_1_1_1","south":"cell_1_-1_1","up":"cell_1_0_2","west":"cell_0_0_1"},"id":"cell_1_0_1","name":"shadowy meadow","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a misty thicket.","exits": {"down":"cell_1_-1_-1","east":"cell_2_-1_0","north":"cell_1_0_0","south":"cell_1_-2_0","up":"cell_1_-1_1","west":"cell_0_-1_0"},"id":"cell_1_-1_0","name":"misty thicket","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a ancient thicket.","exits": {"down":"cell_1_1_0","east":"cell_2_1_1","north":"cell_1_2_1","south":"cell_1_0_1","up":"cell_1_1_2","west":"cell_0_1_1"},"id":"cell_1_1_1","name":"ancient thicket","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a sunlit clearing.","exits": {"down":"cell_1_-2_-1","east":"cell_2_-2_0","north":"cell_1_-1_0","south":"cell_1_-3_0","up":"cell_1_-2_1","west":"cell_0_-2_0"},"id":"cell_1_-2_0","name":"sunlit clearing","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a misty ridge.","exits": {"down":"cell_1_-2_0","east":"cell_2_-2_1","north":"cell_1_-1_1","south":"cell_1_-3_1","up":"cell_1_-2_2","west":"cell_0_-2_1"},"id":"cell_1_-2_1","name":"misty ridge","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a sunlit thicket.","exits": {"down":"cell_0_0_0","east":"cell_1_0_1","north":"cell_0_1_1","south":"cell_0_-1_1","up":"cell_0_0_2","west":"cell_-1_0_1"},"id":"cell_0_0_1","name":"sunlit thicket","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a echoing tunnel.","exits": {"down":"cell_1_1_-2","east":"cell_2_1_-1","north":"cell_1_2_-1","south":"cell_1_0_-1","up":"cell_1_1_0","west":"cell_0_1_-1"},"id":"cell_1_1_-1","name":"echoing tunnel","props": [],"theme":"cavern","type":"outdoor"},  {"desc":"You find yourself in a dark chasm.","exits": {"down":"cell_1_2_-2","east":"cell_2_2_-1","north":"cell_1_3_-1","south":"cell_1_1_-1","up":"cell_1_2_0","west":"cell_0_2_-1"},"id":"cell_1_2_-1","name":"dark chasm","props": [],"theme":"cavern","type":"outdoor"},  {"desc":"You find yourself in a overgrown clearing.","exits": {"down":"cell_1_0_-1","east":"cell_2_0_0","north":"cell_1_1_0","south":"cell_1_-1_0","up":"cell_1_0_1","west":"cell_0_0_0"},"id":"cell_1_0_0","name":"overgrown clearing","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a overgrown ridge.","exits": {"down":"cell_1_-3_0","east":"cell_2_-3_1","north":"cell_1_-2_1","south":"cell_1_-4_1","up":"cell_1_-3_2","west":"cell_0_-3_1"},"id":"cell_1_-3_1","name":"overgrown ridge","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a echoing chasm.","exits": {"down":"cell_2_2_-2","east":"cell_3_2_-1","north":"cell_2_3_-1","south":"cell_2_1_-1","up":"cell_2_2_0","west":"cell_1_2_-1"},"id":"cell_2_2_-1","name":"echoing chasm","props": [],"theme":"cavern","type":"outdoor"},  {"desc":"You find yourself in a misty clearing.","exits": {"down":"cell_2_1_0","east":"cell_3_1_1","north":"cell_2_2_1","south":"cell_2_0_1","up":"cell_2_1_2","west":"cell_1_1_1"},"id":"cell_2_1_1","name":"misty clearing","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a echoing cave.","exits": {"down":"cell_2_1_-2","east":"cell_3_1_-1","north":"cell_2_2_-1","south":"cell_2_0_-1","up":"cell_2_1_0","west":"cell_1_1_-1"},"id":"cell_2_1_-1","name":"echoing cave","props": [],"theme":"cavern","type":"outdoor"},  {"desc":"You find yourself in a misty thicket.","exits": {"down":"cell_1_-3_1","east":"cell_2_-3_2","north":"cell_1_-2_2","south":"cell_1_-4_2","up":"cell_1_-3_3","west":"cell_0_-3_2"},"id":"cell_1_-3_2","name":"misty thicket","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a misty meadow.","exits": {"down":"cell_3_1_0","east":"cell_4_1_1","north":"cell_3_2_1","south":"cell_3_0_1","up":"cell_3_1_2","west":"cell_2_1_1"},"id":"cell_3_1_1","name":"misty meadow","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a overgrown ridge.","exits": {"down":"cell_2_-3_0","east":"cell_3_-3_1","north":"cell_2_-2_1","south":"cell_2_-4_1","up":"cell_2_-3_2","west":"cell_1_-3_1"},"id":"cell_2_-3_1","name":"overgrown ridge","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a misty ridge.","exits": {"down":"cell_1_-3_2","east":"cell_2_-3_3","north":"cell_1_-2_3","south":"cell_1_-4_3","up":"cell_1_-3_4","west":"cell_0_-3_3"},"id":"cell_1_-3_3","name":"misty ridge","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a echoing cave.","exits": {"down":"cell_0_2_-2","east":"cell_1_2_-1","north":"cell_0_3_-1","south":"cell_0_1_-1","up":"cell_0_2_0","west":"cell_-1_2_-1"},"id":"cell_0_2_-1","name":"echoing cave","props": [],"theme":"cavern","type":"outdoor"},  {"desc":"You find yourself in a overgrown thicket.","exits": {"down":"cell_2_-2_0","east":"cell_3_-2_1","north":"cell_2_-1_1","south":"cell_2_-3_1","up":"cell_2_-2_2","west":"cell_1_-2_1"},"id":"cell_2_-2_1","name":"overgrown thicket","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a echoing cave.","exits": {"down":"cell_0_2_-3","east":"cell_1_2_-2","north":"cell_0_3_-2","south":"cell_0_1_-2","up":"cell_0_2_-1","west":"cell_-1_2_-2"},"id":"cell_0_2_-2","name":"echoing cave","props": [],"theme":"cavern","type":"outdoor"},  {"desc":"You find yourself in a echoing chasm.","exits": {"down":"cell_1_-1_-2","east":"cell_2_-1_-1","north":"cell_1_0_-1","south":"cell_1_-2_-1","up":"cell_1_-1_0","west":"cell_0_-1_-1"},"id":"cell_1_-1_-1","name":"echoing chasm","props": [],"theme":"cavern","type":"outdoor"},  {"desc":"You find yourself in a echoing chasm.","exits": {"down":"cell_1_2_-3","east":"cell_2_2_-2","north":"cell_1_3_-2","south":"cell_1_1_-2","up":"cell_1_2_-1","west":"cell_0_2_-2"},"id":"cell_1_2_-2","name":"echoing chasm","props": [],"theme":"cavern","type":"outdoor"},  {"desc":"You find yourself in a shadowy clearing.","exits": {"down":"cell_0_-2_-1","east":"cell_1_-2_0","north":"cell_0_-1_0","south":"cell_0_-3_0","up":"cell_0_-2_1","west":"cell_-1_-2_0"},"id":"cell_0_-2_0","name":"shadowy clearing","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a ancient clearing.","exits": {"down":"cell_2_2_-1","east":"cell_3_2_0","north":"cell_2_3_0","south":"cell_2_1_0","up":"cell_2_2_1","west":"cell_1_2_0"},"id":"cell_2_2_0","name":"ancient clearing","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a damp tunnel.","exits": {"down":"cell_0_-1_-2","east":"cell_1_-1_-1","north":"cell_0_0_-1","south":"cell_0_-2_-1","up":"cell_0_-1_0","west":"cell_-1_-1_-1"},"id":"cell_0_-1_-1","name":"damp tunnel","props": [],"theme":"cavern","type":"outdoor"},  {"desc":"You find yourself in a ancient meadow.","exits": {"down":"cell_2_2_0","east":"cell_3_2_1","north":"cell_2_3_1","south":"cell_2_1_1","up":"cell_2_2_2","west":"cell_1_2_1"},"id":"cell_2_2_1","name":"ancient meadow","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a overgrown meadow.","exits": {"down":"cell_2_-3_1","east":"cell_3_-3_2","north":"cell_2_-2_2","south":"cell_2_-4_2","up":"cell_2_-3_3","west":"cell_1_-3_2"},"id":"cell_2_-3_2","name":"overgrown meadow","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a overgrown grove.","exits": {"down":"cell_4_1_0","east":"cell_5_1_1","north":"cell_4_2_1","south":"cell_4_0_1","up":"cell_4_1_2","west":"cell_3_1_1"},"id":"cell_4_1_1","name":"overgrown grove","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a shadowy grove.","exits": {"down":"cell_1_2_0","east":"cell_2_2_1","north":"cell_1_3_1","south":"cell_1_1_1","up":"cell_1_2_2","west":"cell_0_2_1"},"id":"cell_1_2_1","name":"shadowy grove","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a overgrown grove.","exits": {"down":"cell_3_-3_1","east":"cell_4_-3_2","north":"cell_3_-2_2","south":"cell_3_-4_2","up":"cell_3_-3_3","west":"cell_2_-3_2"},"id":"cell_3_-3_2","name":"overgrown grove","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a ancient thicket.","exits": {"down":"cell_2_-2_-1","east":"cell_3_-2_0","north":"cell_2_-1_0","south":"cell_2_-3_0","up":"cell_2_-2_1","west":"cell_1_-2_0"},"id":"cell_2_-2_0","name":"ancient thicket","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a overgrown thicket.","exits": {"down":"cell_-1_-2_-1","east":"cell_0_-2_0","north":"cell_-1_-1_0","south":"cell_-1_-3_0","up":"cell_-1_-2_1","west":"cell_-2_-2_0"},"id":"cell_-1_-2_0","name":"overgrown thicket","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a ancient thicket.","exits": {"down":"cell_5_1_0","east":"cell_6_1_1","north":"cell_5_2_1","south":"cell_5_0_1","up":"cell_5_1_2","west":"cell_4_1_1"},"id":"cell_5_1_1","name":"ancient thicket","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a dark cave.","exits": {"down":"cell_0_-2_-2","east":"cell_1_-2_-1","north":"cell_0_-1_-1","south":"cell_0_-3_-1","up":"cell_0_-2_0","west":"cell_-1_-2_-1"},"id":"cell_0_-2_-1","name":"dark cave","props": [],"theme":"cavern","type":"outdoor"},  {"desc":"You find yourself in a sunlit meadow.","exits": {"down":"cell_1_-2_2","east":"cell_2_-2_3","north":"cell_1_-1_3","south":"cell_1_-3_3","up":"cell_1_-2_4","west":"cell_0_-2_3"},"id":"cell_1_-2_3","name":"sunlit meadow","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a echoing cave.","exits": {"down":"cell_-1_2_-3","east":"cell_0_2_-2","north":"cell_-1_3_-2","south":"cell_-1_1_-2","up":"cell_-1_2_-1","west":"cell_-2_2_-2"},"id":"cell_-1_2_-2","name":"echoing cave","props": [],"theme":"cavern","type":"outdoor"},  {"desc":"You find yourself in a ancient meadow.","exits": {"down":"cell_3_1_1","east":"cell_4_1_2","north":"cell_3_2_2","south":"cell_3_0_2","up":"cell_3_1_3","west":"cell_2_1_2"},"id":"cell_3_1_2","name":"ancient meadow","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a dark chasm.","exits": {"down":"cell_2_-1_-2","east":"cell_3_-1_-1","north":"cell_2_0_-1","south":"cell_2_-2_-1","up":"cell_2_-1_0","west":"cell_1_-1_-1"},"id":"cell_2_-1_-1","name":"dark chasm","props": [],"theme":"cavern","type":"outdoor"},  {"desc":"You find yourself in a ancient thicket.","exits": {"down":"cell_3_2_1","east":"cell_4_2_2","north":"cell_3_3_2","south":"cell_3_1_2","up":"cell_3_2_3","west":"cell_2_2_2"},"id":"cell_3_2_2","name":"ancient thicket","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a dark cave.","exits": {"down":"cell_2_0_-2","east":"cell_3_0_-1","north":"cell_2_1_-1","south":"cell_2_-1_-1","up":"cell_2_0_0","west":"cell_1_0_-1"},"id":"cell_2_0_-1","name":"dark cave","props": [],"theme":"cavern","type":"outdoor"},  {"desc":"You find yourself in a echoing cave.","exits": {"down":"cell_-1_2_-2","east":"cell_0_2_-1","north":"cell_-1_3_-1","south":"cell_-1_1_-1","up":"cell_-1_2_0","west":"cell_-2_2_-1"},"id":"cell_-1_2_-1","name":"echoing cave","props": [],"theme":"cavern","type":"outdoor"},  {"desc":"You find yourself in a misty meadow.","exits": {"down":"cell_-1_-2_0","east":"cell_0_-2_1","north":"cell_-1_-1_1","south":"cell_-1_-3_1","up":"cell_-1_-2_2","west":"cell_-2_-2_1"},"id":"cell_-1_-2_1","name":"misty meadow","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a shadowy clearing.","exits": {"down":"cell_3_-4_1","east":"cell_4_-4_2","north":"cell_3_-3_2","south":"cell_3_-5_2","up":"cell_3_-4_3","west":"cell_2_-4_2"},"id":"cell_3_-4_2","name":"shadowy clearing","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a damp tunnel.","exits": {"down":"cell_-2_2_-2","east":"cell_-1_2_-1","north":"cell_-2_3_-1","south":"cell_-2_1_-1","up":"cell_-2_2_0","west":"cell_-3_2_-1"},"id":"cell_-2_2_-1","name":"damp tunnel","props": [],"theme":"cavern","type":"outdoor"},  {"desc":"You find yourself in a misty grove.","exits": {"down":"cell_3_-3_0","east":"cell_4_-3_1","north":"cell_3_-2_1","south":"cell_3_-4_1","up":"cell_3_-3_2","west":"cell_2_-3_1"},"id":"cell_3_-3_1","name":"misty grove","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a overgrown thicket.","exits": {"down":"cell_2_2_1","east":"cell_3_2_2","north":"cell_2_3_2","south":"cell_2_1_2","up":"cell_2_2_3","west":"cell_1_2_2"},"id":"cell_2_2_2","name":"overgrown thicket","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a ancient meadow.","exits": {"down":"cell_0_-2_2","east":"cell_1_-2_3","north":"cell_0_-1_3","south":"cell_0_-3_3","up":"cell_0_-2_4","west":"cell_-1_-2_3"},"id":"cell_0_-2_3","name":"ancient meadow","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a overgrown clearing.","exits": {"down":"cell_3_2_0","east":"cell_4_2_1","north":"cell_3_3_1","south":"cell_3_1_1","up":"cell_3_2_2","west":"cell_2_2_1"},"id":"cell_3_2_1","name":"overgrown clearing","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a overgrown thicket.","exits": {"down":"cell_2_-4_1","east":"cell_3_-4_2","north":"cell_2_-3_2","south":"cell_2_-5_2","up":"cell_2_-4_3","west":"cell_1_-4_2"},"id":"cell_2_-4_2","name":"overgrown thicket","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a overgrown meadow.","exits": {"down":"cell_5_1_1","east":"cell_6_1_2","north":"cell_5_2_2","south":"cell_5_0_2","up":"cell_5_1_3","west":"cell_4_1_2"},"id":"cell_5_1_2","name":"overgrown meadow","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a echoing chasm.","exits": {"down":"cell_1_1_-3","east":"cell_2_1_-2","north":"cell_1_2_-2","south":"cell_1_0_-2","up":"cell_1_1_-1","west":"cell_0_1_-2"},"id":"cell_1_1_-2","name":"echoing chasm","props": [],"theme":"cavern","type":"outdoor"},  {"desc":"You find yourself in a echoing cave.","exits": {"down":"cell_-1_3_-2","east":"cell_0_3_-1","north":"cell_-1_4_-1","south":"cell_-1_2_-1","up":"cell_-1_3_0","west":"cell_-2_3_-1"},"id":"cell_-1_3_-1","name":"echoing cave","props": [],"theme":"cavern","type":"outdoor"},  {"desc":"You find yourself in a ancient thicket.","exits": {"down":"cell_3_-4_0","east":"cell_4_-4_1","north":"cell_3_-3_1","south":"cell_3_-5_1","up":"cell_3_-4_2","west":"cell_2_-4_1"},"id":"cell_3_-4_1","name":"ancient thicket","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a shadowy ridge.","exits": {"down":"cell_-1_-2_2","east":"cell_0_-2_3","north":"cell_-1_-1_3","south":"cell_-1_-3_3","up":"cell_-1_-2_4","west":"cell_-2_-2_3"},"id":"cell_-1_-2_3","name":"shadowy ridge","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a damp chasm.","exits": {"down":"cell_-1_3_-3","east":"cell_0_3_-2","north":"cell_-1_4_-2","south":"cell_-1_2_-2","up":"cell_-1_3_-1","west":"cell_-2_3_-2"},"id":"cell_-1_3_-2","name":"damp chasm","props": [],"theme":"cavern","type":"outdoor"},  {"desc":"You find yourself in a ancient ridge.","exits": {"down":"cell_1_2_1","east":"cell_2_2_2","north":"cell_1_3_2","south":"cell_1_1_2","up":"cell_1_2_3","west":"cell_0_2_2"},"id":"cell_1_2_2","name":"ancient ridge","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a ancient clearing.","exits": {"down":"cell_-1_3_-1","east":"cell_0_3_0","north":"cell_-1_4_0","south":"cell_-1_2_0","up":"cell_-1_3_1","west":"cell_-2_3_0"},"id":"cell_-1_3_0","name":"ancient clearing","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a dark cave.","exits": {"down":"cell_1_-2_-2","east":"cell_2_-2_-1","north":"cell_1_-1_-1","south":"cell_1_-3_-1","up":"cell_1_-2_0","west":"cell_0_-2_-1"},"id":"cell_1_-2_-1","name":"dark cave","props": [],"theme":"cavern","type":"outdoor"},  {"desc":"You find yourself in a ancient thicket.","exits": {"down":"cell_0_-2_0","east":"cell_1_-2_1","north":"cell_0_-1_1","south":"cell_0_-3_1","up":"cell_0_-2_2","west":"cell_-1_-2_1"},"id":"cell_0_-2_1","name":"ancient thicket","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a ancient meadow.","exits": {"down":"cell_6_1_1","east":"cell_7_1_2","north":"cell_6_2_2","south":"cell_6_0_2","up":"cell_6_1_3","west":"cell_5_1_2"},"id":"cell_6_1_2","name":"ancient meadow","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a overgrown thicket.","exits": {"down":"cell_0_2_1","east":"cell_1_2_2","north":"cell_0_3_2","south":"cell_0_1_2","up":"cell_0_2_3","west":"cell_-1_2_2"},"id":"cell_0_2_2","name":"overgrown thicket","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a overgrown thicket.","exits": {"down":"cell_3_2_2","east":"cell_4_2_3","north":"cell_3_3_3","south":"cell_3_1_3","up":"cell_3_2_4","west":"cell_2_2_3"},"id":"cell_3_2_3","name":"overgrown thicket","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a overgrown thicket.","exits": {"down":"cell_-2_3_-1","east":"cell_-1_3_0","north":"cell_-2_4_0","south":"cell_-2_2_0","up":"cell_-2_3_1","west":"cell_-3_3_0"},"id":"cell_-2_3_0","name":"overgrown thicket","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a ancient thicket.","exits": {"down":"cell_-2_2_-1","east":"cell_-1_2_0","north":"cell_-2_3_0","south":"cell_-2_1_0","up":"cell_-2_2_1","west":"cell_-3_2_0"},"id":"cell_-2_2_0","name":"ancient thicket","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a overgrown meadow.","exits": {"down":"cell_6_2_1","east":"cell_7_2_2","north":"cell_6_3_2","south":"cell_6_1_2","up":"cell_6_2_3","west":"cell_5_2_2"},"id":"cell_6_2_2","name":"overgrown meadow","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a sunlit clearing.","exits": {"down":"cell_6_0_1","east":"cell_7_0_2","north":"cell_6_1_2","south":"cell_6_-1_2","up":"cell_6_0_3","west":"cell_5_0_2"},"id":"cell_6_0_2","name":"sunlit clearing","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a sunlit thicket.","exits": {"down":"cell_1_1_1","east":"cell_2_1_2","north":"cell_1_2_2","south":"cell_1_0_2","up":"cell_1_1_3","west":"cell_0_1_2"},"id":"cell_1_1_2","name":"sunlit thicket","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a shadowy clearing.","exits": {"down":"cell_4_1_1","east":"cell_5_1_2","north":"cell_4_2_2","south":"cell_4_0_2","up":"cell_4_1_3","west":"cell_3_1_2"},"id":"cell_4_1_2","name":"shadowy clearing","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a echoing chasm.","exits": {"down":"cell_2_0_-3","east":"cell_3_0_-2","north":"cell_2_1_-2","south":"cell_2_-1_-2","up":"cell_2_0_-1","west":"cell_1_0_-2"},"id":"cell_2_0_-2","name":"echoing chasm","props": [],"theme":"cavern","type":"outdoor"},  {"desc":"You find yourself in a ancient ridge.","exits": {"down":"cell_6_0_2","east":"cell_7_0_3","north":"cell_6_1_3","south":"cell_6_-1_3","up":"cell_6_0_4","west":"cell_5_0_3"},"id":"cell_6_0_3","name":"ancient ridge","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a sunlit meadow.","exits": {"down":"cell_1_1_2","east":"cell_2_1_3","north":"cell_1_2_3","south":"cell_1_0_3","up":"cell_1_1_4","west":"cell_0_1_3"},"id":"cell_1_1_3","name":"sunlit meadow","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a overgrown clearing.","exits": {"down":"cell_-1_-2_1","east":"cell_0_-2_2","north":"cell_-1_-1_2","south":"cell_-1_-3_2","up":"cell_-1_-2_3","west":"cell_-2_-2_2"},"id":"cell_-1_-2_2","name":"overgrown clearing","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a dark chasm.","exits": {"down":"cell_1_0_-3","east":"cell_2_0_-2","north":"cell_1_1_-2","south":"cell_1_-1_-2","up":"cell_1_0_-1","west":"cell_0_0_-2"},"id":"cell_1_0_-2","name":"dark chasm","props": [],"theme":"cavern","type":"outdoor"},  {"desc":"You find yourself in a sunlit ridge.","exits": {"down":"cell_3_-5_0","east":"cell_4_-5_1","north":"cell_3_-4_1","south":"cell_3_-6_1","up":"cell_3_-5_2","west":"cell_2_-5_1"},"id":"cell_3_-5_1","name":"sunlit ridge","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a sunlit grove.","exits": {"down":"cell_6_2_2","east":"cell_7_2_3","north":"cell_6_3_3","south":"cell_6_1_3","up":"cell_6_2_4","west":"cell_5_2_3"},"id":"cell_6_2_3","name":"sunlit grove","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a overgrown thicket.","exits": {"down":"cell_4_0_1","east":"cell_5_0_2","north":"cell_4_1_2","south":"cell_4_-1_2","up":"cell_4_0_3","west":"cell_3_0_2"},"id":"cell_4_0_2","name":"overgrown thicket","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a dark tunnel.","exits": {"down":"cell_2_0_-4","east":"cell_3_0_-3","north":"cell_2_1_-3","south":"cell_2_-1_-3","up":"cell_2_0_-2","west":"cell_1_0_-3"},"id":"cell_2_0_-3","name":"dark tunnel","props": [],"theme":"cavern","type":"outdoor"},  {"desc":"You find yourself in a shadowy clearing.","exits": {"down":"cell_5_0_2","east":"cell_6_0_3","north":"cell_5_1_3","south":"cell_5_-1_3","up":"cell_5_0_4","west":"cell_4_0_3"},"id":"cell_5_0_3","name":"shadowy clearing","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a overgrown grove.","exits": {"down":"cell_2_-2_1","east":"cell_3_-2_2","north":"cell_2_-1_2","south":"cell_2_-3_2","up":"cell_2_-2_3","west":"cell_1_-2_2"},"id":"cell_2_-2_2","name":"overgrown grove","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a ancient ridge.","exits": {"down":"cell_0_1_2","east":"cell_1_1_3","north":"cell_0_2_3","south":"cell_0_0_3","up":"cell_0_1_4","west":"cell_-1_1_3"},"id":"cell_0_1_3","name":"ancient ridge","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a echoing cave.","exits": {"down":"cell_1_-3_-2","east":"cell_2_-3_-1","north":"cell_1_-2_-1","south":"cell_1_-4_-1","up":"cell_1_-3_0","west":"cell_0_-3_-1"},"id":"cell_1_-3_-1","name":"echoing cave","props": [],"theme":"cavern","type":"outdoor"},  {"desc":"You find yourself in a ancient ridge.","exits": {"down":"cell_1_0_1","east":"cell_2_0_2","north":"cell_1_1_2","south":"cell_1_-1_2","up":"cell_1_0_3","west":"cell_0_0_2"},"id":"cell_1_0_2","name":"ancient ridge","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a sunlit grove.","exits": {"down":"cell_1_3_0","east":"cell_2_3_1","north":"cell_1_4_1","south":"cell_1_2_1","up":"cell_1_3_2","west":"cell_0_3_1"},"id":"cell_1_3_1","name":"sunlit grove","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a overgrown thicket.","exits": {"down":"cell_-2_2_0","east":"cell_-1_2_1","north":"cell_-2_3_1","south":"cell_-2_1_1","up":"cell_-2_2_2","west":"cell_-3_2_1"},"id":"cell_-2_2_1","name":"overgrown thicket","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a damp cave.","exits": {"down":"cell_1_0_-2","east":"cell_2_0_-1","north":"cell_1_1_-1","south":"cell_1_-1_-1","up":"cell_1_0_0","west":"cell_0_0_-1"},"id":"cell_1_0_-1","name":"damp cave","props": [],"theme":"cavern","type":"outdoor"},  {"desc":"You find yourself in a misty thicket.","exits": {"down":"cell_-2_1_-1","east":"cell_-1_1_0","north":"cell_-2_2_0","south":"cell_-2_0_0","up":"cell_-2_1_1","west":"cell_-3_1_0"},"id":"cell_-2_1_0","name":"misty thicket","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a overgrown meadow.","exits": {"down":"cell_3_1_2","east":"cell_4_1_3","north":"cell_3_2_3","south":"cell_3_0_3","up":"cell_3_1_4","west":"cell_2_1_3"},"id":"cell_3_1_3","name":"overgrown meadow","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a shadowy grove.","exits": {"down":"cell_5_-1_2","east":"cell_6_-1_3","north":"cell_5_0_3","south":"cell_5_-2_3","up":"cell_5_-1_4","west":"cell_4_-1_3"},"id":"cell_5_-1_3","name":"shadowy grove","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a damp cave.","exits": {"down":"cell_3_0_-4","east":"cell_4_0_-3","north":"cell_3_1_-3","south":"cell_3_-1_-3","up":"cell_3_0_-2","west":"cell_2_0_-3"},"id":"cell_3_0_-3","name":"damp cave","props": [],"theme":"cavern","type":"outdoor"},  {"desc":"You find yourself in a sunlit meadow.","exits": {"down":"cell_-3_1_-1","east":"cell_-2_1_0","north":"cell_-3_2_0","south":"cell_-3_0_0","up":"cell_-3_1_1","west":"cell_-4_1_0"},"id":"cell_-3_1_0","name":"sunlit meadow","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a shadowy ridge.","exits": {"down":"cell_3_-3_-1","east":"cell_4_-3_0","north":"cell_3_-2_0","south":"cell_3_-4_0","up":"cell_3_-3_1","west":"cell_2_-3_0"},"id":"cell_3_-3_0","name":"shadowy ridge","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a shadowy clearing.","exits": {"down":"cell_7_0_2","east":"cell_8_0_3","north":"cell_7_1_3","south":"cell_7_-1_3","up":"cell_7_0_4","west":"cell_6_0_3"},"id":"cell_7_0_3","name":"shadowy clearing","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a misty meadow.","exits": {"down":"cell_-1_-3_1","east":"cell_0_-3_2","north":"cell_-1_-2_2","south":"cell_-1_-4_2","up":"cell_-1_-3_3","west":"cell_-2_-3_2"},"id":"cell_-1_-3_2","name":"misty meadow","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a sunlit meadow.","exits": {"down":"cell_4_0_2","east":"cell_5_0_3","north":"cell_4_1_3","south":"cell_4_-1_3","up":"cell_4_0_4","west":"cell_3_0_3"},"id":"cell_4_0_3","name":"sunlit meadow","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a damp tunnel.","exits": {"down":"cell_2_-1_-4","east":"cell_3_-1_-3","north":"cell_2_0_-3","south":"cell_2_-2_-3","up":"cell_2_-1_-2","west":"cell_1_-1_-3"},"id":"cell_2_-1_-3","name":"damp tunnel","props": [],"theme":"cavern","type":"outdoor"},  {"desc":"You find yourself in a overgrown thicket.","exits": {"down":"cell_0_1_1","east":"cell_1_1_2","north":"cell_0_2_2","south":"cell_0_0_2","up":"cell_0_1_3","west":"cell_-1_1_2"},"id":"cell_0_1_2","name":"overgrown thicket","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a shadowy grove.","exits": {"down":"cell_-1_-2_3","east":"cell_0_-2_4","north":"cell_-1_-1_4","south":"cell_-1_-3_4","up":"cell_-1_-2_5","west":"cell_-2_-2_4"},"id":"cell_-1_-2_4","name":"shadowy grove","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a sunlit thicket.","exits": {"down":"cell_2_-3_2","east":"cell_3_-3_3","north":"cell_2_-2_3","south":"cell_2_-4_3","up":"cell_2_-3_4","west":"cell_1_-3_3"},"id":"cell_2_-3_3","name":"sunlit thicket","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a misty clearing.","exits": {"down":"cell_5_-1_3","east":"cell_6_-1_4","north":"cell_5_0_4","south":"cell_5_-2_4","up":"cell_5_-1_5","west":"cell_4_-1_4"},"id":"cell_5_-1_4","name":"misty clearing","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a misty thicket.","exits": {"down":"cell_1_1_-1","east":"cell_2_1_0","north":"cell_1_2_0","south":"cell_1_0_0","up":"cell_1_1_1","west":"cell_0_1_0"},"id":"cell_1_1_0","name":"misty thicket","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a ancient meadow.","exits": {"down":"cell_2_3_0","east":"cell_3_3_1","north":"cell_2_4_1","south":"cell_2_2_1","up":"cell_2_3_2","west":"cell_1_3_1"},"id":"cell_2_3_1","name":"ancient meadow","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a misty thicket.","exits": {"down":"cell_2_1_2","east":"cell_3_1_3","north":"cell_2_2_3","south":"cell_2_0_3","up":"cell_2_1_4","west":"cell_1_1_3"},"id":"cell_2_1_3","name":"misty thicket","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a sunlit clearing.","exits": {"down":"cell_6_-1_2","east":"cell_7_-1_3","north":"cell_6_0_3","south":"cell_6_-2_3","up":"cell_6_-1_4","west":"cell_5_-1_3"},"id":"cell_6_-1_3","name":"sunlit clearing","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a damp tunnel.","exits": {"down":"cell_1_-1_-4","east":"cell_2_-1_-3","north":"cell_1_0_-3","south":"cell_1_-2_-3","up":"cell_1_-1_-2","west":"cell_0_-1_-3"},"id":"cell_1_-1_-3","name":"damp tunnel","props": [],"theme":"cavern","type":"outdoor"},  {"desc":"You find yourself in a shadowy clearing.","exits": {"down":"cell_5_0_3","east":"cell_6_0_4","north":"cell_5_1_4","south":"cell_5_-1_4","up":"cell_5_0_5","west":"cell_4_0_4"},"id":"cell_5_0_4","name":"shadowy clearing","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a damp chasm.","exits": {"down":"cell_1_-3_-3","east":"cell_2_-3_-2","north":"cell_1_-2_-2","south":"cell_1_-4_-2","up":"cell_1_-3_-1","west":"cell_0_-3_-2"},"id":"cell_1_-3_-2","name":"damp chasm","props": [],"theme":"cavern","type":"outdoor"},  {"desc":"You find yourself in a dark cave.","exits": {"down":"cell_1_0_-4","east":"cell_2_0_-3","north":"cell_1_1_-3","south":"cell_1_-1_-3","up":"cell_1_0_-2","west":"cell_0_0_-3"},"id":"cell_1_0_-3","name":"dark cave","props": [],"theme":"cavern","type":"outdoor"},  {"desc":"You find yourself in a sunlit clearing.","exits": {"down":"cell_7_-1_2","east":"cell_8_-1_3","north":"cell_7_0_3","south":"cell_7_-2_3","up":"cell_7_-1_4","west":"cell_6_-1_3"},"id":"cell_7_-1_3","name":"sunlit clearing","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a overgrown meadow.","exits": {"down":"cell_5_0_4","east":"cell_6_0_5","north":"cell_5_1_5","south":"cell_5_-1_5","west":"cell_4_0_5"},"id":"cell_5_0_5","name":"overgrown meadow","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a sunlit ridge.","exits": {"down":"cell_5_2_2","east":"cell_6_2_3","north":"cell_5_3_3","south":"cell_5_1_3","up":"cell_5_2_4","west":"cell_4_2_3"},"id":"cell_5_2_3","name":"sunlit ridge","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a overgrown ridge.","exits": {"down":"cell_4_0_3","east":"cell_5_0_4","north":"cell_4_1_4","south":"cell_4_-1_4","up":"cell_4_0_5","west":"cell_3_0_4"},"id":"cell_4_0_4","name":"overgrown ridge","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a overgrown grove.","exits": {"down":"cell_2_-3_3","east":"cell_3_-3_4","north":"cell_2_-2_4","south":"cell_2_-4_4","up":"cell_2_-3_5","west":"cell_1_-3_4"},"id":"cell_2_-3_4","name":"overgrown grove","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a misty thicket.","exits": {"down":"cell_2_1_3","east":"cell_3_1_4","north":"cell_2_2_4","south":"cell_2_0_4","up":"cell_2_1_5","west":"cell_1_1_4"},"id":"cell_2_1_4","name":"misty thicket","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a shadowy clearing.","exits": {"down":"cell_2_0_2","east":"cell_3_0_3","north":"cell_2_1_3","south":"cell_2_-1_3","up":"cell_2_0_4","west":"cell_1_0_3"},"id":"cell_2_0_3","name":"shadowy clearing","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a damp cave.","exits": {"down":"cell_2_-3_-3","east":"cell_3_-3_-2","north":"cell_2_-2_-2","south":"cell_2_-4_-2","up":"cell_2_-3_-1","west":"cell_1_-3_-2"},"id":"cell_2_-3_-2","name":"damp cave","props": [],"theme":"cavern","type":"outdoor"},  {"desc":"You find yourself in a ancient grove.","exits": {"down":"cell_8_-1_2","east":"cell_9_-1_3","north":"cell_8_0_3","south":"cell_8_-2_3","up":"cell_8_-1_4","west":"cell_7_-1_3"},"id":"cell_8_-1_3","name":"ancient grove","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a damp tunnel.","exits": {"down":"cell_2_-2_-2","east":"cell_3_-2_-1","north":"cell_2_-1_-1","south":"cell_2_-3_-1","up":"cell_2_-2_0","west":"cell_1_-2_-1"},"id":"cell_2_-2_-1","name":"damp tunnel","props": [],"theme":"cavern","type":"outdoor"},  {"desc":"You find yourself in a ancient meadow.","exits": {"down":"cell_4_-4_0","east":"cell_5_-4_1","north":"cell_4_-3_1","south":"cell_4_-5_1","up":"cell_4_-4_2","west":"cell_3_-4_1"},"id":"cell_4_-4_1","name":"ancient meadow","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a ancient clearing.","exits": {"down":"cell_-3_0_-1","east":"cell_-2_0_0","north":"cell_-3_1_0","south":"cell_-3_-1_0","up":"cell_-3_0_1","west":"cell_-4_0_0"},"id":"cell_-3_0_0","name":"ancient clearing","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a ancient grove.","exits": {"down":"cell_-1_2_1","east":"cell_0_2_2","north":"cell_-1_3_2","south":"cell_-1_1_2","up":"cell_-1_2_3","west":"cell_-2_2_2"},"id":"cell_-1_2_2","name":"ancient grove","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a sunlit ridge.","exits": {"down":"cell_2_-2_2","east":"cell_3_-2_3","north":"cell_2_-1_3","south":"cell_2_-3_3","up":"cell_2_-2_4","west":"cell_1_-2_3"},"id":"cell_2_-2_3","name":"sunlit ridge","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a misty ridge.","exits": {"down":"cell_4_-1_3","east":"cell_5_-1_4","north":"cell_4_0_4","south":"cell_4_-2_4","up":"cell_4_-1_5","west":"cell_3_-1_4"},"id":"cell_4_-1_4","name":"misty ridge","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a misty meadow.","exits": {"down":"cell_3_-2_-1","east":"cell_4_-2_0","north":"cell_3_-1_0","south":"cell_3_-3_0","up":"cell_3_-2_1","west":"cell_2_-2_0"},"id":"cell_3_-2_0","name":"misty meadow","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a misty clearing.","exits": {"down":"cell_0_-3_1","east":"cell_1_-3_2","north":"cell_0_-2_2","south":"cell_0_-4_2","up":"cell_0_-3_3","west":"cell_-1_-3_2"},"id":"cell_0_-3_2","name":"misty clearing","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a shadowy clearing.","exits": {"down":"cell_-1_-3_3","east":"cell_0_-3_4","north":"cell_-1_-2_4","south":"cell_-1_-4_4","up":"cell_-1_-3_5","west":"cell_-2_-3_4"},"id":"cell_-1_-3_4","name":"shadowy clearing","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a ancient thicket.","exits": {"down":"cell_2_3_-1","east":"cell_3_3_0","north":"cell_2_4_0","south":"cell_2_2_0","up":"cell_2_3_1","west":"cell_1_3_0"},"id":"cell_2_3_0","name":"ancient thicket","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a ancient thicket.","exits": {"down":"cell_-1_-1_0","east":"cell_0_-1_1","north":"cell_-1_0_1","south":"cell_-1_-2_1","up":"cell_-1_-1_2","west":"cell_-2_-1_1"},"id":"cell_-1_-1_1","name":"ancient thicket","props": [],"theme":"wild","type":"outdoor"},  {"desc":"You find yourself in a sunlit thicket.","exits": {"down":"cell_0_2_0","east":"cell_1_2_1","north":"cell_0_3_1","south":"cell_0_1_1","up":"cell_0_2_2","west":"cell_-1_2_1"},"id":"cell_0_2_1","name":"sunlit thicket","props": [],"theme":"wild","type":"outdoor"} ]}
+{
+   "entities":[
+      {
+         "id":"item_9780691",
+         "name":"shortbow",
+         "qty":1,
+         "race":"human",
+         "room":"room_1651147",
+         "tag":"shortbow",
+         "tier":2
+      },
+      {
+         "id":"item_4590077",
+         "name":"tunic",
+         "qty":1,
+         "race":"human",
+         "room":"room_2531271",
+         "tag":"tunic",
+         "tier":3
+      },
+      {
+         "id":"item_6482193",
+         "name":"shortbow",
+         "qty":1,
+         "race":"human",
+         "room":"room_2531271",
+         "tag":"shortbow",
+         "tier":2
+      },
+      {
+         "id":"item_7383460",
+         "name":"rags",
+         "qty":1,
+         "race":"human",
+         "room":"room_3056879",
+         "tag":"rags",
+         "tier":1
+      },
+      {
+         "id":"item_8639888",
+         "name":"leather_vest",
+         "qty":1,
+         "race":"human",
+         "room":"room_3056879",
+         "tag":"leather_vest",
+         "tier":4
+      },
+      {
+         "id":"item_3104580",
+         "name":"plate_mail",
+         "qty":1,
+         "race":"human",
+         "room":"room_3490646",
+         "tag":"plate_mail",
+         "tier":3
+      },
+      {
+         "id":"item_4532788",
+         "name":"shortbow",
+         "qty":1,
+         "race":"human",
+         "room":"room_3490646",
+         "tag":"shortbow",
+         "tier":2
+      },
+      {
+         "id":"item_2943559",
+         "name":"tunic",
+         "qty":1,
+         "race":"human",
+         "room":"room_6931352",
+         "tag":"tunic",
+         "tier":1
+      },
+      {
+         "id":"item_2997072",
+         "name":"ring",
+         "qty":1,
+         "race":"human",
+         "room":"room_6434190",
+         "tag":"ring",
+         "tier":1
+      },
+      {
+         "id":"item_3566695",
+         "name":"rags",
+         "qty":1,
+         "race":"human",
+         "room":"room_6434190",
+         "tag":"rags",
+         "tier":1
+      },
+      {
+         "id":"item_2691216",
+         "name":"chainmail",
+         "qty":1,
+         "race":"human",
+         "room":"room_9803060",
+         "tag":"chainmail",
+         "tier":1
+      },
+      {
+         "id":"item_8905100",
+         "name":"sword",
+         "qty":1,
+         "race":"human",
+         "room":"room_9803060",
+         "tag":"sword",
+         "tier":2
+      },
+      {
+         "id":"item_4239894",
+         "name":"tunic",
+         "qty":1,
+         "race":"human",
+         "room":"room_3219034",
+         "tag":"tunic",
+         "tier":2
+      },
+      {
+         "id":"item_7813338",
+         "name":"plate_mail",
+         "qty":1,
+         "race":"human",
+         "room":"room_3219034",
+         "tag":"plate_mail",
+         "tier":4
+      },
+      {
+         "id":"drop_2737868",
+         "qty":1,
+         "race":"human",
+         "room":"cell_2_4_0",
+         "tag":"meat"
+      },
+      {
+         "id":"drop_4645935",
+         "qty":1,
+         "race":"human",
+         "room":"cell_2_5_0",
+         "tag":"meat"
+      },
+      {
+         "id":"drop_3538038",
+         "qty":4,
+         "race":"human",
+         "room":"cell_2_6_0",
+         "tag":"gold"
+      },
+      {
+         "id":"drop_9987580",
+         "qty":1,
+         "race":"human",
+         "room":"cell_2_6_0",
+         "tag":"meat"
+      },
+      {
+         "id":"drop_3985216",
+         "qty":2,
+         "race":"human",
+         "room":"cell_2_10_0",
+         "tag":"meat"
+      },
+      {
+         "id":"drop_1532388",
+         "qty":3,
+         "race":"human",
+         "room":"cell_4_10_0",
+         "tag":"gold"
+      },
+      {
+         "id":"drop_4142280",
+         "qty":1,
+         "race":"human",
+         "room":"cell_4_10_0",
+         "tag":"meat"
+      },
+      {
+         "cds":{
+            "combat":3
+         },
+         "dex":10,
+         "hp":20,
+         "id":"mob_5728713",
+         "int":10,
+         "lvl":1,
+         "max_hp":20,
+         "name":"Frost Devourer",
+         "race":"human",
+         "room":"cell_0_10_0",
+         "str":10,
+         "tag":"wolf"
+      },
+      {
+         "act_state":"wander",
+         "cha":18,
+         "con":12,
+         "dex":12,
+         "equip":{
+            "body":"tunic",
+            "shield":"none",
+            "wpn":"dagger"
+         },
+         "fac":"merchant",
+         "home":"tavern",
+         "hp":60,
+         "id":"merchant_silvia",
+         "int":14,
+         "inv":[
+            {
+               "qty":500,
+               "tag":"gold"
+            },
+            {
+               "qty":10,
+               "tag":"bread"
+            },
+            {
+               "qty":10,
+               "tag":"apple"
+            },
+            {
+               "qty":5,
+               "tag":"empty_waterskin"
+            },
+            {
+               "qty":2,
+               "tag":"flint_and_steel"
+            },
+            {
+               "qty":2,
+               "tag":"whetstone"
+            }
+         ],
+         "job":"merchant",
+         "luk":15,
+         "lvl":5,
+         "max_hp":60,
+         "max_mp":40,
+         "mems":{
+
+         },
+         "mp":40,
+         "name":"Silvia the Merchant",
+         "props":[
+            "merchant"
+         ],
+         "race":"human",
+         "room":"square",
+         "str":10,
+         "tag":"merchant",
+         "threats":{
+
+         },
+         "wander":false,
+         "wis":15,
+         "work":"square"
+      },
+      {
+         "dex":10,
+         "hp":20,
+         "id":"mob_9262466",
+         "int":10,
+         "lvl":1,
+         "max_hp":20,
+         "name":"Rabid Crawler",
+         "race":"human",
+         "room":"cell_0_9_0",
+         "str":10,
+         "tag":"wolf"
+      },
+      {
+         "dex":120,
+         "hp":540,
+         "id":"mob_3633579",
+         "int":120,
+         "lvl":25,
+         "max_hp":540,
+         "name":"elite rock_worm",
+         "props":[
+            {
+               "prop":"elite",
+               "val":1.0
+            }
+         ],
+         "race":"human",
+         "room":"room_9803060",
+         "str":120,
+         "tag":"rock_worm"
+      },
+      {
+         "dex":16,
+         "hp":50,
+         "id":"mob_4532149",
+         "int":16,
+         "lvl":3,
+         "max_hp":50,
+         "name":"iron_golem",
+         "props":[
+
+         ],
+         "race":"human",
+         "room":"room_3535947",
+         "str":16,
+         "tag":"iron_golem"
+      },
+      {
+         "dex":120,
+         "hp":540,
+         "id":"mob_1686286",
+         "int":120,
+         "lvl":25,
+         "max_hp":540,
+         "name":"elite salamander",
+         "props":[
+            {
+               "prop":"elite",
+               "val":1.0
+            }
+         ],
+         "race":"human",
+         "room":"room_9803060",
+         "str":120,
+         "tag":"salamander"
+      },
+      {
+         "dex":30,
+         "hp":120,
+         "id":"mob_5696523",
+         "int":30,
+         "lvl":10,
+         "max_hp":120,
+         "name":"skeleton",
+         "props":[
+
+         ],
+         "race":"human",
+         "room":"room_7611917",
+         "str":30,
+         "tag":"skeleton"
+      },
+      {
+         "dex":30,
+         "hp":120,
+         "id":"mob_5734457",
+         "int":30,
+         "lvl":10,
+         "max_hp":120,
+         "name":"zombie",
+         "props":[
+
+         ],
+         "race":"human",
+         "room":"room_6721017",
+         "str":30,
+         "tag":"zombie"
+      },
+      {
+         "dex":60,
+         "hp":270,
+         "id":"mob_7194868",
+         "int":60,
+         "lvl":25,
+         "max_hp":270,
+         "name":"salamander",
+         "props":[
+
+         ],
+         "race":"human",
+         "room":"room_9233700",
+         "str":60,
+         "tag":"salamander"
+      },
+      {
+         "id":"drop_8841706",
+         "qty":1,
+         "race":"human",
+         "room":"square",
+         "tag":"dagger"
+      },
+      {
+         "cds":{
+            "combat":3
+         },
+         "cha":35,
+         "con":50,
+         "dex":45,
+         "equip":{
+            "body":"chainmail",
+            "shield":"iron_shield",
+            "wpn":"iron_sword"
+         },
+         "fac":"guard",
+         "hp":300,
+         "id":"guard_nycolas",
+         "int":25,
+         "luk":20,
+         "lvl":40,
+         "max_hp":300,
+         "max_mp":30,
+         "mems":{
+
+         },
+         "mp":30,
+         "name":"Guard Nycolas",
+         "props":[
+            "protector"
+         ],
+         "race":"human",
+         "room":"farm_field",
+         "route":[
+            "square",
+            "barracks",
+            "prison"
+         ],
+         "route_idx":0,
+         "str":50,
+         "tag":"guard",
+         "threats":{
+
+         },
+         "wander":false,
+         "wis":25
+      },
+      {
+         "dex":60,
+         "hp":270,
+         "id":"mob_8652192",
+         "int":60,
+         "lvl":25,
+         "max_hp":270,
+         "name":"rock_worm",
+         "props":[
+
+         ],
+         "race":"human",
+         "room":"room_9233700",
+         "str":60,
+         "tag":"rock_worm"
+      },
+      {
+         "cds":{
+            "combat":3
+         },
+         "dex":15,
+         "equip":{
+            "body":"chainmail",
+            "shield":"wooden_shield",
+            "wpn":"iron_sword"
+         },
+         "fac":"guard",
+         "hp":100,
+         "id":"guard_8535947",
+         "int":10,
+         "lvl":5,
+         "max_hp":100,
+         "name":"Guard Kim Ravenscroft",
+         "props":[
+            "protector"
+         ],
+         "race":"human",
+         "room":"farm_field",
+         "str":18,
+         "tag":"guard"
+      },
+      {
+         "dex":120,
+         "hp":540,
+         "id":"mob_1426806",
+         "int":120,
+         "lvl":25,
+         "max_hp":540,
+         "name":"elite salamander",
+         "props":[
+            {
+               "prop":"elite",
+               "val":1.0
+            }
+         ],
+         "race":"human",
+         "room":"room_7653460",
+         "str":120,
+         "tag":"salamander"
+      },
+      {
+         "dex":120,
+         "hp":720,
+         "id":"mob_1230580",
+         "int":120,
+         "lvl":10,
+         "max_hp":720,
+         "name":"wraith  boss",
+         "props":[
+            {
+               "prop":"boss",
+               "val":1.0
+            }
+         ],
+         "race":"human",
+         "room":"room_6721017",
+         "str":120,
+         "tag":"wraith"
+      },
+      {
+         "dex":60,
+         "hp":270,
+         "id":"mob_2443200",
+         "int":60,
+         "lvl":25,
+         "max_hp":270,
+         "name":"rock_worm",
+         "props":[
+
+         ],
+         "race":"human",
+         "room":"room_7653460",
+         "str":60,
+         "tag":"rock_worm"
+      },
+      {
+         "dex":60,
+         "hp":240,
+         "id":"mob_3511857",
+         "int":60,
+         "lvl":10,
+         "max_hp":240,
+         "name":"elite goblin",
+         "props":[
+            {
+               "prop":"elite",
+               "val":1.0
+            }
+         ],
+         "race":"human",
+         "room":"room_8299491",
+         "str":60,
+         "tag":"goblin"
+      },
+      {
+         "dex":60,
+         "hp":270,
+         "id":"mob_8285197",
+         "int":60,
+         "lvl":25,
+         "max_hp":270,
+         "name":"salamander",
+         "props":[
+
+         ],
+         "race":"human",
+         "room":"room_9803060",
+         "str":60,
+         "tag":"salamander"
+      },
+      {
+         "dex":60,
+         "hp":270,
+         "id":"mob_4526262",
+         "int":60,
+         "lvl":25,
+         "max_hp":270,
+         "name":"salamander",
+         "props":[
+
+         ],
+         "race":"human",
+         "room":"room_9233700",
+         "str":60,
+         "tag":"salamander"
+      },
+      {
+         "act_state":"wander",
+         "cha":10,
+         "con":14,
+         "dex":10,
+         "equip":{
+            "body":"tunic",
+            "shield":"none",
+            "wpn":"fists"
+         },
+         "fac":"citizen",
+         "home":"tavern",
+         "hp":30,
+         "id":"peasant_bob",
+         "int":8,
+         "inv":[
+            {
+               "qty":3,
+               "tag":"wheat_seed"
+            },
+            {
+               "qty":2,
+               "tag":"bread"
+            }
+         ],
+         "job":"peasant",
+         "luk":12,
+         "lvl":1,
+         "max_hp":30,
+         "max_mp":10,
+         "mems":{
+
+         },
+         "mp":10,
+         "name":"Bob the Farmer",
+         "props":[
+
+         ],
+         "race":"human",
+         "room":"temple",
+         "str":12,
+         "tag":"peasant",
+         "threats":{
+
+         },
+         "wander":true,
+         "wis":10,
+         "work":"farm_field"
+      },
+      {
+         "admin":true,
+         "bounty":0,
+         "cds":{
+
+         },
+         "cha":600,
+         "class":"fighter",
+         "con":1000,
+         "dex":2000,
+         "equip":{
+            "body":"none",
+            "shield":"none",
+            "wpn":"fists"
+         },
+         "hp":5135,
+         "id":"walt",
+         "int":1935,
+         "inv":[
+            {
+               "qty":135,
+               "tag":"gold"
+            },
+            {
+               "qty":1,
+               "tag":"hoe"
+            },
+            {
+               "qty":1,
+               "tag":"flint_and_steel"
+            },
+            {
+               "qty":1,
+               "tag":"fishing_pole"
+            },
+            {
+               "qty":1,
+               "tag":"empty_waterskin"
+            },
+            {
+               "qty":1,
+               "tag":"dagger"
+            },
+            {
+               "qty":6,
+               "tag":"meat"
+            }
+         ],
+         "luk":1600,
+         "lvl":2,
+         "max_hp":5135,
+         "max_mp":9775,
+         "mp":9775,
+         "pass_hash":"483056d12396154a932f6c29cb34dc15",
+         "race":"angel",
+         "room":"square",
+         "stat_points":3,
+         "str":1000,
+         "tag":"player",
+         "wis":1935,
+         "xp":160
+      },
+      {
+         "dex":120,
+         "hp":540,
+         "id":"mob_2380200",
+         "int":120,
+         "lvl":25,
+         "max_hp":540,
+         "name":"elite salamander",
+         "props":[
+            {
+               "prop":"elite",
+               "val":1.0
+            }
+         ],
+         "race":"human",
+         "room":"room_9233700",
+         "str":120,
+         "tag":"salamander"
+      },
+      {
+         "dex":32,
+         "hp":100,
+         "id":"mob_7770697",
+         "int":32,
+         "lvl":3,
+         "max_hp":100,
+         "name":"elite iron_golem",
+         "props":[
+            {
+               "prop":"elite",
+               "val":1.0
+            }
+         ],
+         "race":"human",
+         "room":"room_3171639",
+         "str":32,
+         "tag":"iron_golem"
+      },
+      {
+         "dex":30,
+         "hp":120,
+         "id":"mob_7449353",
+         "int":30,
+         "lvl":10,
+         "max_hp":120,
+         "name":"goblin",
+         "props":[
+
+         ],
+         "race":"human",
+         "room":"room_6434190",
+         "str":30,
+         "tag":"goblin"
+      },
+      {
+         "dex":30,
+         "hp":120,
+         "id":"mob_9406220",
+         "int":30,
+         "lvl":10,
+         "max_hp":120,
+         "name":"goblin",
+         "props":[
+
+         ],
+         "race":"human",
+         "room":"room_8299491",
+         "str":30,
+         "tag":"goblin"
+      },
+      {
+         "dex":120,
+         "hp":540,
+         "id":"mob_9340440",
+         "int":120,
+         "lvl":25,
+         "max_hp":540,
+         "name":"elite rock_worm",
+         "props":[
+            {
+               "prop":"elite",
+               "val":1.0
+            }
+         ],
+         "race":"human",
+         "room":"room_9233700",
+         "str":120,
+         "tag":"rock_worm"
+      },
+      {
+         "dex":30,
+         "hp":120,
+         "id":"mob_6601052",
+         "int":30,
+         "lvl":10,
+         "max_hp":120,
+         "name":"goblin",
+         "props":[
+
+         ],
+         "race":"human",
+         "room":"room_6721017",
+         "str":30,
+         "tag":"goblin"
+      },
+      {
+         "cds":{
+            "combat":3
+         },
+         "dex":15,
+         "equip":{
+            "body":"chainmail",
+            "shield":"wooden_shield",
+            "wpn":"iron_sword"
+         },
+         "fac":"guard",
+         "hp":100,
+         "id":"guard_2053846",
+         "int":10,
+         "lvl":5,
+         "max_hp":100,
+         "name":"Guard Aldus Blackwood",
+         "props":[
+            "protector"
+         ],
+         "race":"human",
+         "room":"square",
+         "str":18,
+         "tag":"guard"
+      },
+      {
+         "bounty":0,
+         "cds":{
+            "combat":3
+         },
+         "dex":16,
+         "hp":0,
+         "id":"mob_9293799",
+         "int":16,
+         "lvl":3,
+         "max_hp":50,
+         "name":"giant_spider",
+         "props":[
+
+         ],
+         "race":"human",
+         "room":"square",
+         "str":16,
+         "tag":"giant_spider"
+      }
+   ],
+   "env":{
+      "time":370,
+      "weather":"rain"
+   },
+   "rooms":[
+      {
+         "desc":"The central town square. A cool mountain river rushes past a stone fountain here.",
+         "exits":{
+            "east":"barracks",
+            "farm":"farm_field",
+            "forest":"forest_trail",
+            "mountain":"mountain_trail",
+            "north":"tavern",
+            "south":"temple",
+            "west":"mine_entrance",
+            "wild":"cell_0_0_0"
+         },
+         "id":"square",
+         "props":[
+            "safe",
+            "landmark",
+            "square",
+            "river"
+         ],
+         "region":"shire",
+         "theme":"village",
+         "type":"outdoor"
+      },
+      {
+         "desc":"The Rusty Flagon. A rowdy tavern complete with comfortable beds, heavy oak chairs, and a baking oven.",
+         "exits":{
+            "south":"square",
+            "upstairs":"tavern_loft"
+         },
+         "furniture":{
+            "stool_1":{
+               "type":"chair",
+               "user":"none"
+            },
+            "stool_2":{
+               "type":"chair",
+               "user":"none"
+            }
+         },
+         "id":"tavern",
+         "props":[
+            "safe",
+            "oven",
+            "tavern"
+         ],
+         "region":"shire",
+         "theme":"village",
+         "type":"indoor"
+      },
+      {
+         "desc":"The quiet upper floor of the tavern. Soft straw beds line the walls under a wooden ceiling.",
+         "exits":{
+            "downstairs":"tavern"
+         },
+         "id":"tavern_loft",
+         "props":[
+            "safe",
+            "bed"
+         ],
+         "region":"shire",
+         "theme":"village",
+         "type":"indoor"
+      },
+      {
+         "desc":"Sanctuary of Light. A grand cathedral housing the resplendent Altar of Sol. The air is thick with holy incense.",
+         "exits":{
+            "crypt":"graveyard",
+            "north":"square"
+         },
+         "id":"temple",
+         "props":[
+            "safe",
+            "altar_of_sol",
+            "ritual_circle"
+         ],
+         "region":"shire",
+         "theme":"monastery",
+         "type":"indoor"
+      },
+      {
+         "breakables":{
+            "rack_1":{
+               "hp":20,
+               "type":"crate"
+            }
+         },
+         "desc":"The town guard barracks. Weapon racks, shield braces, and training dummies line the stone walls.",
+         "exits":{
+            "south":"prison",
+            "tower":"watchtower",
+            "west":"square"
+         },
+         "id":"barracks",
+         "props":[
+            "safe",
+            "training_dummy"
+         ],
+         "region":"shire",
+         "theme":"keep",
+         "type":"indoor"
+      },
+      {
+         "desc":"The high watchtower overlooking the shire. Banners flutter loudly in the strong wind.",
+         "exits":{
+            "down":"barracks"
+         },
+         "id":"watchtower",
+         "props":[
+            "safe",
+            "windy"
+         ],
+         "region":"shire",
+         "theme":"keep",
+         "type":"outdoor"
+      },
+      {
+         "desc":"The iron-barred dungeon. It is bleak, secure, and inescapable. Clangs of chains echo through the cells.",
+         "exits":{
+            "north":"barracks"
+         },
+         "id":"prison",
+         "props":[
+            "prison",
+            "dark"
+         ],
+         "region":"shire",
+         "theme":"prison",
+         "type":"indoor"
+      },
+      {
+         "desc":"A tilled farming field. Fertile soil stretches out in neat furrows under the open sky.",
+         "exits":{
+            "east":"orchard",
+            "south":"windmill",
+            "town":"square"
+         },
+         "id":"farm_field",
+         "props":[
+            "safe",
+            "tilled"
+         ],
+         "region":"shire",
+         "theme":"plains",
+         "type":"outdoor"
+      },
+      {
+         "desc":"A dense apple orchard. Sweet-smelling blossoms hang low from thick, sturdy branches.",
+         "exits":{
+            "west":"farm_field"
+         },
+         "id":"orchard",
+         "nodes":{
+            "apple_tree":{
+               "qty":5,
+               "tag":"oak_tree"
+            }
+         },
+         "props":[
+            "safe"
+         ],
+         "region":"shire",
+         "theme":"grove",
+         "type":"outdoor"
+      },
+      {
+         "desc":"A towering wooden windmill. Large stone gears creak endlessly as they grind wheat into flour.",
+         "exits":{
+            "north":"farm_field"
+         },
+         "id":"windmill",
+         "props":[
+            "safe"
+         ],
+         "region":"shire",
+         "theme":"village",
+         "type":"indoor"
+      },
+      {
+         "desc":"The dark, excavated entrance to an abandoned mine.",
+         "exits":{
+            "down":"room_7031611",
+            "east":"square"
+         },
+         "id":"mine_entrance",
+         "props":[
+
+         ],
+         "theme":"mine",
+         "type":"normal"
+      },
+      {
+         "desc":"abandoned shaft",
+         "exits":{
+            "up":"mine_entrance",
+            "west":"room_4016259"
+         },
+         "id":"room_7031611",
+         "lvl":3,
+         "name":"abandoned shaft",
+         "props":[
+
+         ],
+         "theme":"mine",
+         "type":"normal"
+      },
+      {
+         "desc":"collapsed lode",
+         "exits":{
+            "east":"room_7031611",
+            "west":"room_7811458"
+         },
+         "id":"room_4016259",
+         "lvl":3,
+         "name":"collapsed lode",
+         "nodes":{
+            "node_iron_vein_233304":{
+               "qty":3,
+               "tag":"iron_vein"
+            }
+         },
+         "props":[
+
+         ],
+         "theme":"mine",
+         "type":"normal"
+      },
+      {
+         "desc":"collapsed excavation_site",
+         "exits":{
+            "east":"room_4016259",
+            "west":"room_1384292"
+         },
+         "id":"room_7811458",
+         "lvl":3,
+         "name":"collapsed excavation_site",
+         "props":[
+
+         ],
+         "theme":"mine",
+         "type":"normal"
+      },
+      {
+         "desc":"collapsed lode",
+         "exits":{
+            "east":"room_7811458",
+            "up":"room_4717926"
+         },
+         "id":"room_1384292",
+         "lvl":3,
+         "name":"collapsed lode",
+         "nodes":{
+            "node_iron_vein_714994":{
+               "qty":4,
+               "tag":"iron_vein"
+            }
+         },
+         "props":[
+
+         ],
+         "theme":"mine",
+         "type":"normal"
+      },
+      {
+         "desc":"abandoned elevator",
+         "exits":{
+            "down":"room_1384292",
+            "up":"room_1651147"
+         },
+         "id":"room_4717926",
+         "lvl":3,
+         "name":"abandoned elevator",
+         "nodes":{
+            "node_iron_vein_240186":{
+               "qty":5,
+               "tag":"iron_vein"
+            }
+         },
+         "props":[
+
+         ],
+         "theme":"mine",
+         "type":"normal"
+      },
+      {
+         "desc":"resource-rich lode",
+         "exits":{
+            "down":"room_4717926",
+            "west":"room_2531271"
+         },
+         "id":"room_1651147",
+         "lvl":3,
+         "name":"resource-rich lode",
+         "nodes":{
+            "node_iron_vein_802809":{
+               "qty":8,
+               "tag":"iron_vein"
+            }
+         },
+         "props":[
+
+         ],
+         "theme":"mine",
+         "type":"normal"
+      },
+      {
+         "desc":"abandoned lode",
+         "exits":{
+            "east":"room_1651147"
+         },
+         "id":"room_2531271",
+         "lvl":3,
+         "name":"abandoned lode",
+         "props":[
+
+         ],
+         "theme":"mine",
+         "type":"normal"
+      },
+      {
+         "desc":"A sprawling ancient canopy marking the edge of the woods.",
+         "exits":{
+            "down":"room_3535947",
+            "town":"square"
+         },
+         "id":"forest_trail",
+         "props":[
+
+         ],
+         "theme":"forest",
+         "type":"normal"
+      },
+      {
+         "desc":"verdant thicket",
+         "exits":{
+            "east":"room_3056879",
+            "up":"forest_trail"
+         },
+         "id":"room_3535947",
+         "lvl":3,
+         "name":"verdant thicket",
+         "props":[
+
+         ],
+         "theme":"forest",
+         "type":"normal"
+      },
+      {
+         "desc":"shadowy den",
+         "exits":{
+            "up":"room_7321912",
+            "west":"room_3535947"
+         },
+         "id":"room_3056879",
+         "lvl":3,
+         "name":"shadowy den",
+         "props":[
+
+         ],
+         "theme":"forest",
+         "type":"normal"
+      },
+      {
+         "desc":"shadowy clearing",
+         "exits":{
+            "down":"room_3056879",
+            "north":"room_1173941"
+         },
+         "id":"room_7321912",
+         "lvl":3,
+         "name":"shadowy clearing",
+         "props":[
+
+         ],
+         "theme":"forest",
+         "type":"normal"
+      },
+      {
+         "desc":"ancient glade",
+         "exits":{
+            "south":"room_7321912",
+            "up":"room_4963422"
+         },
+         "id":"room_1173941",
+         "lvl":3,
+         "name":"ancient glade",
+         "props":[
+
+         ],
+         "theme":"forest",
+         "type":"normal"
+      },
+      {
+         "desc":"dense clearing",
+         "exits":{
+            "down":"room_1173941",
+            "east":"room_1771078"
+         },
+         "id":"room_4963422",
+         "lvl":3,
+         "name":"dense clearing",
+         "nodes":{
+            "node_oak_tree_948270":{
+               "qty":4,
+               "tag":"oak_tree"
+            }
+         },
+         "props":[
+
+         ],
+         "theme":"forest",
+         "type":"normal"
+      },
+      {
+         "desc":"shadowy den",
+         "exits":{
+            "east":"room_9329829",
+            "west":"room_4963422"
+         },
+         "id":"room_1771078",
+         "lvl":3,
+         "name":"shadowy den",
+         "props":[
+
+         ],
+         "theme":"forest",
+         "type":"normal"
+      },
+      {
+         "desc":"shadowy den",
+         "exits":{
+            "east":"room_6722588",
+            "west":"room_1771078"
+         },
+         "id":"room_9329829",
+         "lvl":3,
+         "name":"shadowy den",
+         "props":[
+
+         ],
+         "theme":"forest",
+         "type":"normal"
+      },
+      {
+         "desc":"dense glade",
+         "exits":{
+            "south":"room_3490646",
+            "west":"room_9329829"
+         },
+         "id":"room_6722588",
+         "lvl":3,
+         "name":"dense glade",
+         "nodes":{
+            "node_oak_tree_635817":{
+               "qty":8,
+               "tag":"oak_tree"
+            }
+         },
+         "props":[
+
+         ],
+         "theme":"forest",
+         "type":"normal"
+      },
+      {
+         "desc":"ancient glade",
+         "exits":{
+            "north":"room_6722588"
+         },
+         "id":"room_3490646",
+         "lvl":3,
+         "name":"ancient glade",
+         "nodes":{
+            "node_oak_tree_772620":{
+               "qty":7,
+               "tag":"oak_tree"
+            }
+         },
+         "props":[
+
+         ],
+         "theme":"forest",
+         "type":"normal"
+      },
+      {
+         "desc":"A dusty catacomb beneath the temple.",
+         "exits":{
+            "down":"room_6415694",
+            "up":"temple"
+         },
+         "id":"graveyard",
+         "props":[
+
+         ],
+         "theme":"crypt",
+         "type":"normal"
+      },
+      {
+         "desc":"silent vault",
+         "exits":{
+            "south":"room_6931352",
+            "up":"graveyard"
+         },
+         "id":"room_6415694",
+         "lvl":10,
+         "name":"silent vault",
+         "props":[
+
+         ],
+         "theme":"crypt",
+         "type":"normal"
+      },
+      {
+         "desc":"dusty vault",
+         "exits":{
+            "north":"room_6415694",
+            "up":"room_2083757"
+         },
+         "id":"room_6931352",
+         "lvl":10,
+         "name":"dusty vault",
+         "props":[
+
+         ],
+         "theme":"crypt",
+         "type":"normal"
+      },
+      {
+         "desc":"crumbling mausoleum",
+         "exits":{
+            "down":"room_6931352",
+            "south":"room_6721017"
+         },
+         "id":"room_2083757",
+         "lvl":10,
+         "name":"crumbling mausoleum",
+         "props":[
+
+         ],
+         "theme":"crypt",
+         "type":"normal"
+      },
+      {
+         "desc":"echoing sepulcher",
+         "exits":{
+            "north":"room_7611917"
+         },
+         "id":"room_6721017",
+         "lvl":10,
+         "name":"echoing sepulcher",
+         "props":[
+
+         ],
+         "theme":"crypt",
+         "type":"normal"
+      },
+      {
+         "desc":"desecrated catacomb",
+         "exits":{
+            "south":"room_6721017",
+            "west":"room_8299491"
+         },
+         "id":"room_7611917",
+         "lvl":10,
+         "name":"desecrated catacomb",
+         "props":[
+
+         ],
+         "theme":"crypt",
+         "type":"normal"
+      },
+      {
+         "desc":"crumbling mausoleum",
+         "exits":{
+            "down":"room_3171639",
+            "east":"room_7611917"
+         },
+         "id":"room_8299491",
+         "lvl":10,
+         "name":"crumbling mausoleum",
+         "props":[
+
+         ],
+         "theme":"crypt",
+         "type":"normal"
+      },
+      {
+         "desc":"dusty tomb",
+         "exits":{
+            "up":"room_8299491",
+            "west":"room_6434190"
+         },
+         "id":"room_3171639",
+         "lvl":10,
+         "name":"dusty tomb",
+         "props":[
+
+         ],
+         "theme":"crypt",
+         "type":"normal"
+      },
+      {
+         "desc":"dusty tomb",
+         "exits":{
+            "east":"room_3171639",
+            "west":"room_2922713"
+         },
+         "id":"room_6434190",
+         "lvl":10,
+         "name":"dusty tomb",
+         "props":[
+
+         ],
+         "theme":"crypt",
+         "type":"normal"
+      },
+      {
+         "desc":"desecrated sepulcher",
+         "exits":{
+            "east":"room_6434190"
+         },
+         "id":"room_2922713",
+         "lvl":10,
+         "name":"desecrated sepulcher",
+         "props":[
+
+         ],
+         "theme":"crypt",
+         "type":"normal"
+      },
+      {
+         "desc":"A steep and magmatic trail ascending into the clouds.",
+         "exits":{
+            "down":"room_5668996",
+            "town":"square"
+         },
+         "id":"mountain_trail",
+         "props":[
+
+         ],
+         "theme":"volcano",
+         "type":"normal"
+      },
+      {
+         "desc":"unstable crater_edge",
+         "exits":{
+            "north":"room_5086949",
+            "up":"mountain_trail"
+         },
+         "id":"room_5668996",
+         "lvl":25,
+         "name":"unstable crater_edge",
+         "props":[
+
+         ],
+         "theme":"volcano",
+         "type":"normal"
+      },
+      {
+         "desc":"erupting vent",
+         "exits":{
+            "south":"room_5668996",
+            "up":"room_9057133"
+         },
+         "id":"room_5086949",
+         "lvl":25,
+         "name":"erupting vent",
+         "props":[
+
+         ],
+         "theme":"volcano",
+         "type":"normal"
+      },
+      {
+         "desc":"erupting vent",
+         "exits":{
+            "down":"room_5086949",
+            "north":"room_4043695"
+         },
+         "id":"room_9057133",
+         "lvl":25,
+         "name":"erupting vent",
+         "props":[
+
+         ],
+         "theme":"volcano",
+         "type":"normal"
+      },
+      {
+         "desc":"magmatic vent",
+         "exits":{
+            "down":"room_4102655",
+            "south":"room_9057133"
+         },
+         "id":"room_4043695",
+         "lvl":25,
+         "name":"magmatic vent",
+         "props":[
+
+         ],
+         "theme":"volcano",
+         "type":"normal"
+      },
+      {
+         "desc":"unstable obsidian_spire",
+         "exits":{
+            "south":"room_6381949",
+            "up":"room_4043695"
+         },
+         "id":"room_4102655",
+         "lvl":25,
+         "name":"unstable obsidian_spire",
+         "nodes":{
+            "node_basalt_fissure_808605":{
+               "qty":8,
+               "tag":"basalt_fissure"
+            }
+         },
+         "props":[
+
+         ],
+         "theme":"volcano",
+         "type":"normal"
+      },
+      {
+         "desc":"heated vent",
+         "exits":{
+            "north":"room_4102655",
+            "south":"room_7161518"
+         },
+         "id":"room_6381949",
+         "lvl":25,
+         "name":"heated vent",
+         "nodes":{
+            "node_basalt_fissure_818241":{
+               "qty":5,
+               "tag":"basalt_fissure"
+            }
+         },
+         "props":[
+
+         ],
+         "theme":"volcano",
+         "type":"normal"
+      },
+      {
+         "desc":"heated obsidian_spire",
+         "exits":{
+            "north":"room_9803060"
+         },
+         "id":"room_7161518",
+         "lvl":25,
+         "name":"heated obsidian_spire",
+         "nodes":{
+            "node_basalt_fissure_242025":{
+               "qty":5,
+               "tag":"basalt_fissure"
+            }
+         },
+         "props":[
+
+         ],
+         "theme":"volcano",
+         "type":"normal"
+      },
+      {
+         "desc":"heated crater_edge",
+         "exits":{
+            "north":"room_7653460",
+            "south":"room_7161518"
+         },
+         "id":"room_9803060",
+         "lvl":25,
+         "name":"heated crater_edge",
+         "props":[
+
+         ],
+         "theme":"volcano",
+         "type":"normal"
+      },
+      {
+         "desc":"magmatic crater_edge",
+         "exits":{
+            "south":"room_9803060",
+            "up":"room_9233700"
+         },
+         "id":"room_7653460",
+         "lvl":25,
+         "name":"magmatic crater_edge",
+         "nodes":{
+            "node_basalt_fissure_557957":{
+               "qty":7,
+               "tag":"basalt_fissure"
+            }
+         },
+         "props":[
+
+         ],
+         "theme":"volcano",
+         "type":"normal"
+      },
+      {
+         "desc":"magmatic crater_edge",
+         "exits":{
+            "down":"room_7653460",
+            "south":"room_3219034"
+         },
+         "id":"room_9233700",
+         "lvl":25,
+         "name":"magmatic crater_edge",
+         "nodes":{
+            "node_basalt_fissure_355288":{
+               "qty":7,
+               "tag":"basalt_fissure"
+            }
+         },
+         "props":[
+
+         ],
+         "theme":"volcano",
+         "type":"normal"
+      },
+      {
+         "desc":"magmatic crater_edge",
+         "exits":{
+            "north":"room_9233700"
+         },
+         "id":"room_3219034",
+         "lvl":25,
+         "name":"magmatic crater_edge",
+         "props":[
+
+         ],
+         "theme":"volcano",
+         "type":"normal"
+      },
+      {
+         "desc":"You find yourself in a misty grove.",
+         "exits":{
+            "down":"cell_0_0_-1",
+            "east":"cell_1_0_0",
+            "north":"cell_0_1_0",
+            "south":"cell_0_-1_0",
+            "town":"square",
+            "up":"cell_0_0_1",
+            "west":"cell_-1_0_0"
+         },
+         "id":"cell_0_0_0",
+         "name":"misty grove",
+         "props":[
+
+         ],
+         "theme":"wild",
+         "type":"outdoor"
+      },
+      {
+         "desc":"You find yourself in a misty grove.",
+         "exits":{
+            "down":"cell_0_1_-1",
+            "east":"cell_1_1_0",
+            "north":"cell_0_2_0",
+            "south":"cell_0_0_0",
+            "up":"cell_0_1_1",
+            "west":"cell_-1_1_0"
+         },
+         "id":"cell_0_1_0",
+         "name":"misty grove",
+         "props":[
+
+         ],
+         "theme":"wild",
+         "type":"outdoor"
+      },
+      {
+         "desc":"You find yourself in a ancient meadow.",
+         "exits":{
+            "down":"cell_0_2_-1",
+            "east":"cell_1_2_0",
+            "north":"cell_0_3_0",
+            "south":"cell_0_1_0",
+            "up":"cell_0_2_1",
+            "west":"cell_-1_2_0"
+         },
+         "id":"cell_0_2_0",
+         "name":"ancient meadow",
+         "props":[
+
+         ],
+         "theme":"wild",
+         "type":"outdoor"
+      },
+      {
+         "desc":"You find yourself in a shadowy grove.",
+         "exits":{
+            "down":"cell_1_2_-1",
+            "east":"cell_2_2_0",
+            "north":"cell_1_3_0",
+            "south":"cell_1_1_0",
+            "up":"cell_1_2_1",
+            "west":"cell_0_2_0"
+         },
+         "id":"cell_1_2_0",
+         "name":"shadowy grove",
+         "props":[
+
+         ],
+         "theme":"wild",
+         "type":"outdoor"
+      },
+      {
+         "desc":"You find yourself in a overgrown grove.",
+         "exits":{
+            "down":"cell_1_3_-1",
+            "east":"cell_2_3_0",
+            "north":"cell_1_4_0",
+            "south":"cell_1_2_0",
+            "up":"cell_1_3_1",
+            "west":"cell_0_3_0"
+         },
+         "id":"cell_1_3_0",
+         "name":"overgrown grove",
+         "props":[
+
+         ],
+         "theme":"wild",
+         "type":"outdoor"
+      },
+      {
+         "desc":"You find yourself in a ancient thicket.",
+         "exits":{
+            "down":"cell_2_3_-1",
+            "east":"cell_3_3_0",
+            "north":"cell_2_4_0",
+            "south":"cell_2_2_0",
+            "up":"cell_2_3_1",
+            "west":"cell_1_3_0"
+         },
+         "id":"cell_2_3_0",
+         "name":"ancient thicket",
+         "props":[
+
+         ],
+         "theme":"wild",
+         "type":"outdoor"
+      },
+      {
+         "desc":"You find yourself in a ancient thicket.",
+         "exits":{
+            "down":"cell_2_4_-1",
+            "east":"cell_3_4_0",
+            "north":"cell_2_5_0",
+            "south":"cell_2_3_0",
+            "up":"cell_2_4_1",
+            "west":"cell_1_4_0"
+         },
+         "id":"cell_2_4_0",
+         "name":"ancient thicket",
+         "props":[
+
+         ],
+         "theme":"wild",
+         "type":"outdoor"
+      },
+      {
+         "desc":"You find yourself in a ancient ridge.",
+         "exits":{
+            "down":"cell_2_5_-1",
+            "east":"cell_3_5_0",
+            "north":"cell_2_6_0",
+            "south":"cell_2_4_0",
+            "up":"cell_2_5_1",
+            "west":"cell_1_5_0"
+         },
+         "id":"cell_2_5_0",
+         "name":"ancient ridge",
+         "props":[
+
+         ],
+         "theme":"wild",
+         "type":"outdoor"
+      },
+      {
+         "desc":"You find yourself in a overgrown thicket.",
+         "exits":{
+            "down":"cell_2_6_-1",
+            "east":"cell_3_6_0",
+            "north":"cell_2_7_0",
+            "south":"cell_2_5_0",
+            "up":"cell_2_6_1",
+            "west":"cell_1_6_0"
+         },
+         "id":"cell_2_6_0",
+         "name":"overgrown thicket",
+         "props":[
+
+         ],
+         "theme":"wild",
+         "type":"outdoor"
+      },
+      {
+         "desc":"You find yourself in a overgrown clearing.",
+         "exits":{
+            "down":"cell_2_7_-1",
+            "east":"cell_3_7_0",
+            "north":"cell_2_8_0",
+            "south":"cell_2_6_0",
+            "up":"cell_2_7_1",
+            "west":"cell_1_7_0"
+         },
+         "id":"cell_2_7_0",
+         "name":"overgrown clearing",
+         "props":[
+
+         ],
+         "theme":"wild",
+         "type":"outdoor"
+      },
+      {
+         "desc":"You find yourself in a overgrown thicket.",
+         "exits":{
+            "down":"cell_2_8_-1",
+            "east":"cell_3_8_0",
+            "north":"cell_2_9_0",
+            "south":"cell_2_7_0",
+            "up":"cell_2_8_1",
+            "west":"cell_1_8_0"
+         },
+         "id":"cell_2_8_0",
+         "name":"overgrown thicket",
+         "props":[
+
+         ],
+         "theme":"wild",
+         "type":"outdoor"
+      },
+      {
+         "desc":"You find yourself in a sunlit meadow.",
+         "exits":{
+            "down":"cell_2_9_-1",
+            "east":"cell_3_9_0",
+            "north":"cell_2_10_0",
+            "south":"cell_2_8_0",
+            "up":"cell_2_9_1",
+            "west":"cell_1_9_0"
+         },
+         "id":"cell_2_9_0",
+         "name":"sunlit meadow",
+         "props":[
+
+         ],
+         "theme":"wild",
+         "type":"outdoor"
+      },
+      {
+         "desc":"You find yourself in a sunlit meadow.",
+         "exits":{
+            "down":"cell_2_10_-1",
+            "east":"cell_3_10_0",
+            "north":"cell_2_11_0",
+            "south":"cell_2_9_0",
+            "up":"cell_2_10_1",
+            "west":"cell_1_10_0"
+         },
+         "id":"cell_2_10_0",
+         "name":"sunlit meadow",
+         "props":[
+
+         ],
+         "theme":"wild",
+         "type":"outdoor"
+      },
+      {
+         "desc":"You find yourself in a sunlit meadow.",
+         "exits":{
+            "down":"cell_3_10_-1",
+            "east":"cell_4_10_0",
+            "north":"cell_3_11_0",
+            "south":"cell_3_9_0",
+            "up":"cell_3_10_1",
+            "west":"cell_2_10_0"
+         },
+         "id":"cell_3_10_0",
+         "name":"sunlit meadow",
+         "props":[
+
+         ],
+         "theme":"wild",
+         "type":"outdoor"
+      },
+      {
+         "desc":"You find yourself in a overgrown thicket.",
+         "exits":{
+            "down":"cell_4_10_-1",
+            "east":"cell_5_10_0",
+            "north":"cell_4_11_0",
+            "south":"cell_4_9_0",
+            "up":"cell_4_10_1",
+            "west":"cell_3_10_0"
+         },
+         "id":"cell_4_10_0",
+         "name":"overgrown thicket",
+         "props":[
+
+         ],
+         "theme":"wild",
+         "type":"outdoor"
+      },
+      {
+         "desc":"You find yourself in a misty grove.",
+         "exits":{
+            "down":"cell_5_10_-1",
+            "east":"cell_6_10_0",
+            "north":"cell_5_11_0",
+            "south":"cell_5_9_0",
+            "up":"cell_5_10_1",
+            "west":"cell_4_10_0"
+         },
+         "id":"cell_5_10_0",
+         "name":"misty grove",
+         "props":[
+
+         ],
+         "theme":"wild",
+         "type":"outdoor"
+      },
+      {
+         "desc":"You find yourself in a shadowy ridge.",
+         "exits":{
+            "down":"cell_6_10_-1",
+            "east":"cell_7_10_0",
+            "north":"cell_6_11_0",
+            "south":"cell_6_9_0",
+            "up":"cell_6_10_1",
+            "west":"cell_5_10_0"
+         },
+         "id":"cell_6_10_0",
+         "name":"shadowy ridge",
+         "props":[
+
+         ],
+         "theme":"wild",
+         "type":"outdoor"
+      },
+      {
+         "desc":"You find yourself in a ancient clearing.",
+         "exits":{
+            "down":"cell_7_10_-1",
+            "east":"cell_8_10_0",
+            "north":"cell_7_11_0",
+            "south":"cell_7_9_0",
+            "up":"cell_7_10_1",
+            "west":"cell_6_10_0"
+         },
+         "id":"cell_7_10_0",
+         "name":"ancient clearing",
+         "props":[
+
+         ],
+         "theme":"wild",
+         "type":"outdoor"
+      },
+      {
+         "desc":"You find yourself in a shadowy grove.",
+         "exits":{
+            "down":"cell_8_10_-1",
+            "east":"cell_9_10_0",
+            "north":"cell_8_11_0",
+            "south":"cell_8_9_0",
+            "up":"cell_8_10_1",
+            "west":"cell_7_10_0"
+         },
+         "id":"cell_8_10_0",
+         "name":"shadowy grove",
+         "props":[
+
+         ],
+         "theme":"wild",
+         "type":"outdoor"
+      },
+      {
+         "desc":"You find yourself in a sunlit grove.",
+         "exits":{
+            "down":"cell_1_10_-1",
+            "east":"cell_2_10_0",
+            "north":"cell_1_11_0",
+            "south":"cell_1_9_0",
+            "up":"cell_1_10_1",
+            "west":"cell_0_10_0"
+         },
+         "id":"cell_1_10_0",
+         "name":"sunlit grove",
+         "props":[
+
+         ],
+         "theme":"wild",
+         "type":"outdoor"
+      },
+      {
+         "desc":"You find yourself in a shadowy clearing.",
+         "exits":{
+            "down":"cell_0_10_-1",
+            "east":"cell_1_10_0",
+            "north":"cell_0_11_0",
+            "south":"cell_0_9_0",
+            "up":"cell_0_10_1",
+            "west":"cell_-1_10_0"
+         },
+         "id":"cell_0_10_0",
+         "name":"shadowy clearing",
+         "props":[
+
+         ],
+         "theme":"wild",
+         "type":"outdoor"
+      },
+      {
+         "desc":"You find yourself in a sunlit clearing.",
+         "exits":{
+            "down":"cell_0_9_-1",
+            "east":"cell_1_9_0",
+            "north":"cell_0_10_0",
+            "south":"cell_0_8_0",
+            "up":"cell_0_9_1",
+            "west":"cell_-1_9_0"
+         },
+         "id":"cell_0_9_0",
+         "name":"sunlit clearing",
+         "props":[
+
+         ],
+         "theme":"wild",
+         "type":"outdoor"
+      },
+      {
+         "desc":"You find yourself in a ancient meadow.",
+         "exits":{
+            "down":"cell_0_8_-1",
+            "east":"cell_1_8_0",
+            "north":"cell_0_9_0",
+            "south":"cell_0_7_0",
+            "up":"cell_0_8_1",
+            "west":"cell_-1_8_0"
+         },
+         "id":"cell_0_8_0",
+         "name":"ancient meadow",
+         "props":[
+
+         ],
+         "theme":"wild",
+         "type":"outdoor"
+      },
+      {
+         "desc":"You find yourself in a overgrown thicket.",
+         "exits":{
+            "down":"cell_0_7_-1",
+            "east":"cell_1_7_0",
+            "north":"cell_0_8_0",
+            "south":"cell_0_6_0",
+            "up":"cell_0_7_1",
+            "west":"cell_-1_7_0"
+         },
+         "id":"cell_0_7_0",
+         "name":"overgrown thicket",
+         "props":[
+
+         ],
+         "theme":"wild",
+         "type":"outdoor"
+      },
+      {
+         "desc":"You find yourself in a shadowy thicket.",
+         "exits":{
+            "down":"cell_0_6_-1",
+            "east":"cell_1_6_0",
+            "north":"cell_0_7_0",
+            "south":"cell_0_5_0",
+            "up":"cell_0_6_1",
+            "west":"cell_-1_6_0"
+         },
+         "id":"cell_0_6_0",
+         "name":"shadowy thicket",
+         "props":[
+
+         ],
+         "theme":"wild",
+         "type":"outdoor"
+      },
+      {
+         "desc":"You find yourself in a shadowy grove.",
+         "exits":{
+            "down":"cell_0_5_-1",
+            "east":"cell_1_5_0",
+            "north":"cell_0_6_0",
+            "south":"cell_0_4_0",
+            "up":"cell_0_5_1",
+            "west":"cell_-1_5_0"
+         },
+         "id":"cell_0_5_0",
+         "name":"shadowy grove",
+         "props":[
+
+         ],
+         "theme":"wild",
+         "type":"outdoor"
+      },
+      {
+         "desc":"You find yourself in a overgrown clearing.",
+         "exits":{
+            "down":"cell_0_4_-1",
+            "east":"cell_1_4_0",
+            "north":"cell_0_5_0",
+            "south":"cell_0_3_0",
+            "up":"cell_0_4_1",
+            "west":"cell_-1_4_0"
+         },
+         "id":"cell_0_4_0",
+         "name":"overgrown clearing",
+         "props":[
+
+         ],
+         "theme":"wild",
+         "type":"outdoor"
+      },
+      {
+         "desc":"You find yourself in a sunlit meadow.",
+         "exits":{
+            "down":"cell_0_3_-1",
+            "east":"cell_1_3_0",
+            "north":"cell_0_4_0",
+            "south":"cell_0_2_0",
+            "up":"cell_0_3_1",
+            "west":"cell_-1_3_0"
+         },
+         "id":"cell_0_3_0",
+         "name":"sunlit meadow",
+         "props":[
+
+         ],
+         "theme":"wild",
+         "type":"outdoor"
+      }
+   ]
+}
