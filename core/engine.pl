@@ -42,11 +42,16 @@ step(Id, ensure_player, [player_status(Id, Status)]) :-
 
 step(Id, ActTerm, [error(unhandled_action(Id, ActTerm))]).
 
+% Public events are broadcast to everyone in the room. Everything else is private.
 is_public_event(moved(_,_,_)).
 is_public_event(hit(_,_,_,_,_)).
+is_public_event(crit(_,_,_,_,_)).
 is_public_event(dead(_,_)).
 is_public_event(cast(_,_,_)).
+is_public_event(cast_crit(_,_,_)).
 is_public_event(healed(_,_,_,_)).
+is_public_event(dodged(_,_)).
+is_public_event(flurry(_,_)).
 is_public_event(say(_,_)).
 is_public_event(npc_arrived(_)).
 is_public_event(guard_reinforcement(_)).

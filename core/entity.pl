@@ -9,7 +9,10 @@
     rem_threat/3,
     add_bounty/3,
     clear_bounty/2,
-    mark_combat/2
+    mark_combat/2,
+    has_trait/2,
+    check_pass/2,
+    check_admin/1
 ]).
 
 :- use_module(library(lists)).
@@ -21,10 +24,29 @@ is_alive(Ent) :-
     Hp > 0.
 
 get_stat(Ent, Stat, Total) :-
-    ( is_dict(Ent), get_dict(Stat, Ent, Base) -> true ; Base = 10 ),
-    ( is_dict(Ent), get_dict(race, Ent, Race), catch(spawn_config:race_bonus(Race, Stat, Bonus), _, fail) -> true ; Bonus = 0 ),
+    is_dict(Ent), !,
+    ( get_dict(Stat, Ent, Base) -> true ; Base = 10 ),
+    ( get_dict(race, Ent, Race) ->
+        findall(B, spawn_config:race_bonus(Race, Stat, B), BList),
+        sum_list(BList, Bonus)
+    ;
+        Bonus = 0
+    ),
     Total is Base + Bonus.
 get_stat(_, _, 10).
+
+has_trait(Ent, Trait) :-
+    is_dict(Ent),
+    get_dict(race, Ent, Race),
+    spawn_config:race_trait(Race, Trait).
+
+check_pass(Ent, Pass) :-
+    is_dict(Ent),
+    ( get_dict(pass, Ent, CurPass) -> CurPass == Pass ; true ).
+
+check_admin(Ent) :-
+    is_dict(Ent),
+    get_dict(admin, Ent, true).
 
 mod_hp(Ent, Delta, NEnt) :-
     get_dict(hp, Ent, Hp),

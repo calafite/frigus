@@ -1,20 +1,49 @@
 :- module(combat_config, [
-    wpn_dmg/2, spell_cost/2, spell_cooldown/2, spell_dmg/2
+    wpn_dmg/2, wpn_trait/2, wpn_crit_mult/2,
+    spell_cost/2, spell_cooldown/2, spell_dmg/2
 ]).
 
+% Base Weapon Damage
 wpn_dmg(fists, [dmg(blunt, 3)]).
-wpn_dmg(staff, [dmg(blunt, 5)]).
 wpn_dmg(dagger, [dmg(pierce, 5)]).
+wpn_dmg(shortsword, [dmg(slash, 7)]).
 wpn_dmg(sword, [dmg(slash, 8)]).
+wpn_dmg(greatsword, [dmg(slash, 12)]).
+wpn_dmg(battleaxe, [dmg(slash, 14)]).
 wpn_dmg(shortbow, [dmg(pierce, 7)]).
+wpn_dmg(staff, [dmg(blunt, 5)]).
 wpn_dmg(iron_sword, [dmg(slash, 10)]).
 
+% Monster Attack Fallbacks
 wpn_dmg(rat, [dmg(pierce, 2)]).
 wpn_dmg(wolf, [dmg(slash, 4)]).
 wpn_dmg(goblin, [dmg(slash, 5)]).
 wpn_dmg(orc, [dmg(blunt, 8)]).
 wpn_dmg(dragon, [dmg(fire, 25)]).
 
+% Weapon Traits:
+% - reliable: Steady, predictable damage bounds.
+% - flurry: Chance to trigger a rapid 2nd attack.
+% - massacre: Devastating critical hit multipliers.
+% - precision: High critical strike chance.
+% - catalyst: Empowers magic damage.
+wpn_trait(sword, reliable).
+wpn_trait(iron_sword, reliable).
+wpn_trait(shortsword, reliable).
+wpn_trait(dagger, flurry).
+wpn_trait(battleaxe, massacre).
+wpn_trait(greatsword, massacre).
+wpn_trait(shortbow, precision).
+wpn_trait(staff, catalyst).
+wpn_trait(_, standard).
+
+% Critical Damage Multipliers
+wpn_crit_mult(battleaxe, 2.5).
+wpn_crit_mult(greatsword, 2.5).
+wpn_crit_mult(dagger, 1.8).
+wpn_crit_mult(_, 2.0).
+
+% Spell Configuration
 spell_cost(fireball, 15).
 spell_cost(fireblast, 25).
 spell_cost(iceblast, 12).

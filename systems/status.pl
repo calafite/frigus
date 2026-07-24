@@ -15,6 +15,15 @@ do_tick(Id, Evts) :-
         Evts = []
     ).
 
+regen_mult(Act, HpMult, MpMult) :-
+    ( entity:has_trait(Act, troll_regen) -> HpMult1 = 4.0
+    ; entity:has_trait(Act, high_regen)  -> HpMult1 = 2.0
+    ; HpMult1 = 1.0 ),
+    ( entity:has_trait(Act, keen_mind)   -> MpMult1 = 1.8
+    ; MpMult1 = 1.0 ),
+    HpMult = HpMult1,
+    MpMult = MpMult1.
+
 tick_regen(Act, NAct, Evts) :-
     ( get_dict(cds, Act, Cds), get_dict(combat, Cds, CCd), CCd > 0 ->
         NAct = Act, Evts = []
@@ -23,12 +32,21 @@ tick_regen(Act, NAct, Evts) :-
         ( get_dict(max_hp, Act, MaxHp) -> true ; MaxHp = 50 ),
         ( get_dict(mp, Act, Mp) -> true ; Mp = 20 ),
         ( get_dict(max_mp, Act, MaxMp) -> true ; MaxMp = 20 ),
+
         entity:get_stat(Act, con, Con),
         entity:get_stat(Act, wis, Wis),
-        HpRegen is 2 + floor(Con * 0.2),
-        MpRegen is 2 + floor(Wis * 0.2),
+
+        regen_mult(Act, HpMult, MpMult),
+
+        BaseHp is 2 + floor(Con * 0.2),
+        BaseMp is 2 + floor(Wis * 0.2),
+
+        HpRegen is floor(BaseHp * HpMult),
+        MpRegen is floor(BaseMp * MpMult),
+
         ( Hp < MaxHp -> NHp is min(MaxHp, Hp + HpRegen) ; NHp = Hp ),
         ( Mp < MaxMp -> NMp is min(MaxMp, Mp + MpRegen) ; NMp = Mp ),
+
         NAct = Act.put(hp, NHp).put(mp, NMp),
         ( (Hp \== NHp ; Mp \== NMp) ->
             get_dict(id, Act, ActId),
