@@ -1,8 +1,12 @@
+================================================
+FILE: core/engine.pl
+================================================
 :- module(engine, [api_step/2, term_to_json/2, terms_to_json/2, ensure_atom/2]).
 
 :- discontiguous step/3.
 :- discontiguous parse_act/2.
 
+:- use_module(library(md5)).
 :- use_module('world').
 :- use_module('../systems/move').
 :- use_module('../systems/combat').
@@ -29,18 +33,51 @@ step(Id, inventory, Evts)     :- do_inventory(Id, Evts), !.
 step(Id, bounties, Evts)      :- do_bounties(Id, Evts), !.
 step(Id, pay_bounty, Evts)    :- combat:do_pay_bounty(Id, Evts), !.
 step(Id, time, Evts)          :- do_time(Id, Evts), !.
+step(Id, admin_cmd(Sub, Arg), Evts) :- do_admin(Id, Sub, Arg, Evts), !.
 
-step(Id, ensure_player, [player_status(Id, Status)]) :-
-    ( world:get_entity(Id, _) ->
-        Status = exists
+step(Id, ensure_player(Pass, Key, Race), Evts) :-
+    hash_pass(Pass, Hash),
+    ( world:get_entity(Id, Player) ->
+        ( get_dict(pass_hash, Player, StoredHash) ->
+            ( StoredHash == Hash ->
+                Evts = [player_status(Id, exists)]
+            ;
+                Evts = [error(invalid_password(Id))]
+            )
+        ;
+            NPlayer = Player.put(pass_hash, Hash),
+            world:put_entity(NPlayer),
+            world:save_db('world_state.json'),
+            Evts = [player_status(Id, exists)]
+        )
     ;
-        default_player(Id, Player),
-        world:put_entity(Player),
-        world:save_db('world_state.json'),
-        Status = created
+        ( (is_restricted(Race), \+ admin_key(Key)) ->
+            Evts = [error(restricted_race_denied(Id, Race))]
+        ;
+            ( admin_key(Key) -> IsAdmin = true ; IsAdmin = false ),
+            default_player(Id, Pass, Race, IsAdmin, NewPlayer),
+            world:put_entity(NewPlayer),
+            world:save_db('world_state.json'),
+            Evts = [player_status(Id, created)]
+        )
     ), !.
 
 step(Id, ActTerm, [error(unhandled_action(Id, ActTerm))]).
+
+% Pass Hashing Helper
+hash_pass(Pass, Hash) :-
+    ( atom(Pass) ; string(Pass) ),
+    Pass \== "", !,
+    atom_string(Pass, Str),
+    md5_hash(Str, Hash, []).
+hash_pass(_, "nohash").
+
+% Admin Master Keys
+admin_key("placeholder").
+
+% Restricted Lineages
+is_restricted(angel).
+is_restricted(demon).
 
 % Public events are broadcast to everyone in the room. Everything else is private.
 is_public_event(moved(_,_,_)).
@@ -163,7 +200,17 @@ parse_act(D, pay_bounty)    :- ( get_dict(type, D, "pay_bounty") ; get_dict(type
 parse_act(D, time)          :- ( get_dict(type, D, "time") ; get_dict(type, D, "weather") ; get_dict(type, D, "env") ).
 parse_act(D, ai_tick)       :- get_dict(type, D, "ai_tick").
 parse_act(D, tick)          :- get_dict(type, D, "tick").
-parse_act(D, ensure_player) :- get_dict(type, D, "ensure_player").
+
+parse_act(D, ensure_player(Pass, Key, Race)) :-
+    get_dict(type, D, "ensure_player"),
+    ( get_dict(pass, D, RawP) -> ensure_atom(RawP, Pass) ; Pass = "" ),
+    ( get_dict(key, D, RawK) -> ensure_atom(RawK, Key) ; Key = "" ),
+    ( get_dict(race, D, RawR) -> ensure_atom(RawR, Race) ; Race = human ).
+
+parse_act(D, admin_cmd(SubCmd, Arg)) :-
+    get_dict(type, D, "admin"),
+    ( get_dict(sub, D, RawS) -> ensure_atom(RawS, SubCmd) ; SubCmd = none ),
+    ( get_dict(target, D, RawA) -> ensure_atom(RawA, Arg) ; Arg = none ).
 
 is_plyr(E) :- is_dict(E, plyr), !.
 is_plyr(E) :- is_dict(E), get_dict(tag, E, player).
@@ -240,10 +287,18 @@ do_time(Id, [time_report(Id, Desc)]) :-
     world:env_state(Env),
     env:env_desc(Env, Desc).
 
-default_player(Id, P) :-
+do_admin(Id, god, _, [admin_msg(Id, "God mode granted!")]) :-
+    world:get_entity(Id, A),
+    entity:check_admin(A), !,
+    NA = A.put(hp, 999999).put(max_hp, 999999),
+    world:put_entity(NA).
+do_admin(Id, SubCmd, _, [error(unhandled_admin_cmd(Id, SubCmd))]).
+
+default_player(Id, Pass, Race, IsAdmin, P) :-
+    hash_pass(Pass, Hash),
     P = plyr{
-        id: Id, tag: player, class: fighter, race: human, lvl: 1, xp: 0,
-        stat_points: 3, bounty: 0,
+        id: Id, tag: player, class: fighter, race: Race, lvl: 1, xp: 0,
+        stat_points: 3, bounty: 0, pass_hash: Hash, admin: IsAdmin,
         hp: 50, max_hp: 50, mp: 20, max_mp: 20,
         str: 12, dex: 12, con: 12, int: 10, wis: 10, cha: 10, luk: 10,
         room: square, equip: equip{wpn: fists, shield: none, body: none},
