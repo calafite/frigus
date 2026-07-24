@@ -23,7 +23,13 @@ init_room(Id, Theme, Lvl, R) :-
     ( Chance > 0, random_between(1, 100, Roll), Roll =< Chance ->
         Props = [safe]
     ; Props = [] ),
-    R = dict{id: Id, type: normal, desc: Name, name: Name, exits: dict{}, props: Props, theme: Theme, lvl: Lvl}.
+
+    world_config:theme_env_base(Theme, BTemp, BMag, BCor),
+    random_between(-5, 5, TOff), random_between(-5, 5, MOff), random_between(-5, 5, COff),
+    Temp is BTemp + TOff, Mag is max(0, BMag + MOff), Cor is max(0, BCor + COff),
+    REnv = dict{temp: Temp, magic: Mag, corr: Cor},
+
+    R = dict{id: Id, type: normal, desc: Name, name: Name, exits: dict{}, props: Props, theme: Theme, lvl: Lvl, env: REnv}.
 
 add_exit(R, Dir, Tgt, NR) :-
     E = R.exits.put(Dir, Tgt),

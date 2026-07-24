@@ -23,11 +23,15 @@ generate_cell(X, Y, Z, Id) :-
     ( Z < 0 -> Theme = cavern ; Theme = wild ),
     rng:gen_room_desc(Theme, Hash, Name, Desc, _),
 
+    % Safe zone processing (utilizing deterministic hash bounds for reproducible cells)
     world_config:safe_zone_chance(Theme, Chance),
     SafeRoll is (Hash // 100) mod 100,
-    ( Chance > 0, SafeRoll < Chance ->
-        Props = [safe]
-    ; Props = [] ),
+    ( Chance > 0, SafeRoll < Chance -> Props = [safe] ; Props = [] ),
+
+    world_config:theme_env_base(Theme, BTemp, BMag, BCor),
+    TOff is (Hash mod 11) - 5, MOff is ((Hash // 11) mod 11) - 5, COff is ((Hash // 121) mod 11) - 5,
+    Temp is BTemp + TOff, Mag is max(0, BMag + MOff), Cor is max(0, BCor + COff),
+    REnv = dict{temp: Temp, magic: Mag, corr: Cor},
 
     X1 is X + 1, chunk_id(X1, Y, Z, IdEast),
     X2 is X - 1, chunk_id(X2, Y, Z, IdWest),
@@ -40,7 +44,7 @@ generate_cell(X, Y, Z, Id) :-
 
     ( X == 0, Y == 0, Z == 0 -> FinalExits = Exits2.put(town, square) ; FinalExits = Exits2 ),
 
-    Room = dict{id: Id, theme: Theme, type: outdoor, desc: Desc, name: Name, exits: FinalExits, props: Props},
+    Room = dict{id: Id, theme: Theme, type: outdoor, desc: Desc, name: Name, exits: FinalExits, props: Props, env: REnv},
     world:put_room(Room),
 
     ( \+ member(safe, Props), (Hash mod 100) < 30 -> spawn_random_mob(Theme, Hash, X, Y, Z, Id) ; true ).
@@ -50,5 +54,4 @@ spawn_random_mob(Theme, Hash, X, Y, Z, RId) :-
     Lvl is max(1, floor(Dist / 2)),
     ( (Hash mod 100) < 5 -> Tier = elite ; Tier = normal ),
     spawn:gen_mob(Theme, Lvl, Tier, RId, Mob),
-
     world:put_entity(Mob).

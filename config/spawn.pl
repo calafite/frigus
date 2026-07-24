@@ -56,12 +56,34 @@ mob_stats(treant, 70, 18, 6, 12).
 mob_stats(dragon, 500, 30, 20, 25).
 mob_stats(_, 20, 10, 10, 10). % fallback
 
+% Core Loot Tables
 loot_table(rat, gold, 0.3, 1, 3).
 loot_table(wolf, gold, 0.1, 1, 5).
 loot_table(wolf, meat, 0.8, 1, 2).
+loot_table(bear, meat, 1.0, 2, 5).
+loot_table(bear, gold, 0.2, 5, 10).
+loot_table(giant_spider, gold, 0.4, 2, 8).
+loot_table(dire_wolf, meat, 1.0, 3, 6).
 loot_table(goblin, gold, 0.8, 3, 12).
 loot_table(goblin, dagger, 0.1, 1, 1).
 loot_table(orc, gold, 0.9, 8, 25).
+loot_table(orc, battleaxe, 0.05, 1, 1).
+loot_table(hobgoblin, gold, 0.9, 10, 30).
+loot_table(bandit, gold, 1.0, 15, 40).
+loot_table(bandit, shortsword, 0.1, 1, 1).
+loot_table(skeleton, gold, 0.5, 2, 10).
+loot_table(zombie, gold, 0.4, 3, 12).
+loot_table(wraith, gold, 0.7, 10, 35).
+loot_table(lich, gold, 1.0, 50, 200).
+loot_table(imp, gold, 0.6, 5, 15).
+loot_table(hellhound, gold, 0.7, 12, 30).
+loot_table(demon_brute, gold, 1.0, 40, 120).
+loot_table(salamander, gold, 0.8, 10, 25).
+loot_table(rock_worm, gold, 0.8, 15, 40).
+loot_table(gargoyle, gold, 0.9, 20, 50).
+loot_table(iron_golem, gold, 1.0, 30, 80).
+loot_table(arcane_anomaly, gold, 0.9, 15, 45).
+loot_table(treant, gold, 0.5, 10, 40).
 loot_table(dragon, gold, 1.0, 500, 2000).
 
 % Balanced

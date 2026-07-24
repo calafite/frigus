@@ -1,7 +1,7 @@
 :- module(world_config, [
     theme_weight/2, theme_data/2, rm_adj/2, rm_noun/2,
     base_wpn/1, base_arm/1, base_acc/1, pref/4, suff/4, tier_mult/2,
-    mob_base/2, elite_mod/3, safe_zone_chance/2
+    mob_base/2, elite_mod/3, safe_zone_chance/2, theme_env_base/4
 ]).
 
 theme_weight(grove, 100).
@@ -74,7 +74,6 @@ tier_mult(2, 1.5).
 tier_mult(3, 2.0).
 tier_mult(4, 3.0).
 
-% Extensive list of monster types mapping to their broad categories
 mob_base(undead, skeleton).
 mob_base(undead, zombie).
 mob_base(undead, wraith).
@@ -98,7 +97,6 @@ mob_base(steel, iron_golem).
 mob_base(magic, arcane_anomaly).
 mob_base(nature, treant).
 
-% Affixes applied to Elite and Boss monsters
 elite_mod(armored, con, 2.0).
 elite_mod(berserk, str, 2.5).
 elite_mod(swift, dex, 2.5).
@@ -106,10 +104,24 @@ elite_mod(titan, max_hp, 3.0).
 elite_mod(cunning, int, 2.5).
 elite_mod(vampiric, str, 1.5).
 
-% Probability of generating as a Safe Zone (0-100) based on Theme
 safe_zone_chance(village, 100).
 safe_zone_chance(monastery, 100).
 safe_zone_chance(grove, 25).
 safe_zone_chance(forest, 5).
 safe_zone_chance(wild, 5).
 safe_zone_chance(_, 0).
+
+theme_env_base(crypt, 10, 5, 80).
+theme_env_base(cavern, 12, 15, 20).
+theme_env_base(ruins, 15, 40, 30).
+theme_env_base(keep, 18, 5, 5).
+theme_env_base(forest, 20, 30, 0).
+theme_env_base(mine, 15, 5, 15).
+theme_env_base(volcano, 80, 20, 50).
+theme_env_base(wild, 15, 10, 10).
+theme_env_base(grove, 20, 60, 0).
+theme_env_base(plains, 22, 10, 0).
+theme_env_base(village, 20, 10, 0).
+theme_env_base(monastery, 20, 50, 0).
+theme_env_base(prison, 10, 0, 40).
+theme_env_base(_, 15, 10, 10).
