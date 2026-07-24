@@ -17,6 +17,7 @@ is_public_event(env_msg(_)).
 is_public_event(aff_applied(_,_)).
 is_public_event(aff_tick(_,_,_)).
 is_public_event(aff_faded(_,_)).
+is_public_event(respawned(_,_)).
 
 split_events([], [], []).
 split_events([E|Es], [E|Pubs], Privs) :- is_public_event(E), !, split_events(Es, Pubs, Privs).

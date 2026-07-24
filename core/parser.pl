@@ -25,8 +25,12 @@ parse_act(D, validate_key(Key)) :-
     get_dict(type, D, "validate_key"),
     ( get_dict(key, D, RawK) -> ensure_atom(RawK, Key) ; Key = "" ).
 
-parse_act(D, ensure_player(Pass, Key, Race, Stats)) :-
-    get_dict(type, D, "ensure_player"),
+parse_act(D, login(Pass)) :-
+    get_dict(type, D, "login"),
+    ( get_dict(pass, D, RawP) -> ensure_atom(RawP, Pass) ; Pass = "" ).
+
+parse_act(D, register(Pass, Key, Race, Stats)) :-
+    get_dict(type, D, "register"),
     ( get_dict(pass, D, RawP) -> ensure_atom(RawP, Pass) ; Pass = "" ),
     ( get_dict(key, D, RawK) -> ensure_atom(RawK, Key) ; Key = "" ),
     ( get_dict(race, D, RawR) -> ensure_atom(RawR, Race) ; Race = human ),
@@ -37,20 +41,12 @@ parse_act(D, admin_cmd(SubCmd, Arg)) :-
     ( get_dict(sub, D, RawS) -> ensure_atom(RawS, SubCmd) ; SubCmd = none ),
     ( get_dict(target, D, RawA) -> ensure_atom(RawA, Arg) ; Arg = none ).
 
-parse_act(D, move(Dir)) :-
-    ( get_dict(type, D, "move") ; get_dict(type, D, "go") ), extract_dir(D, Dir).
-
-parse_act(D, kill(Tgt)) :-
-    ( get_dict(type, D, "kill") ; get_dict(type, D, "attack") ; get_dict(type, D, "k") ), extract_target(D, Tgt).
-
+parse_act(D, move(Dir)) :- ( get_dict(type, D, "move") ; get_dict(type, D, "go") ), extract_dir(D, Dir).
+parse_act(D, kill(Tgt)) :- ( get_dict(type, D, "kill") ; get_dict(type, D, "attack") ; get_dict(type, D, "k") ), extract_target(D, Tgt).
 parse_act(D, cast(S, T)):-
     ( get_dict(type, D, "cast") ; get_dict(type, D, "c") ),
-    ( get_dict(spell, D, RawS), RawS \== "" -> ensure_atom(RawS, S)
-    ; get_dict(args, D, [RawS|_]), RawS \== "" -> ensure_atom(RawS, S)
-    ; S = fireball ),
-    ( get_dict(target, D, RawT), RawT \== "" -> ensure_atom(RawT, T)
-    ; get_dict(args, D, [_, RawT|_]), RawT \== "" -> ensure_atom(RawT, T)
-    ; T = none ).
+    ( get_dict(spell, D, RawS), RawS \== "" -> ensure_atom(RawS, S) ; get_dict(args, D, [RawS|_]), RawS \== "" -> ensure_atom(RawS, S) ; S = fireball ),
+    ( get_dict(target, D, RawT), RawT \== "" -> ensure_atom(RawT, T) ; get_dict(args, D, [_, RawT|_]), RawT \== "" -> ensure_atom(RawT, T) ; T = none ).
 
 parse_act(D, loot(IId))     :- ( get_dict(type, D, "loot") ; get_dict(type, D, "get") ; get_dict(type, D, "take") ; get_dict(type, D, "g") ), extract_target(D, IId).
 parse_act(D, equip(I))      :- get_dict(type, D, "equip"), extract_target(D, I).
@@ -66,3 +62,4 @@ parse_act(D, pay_bounty)    :- ( get_dict(type, D, "pay_bounty") ; get_dict(type
 parse_act(D, time)          :- ( get_dict(type, D, "time") ; get_dict(type, D, "weather") ; get_dict(type, D, "env") ).
 parse_act(D, ai_tick)       :- get_dict(type, D, "ai_tick").
 parse_act(D, tick)          :- get_dict(type, D, "tick").
+parse_act(D, respawn)       :- get_dict(type, D, "respawn").

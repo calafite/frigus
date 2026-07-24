@@ -1,4 +1,4 @@
-:- module(status, [do_tick/2, is_cced/2]).
+:- module(status, [do_tick/2, is_cced/2, do_respawn/2]).
 
 :- use_module('../core/world').
 :- use_module('../core/entity').
@@ -10,26 +10,31 @@ is_cced(Ent, CC) :-
     ; entity:has_aff(Ent, paralysed) -> CC = paralysed
     ).
 
+do_respawn(Id, Evts) :-
+    world:get_entity(Id, Actor),
+    get_dict(hp, Actor, Hp), Hp =< 0, !,
+    get_dict(max_hp, Actor, MaxHp), get_dict(max_mp, Actor, MaxMp),
+    Reborn = Actor.put(hp, MaxHp).put(mp, MaxMp).put(room, square).put(affs, dict{}),
+    world:put_entity(Reborn),
+    Evts = [respawned(Id, square)].
+do_respawn(Id, [error(cannot_respawn_alive(Id))]).
+
 do_tick(Id, Evts) :-
     ( world:get_entity(Id, Actor) ->
         tick_regen(Actor, Act1, RegenEvts),
         tick_cds(Act1, Act2),
         tick_affs(Act2, Act3, AffEvts),
-
         ( entity:is_alive(Act3) ->
             world:put_entity(Act3),
             append(RegenEvts, AffEvts, Evts)
         ;
-            % Entity died purely to DoT afflictions on tick
             combat:resolve_death(environment, Act3, DeathEvts),
             get_dict(id, Act3, TgtId),
             ( get_dict(name, Act3, TgtName) -> true ; TgtName = TgtId ),
             append(RegenEvts, AffEvts, TmpEvts),
             append(TmpEvts, [dead(TgtId, TgtName) | DeathEvts], Evts)
         )
-    ;
-        Evts = []
-    ).
+    ; Evts = [] ).
 
 regen_mult(Act, HpMult, MpMult) :-
     ( entity:has_trait(Act, troll_regen) -> HpMult1 = 4.0
@@ -79,21 +84,16 @@ process_aff_pairs([], Act, Act, []).
 process_aff_pairs([AffTag-AffNode|Rest], Act, FinalAct, Evts) :-
     get_dict(dur, AffNode, Dur), get_dict(mag, AffNode, Mag),
     NDur is Dur - 1,
-
     ( is_dot(AffTag) ->
-        entity:mod_hp(Act, -Mag, Act1), get_dict(id, Act1, AId),
-        TickEvt = [aff_tick(AId, AffTag, Mag)]
+        entity:mod_hp(Act, -Mag, Act1), get_dict(id, Act1, AId), TickEvt = [aff_tick(AId, AffTag, Mag)]
     ; Act1 = Act, TickEvt = [] ),
-
     get_dict(id, Act1, AId2),
-
     ( NDur =< 0 ->
         entity:remove_aff(Act1, AffTag, Act2), FadeEvt = [aff_faded(AId2, AffTag)]
     ;
         NAffNode = AffNode.put(dur, NDur), get_dict(affs, Act1, CurAffs),
         NAffs = CurAffs.put(AffTag, NAffNode), Act2 = Act1.put(affs, NAffs), FadeEvt = []
     ),
-
     process_aff_pairs(Rest, Act2, FinalAct, RestEvts),
     append(TickEvt, FadeEvt, E1), append(E1, RestEvts, Evts).
 

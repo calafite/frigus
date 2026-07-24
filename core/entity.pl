@@ -13,10 +13,9 @@
     has_trait/2,
     check_pass/2,
     check_admin/1,
-    % Status Effects API
     has_aff/2,
     get_aff/3,
-    apply_aff/4,
+    apply_aff/5,
     remove_aff/3
 ]).
 
@@ -159,10 +158,9 @@ get_aff(Ent, AffTag, dict{dur: Dur, mag: Mag}) :-
 apply_aff(Ent, AffTag, Dur, Mag, NEnt) :-
     is_dict(Ent),
     ( get_dict(affs, Ent, Affs) -> true ; Affs = dict{} ),
-    % If it already exists, refresh duration (keep max magnitude or override)
     ( get_dict(AffTag, Affs, CurAff) ->
         get_dict(dur, CurAff, CurDur),
-        NDur is max(CurDur, Dur), % Keep whichever duration is longer
+        NDur is max(CurDur, Dur),
         NAffNode = dict{dur: NDur, mag: Mag}
     ;
         NAffNode = dict{dur: Dur, mag: Mag}
