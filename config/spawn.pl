@@ -1,13 +1,60 @@
 :- module(spawn_config, [
-              mob_xp/2, loot_table/5, race_bonus/3, race_trait/2, is_aggressive/1
-                        ]).
+    mob_xp/2, loot_table/5, race_bonus/3, race_trait/2, is_aggressive/1, mob_stats/5
+]).
 
+% Experience Points yield based on base tag
 mob_xp(rat, 10).
 mob_xp(wolf, 40).
+mob_xp(bear, 80).
+mob_xp(viper, 30).
+mob_xp(giant_spider, 60).
+mob_xp(dire_wolf, 90).
 mob_xp(goblin, 25).
 mob_xp(orc, 60).
+mob_xp(hobgoblin, 50).
+mob_xp(bandit, 45).
+mob_xp(skeleton, 35).
+mob_xp(zombie, 40).
+mob_xp(wraith, 75).
+mob_xp(lich, 200).
+mob_xp(imp, 30).
+mob_xp(hellhound, 70).
+mob_xp(demon_brute, 150).
+mob_xp(salamander, 65).
+mob_xp(rock_worm, 80).
+mob_xp(gargoyle, 90).
+mob_xp(iron_golem, 120).
+mob_xp(arcane_anomaly, 55).
+mob_xp(treant, 110).
 mob_xp(dragon, 2000).
 mob_xp(_, 20).
+
+% mob_stats(Tag, BaseHp, BaseStr, BaseDex, BaseInt)
+mob_stats(rat, 10, 5, 10, 2).
+mob_stats(wolf, 25, 12, 14, 4).
+mob_stats(bear, 50, 18, 8, 4).
+mob_stats(viper, 15, 8, 18, 2).
+mob_stats(giant_spider, 35, 14, 16, 5).
+mob_stats(dire_wolf, 45, 16, 15, 5).
+mob_stats(skeleton, 20, 10, 10, 2).
+mob_stats(zombie, 40, 14, 4, 1).
+mob_stats(wraith, 30, 8, 18, 15).
+mob_stats(lich, 80, 10, 12, 30).
+mob_stats(goblin, 20, 8, 15, 8).
+mob_stats(orc, 45, 16, 10, 6).
+mob_stats(hobgoblin, 35, 14, 12, 10).
+mob_stats(bandit, 25, 12, 14, 10).
+mob_stats(imp, 15, 6, 16, 14).
+mob_stats(hellhound, 40, 15, 15, 6).
+mob_stats(demon_brute, 100, 22, 10, 8).
+mob_stats(salamander, 30, 12, 12, 10).
+mob_stats(rock_worm, 55, 16, 6, 2).
+mob_stats(gargoyle, 50, 15, 8, 8).
+mob_stats(iron_golem, 90, 20, 5, 2).
+mob_stats(arcane_anomaly, 25, 4, 15, 20).
+mob_stats(treant, 70, 18, 6, 12).
+mob_stats(dragon, 500, 30, 20, 25).
+mob_stats(_, 20, 10, 10, 10). % fallback
 
 loot_table(rat, gold, 0.3, 1, 3).
 loot_table(wolf, gold, 0.1, 1, 5).
@@ -16,8 +63,6 @@ loot_table(goblin, gold, 0.8, 3, 12).
 loot_table(goblin, dagger, 0.1, 1, 1).
 loot_table(orc, gold, 0.9, 8, 25).
 loot_table(dragon, gold, 1.0, 500, 2000).
-dragon_loot_table(dragon, sword, 0.5, 1, 1).
-
 
 % Balanced
 race_bonus(human, str, 2).
@@ -146,15 +191,27 @@ race_trait(troll, troll_regen).
 race_trait(angel, celestial).
 race_trait(demon, celestial).
 
+% Aggressiveness Flags
 is_aggressive(wolf).
+is_aggressive(bear).
+is_aggressive(viper).
+is_aggressive(giant_spider).
+is_aggressive(dire_wolf).
 is_aggressive(goblin).
 is_aggressive(orc).
-is_aggressive(dragon).
+is_aggressive(hobgoblin).
+is_aggressive(bandit).
 is_aggressive(skeleton).
 is_aggressive(zombie).
 is_aggressive(wraith).
+is_aggressive(lich).
 is_aggressive(imp).
+is_aggressive(hellhound).
+is_aggressive(demon_brute).
 is_aggressive(salamander).
 is_aggressive(rock_worm).
-is_aggressive(giant_spider).
-is_aggressive(bear).
+is_aggressive(gargoyle).
+is_aggressive(iron_golem).
+is_aggressive(arcane_anomaly).
+is_aggressive(treant).
+is_aggressive(dragon).

@@ -20,6 +20,9 @@ theme_data(keep, [humanoid, steel]).
 theme_data(forest, [beast, nature]).
 theme_data(mine, [beast, earth, steel]).
 theme_data(volcano, [demon, fire, earth]).
+theme_data(wild, [beast, nature, humanoid]).
+theme_data(grove, [beast, nature]).
+theme_data(plains, [beast, humanoid]).
 
 rm_adj(crypt, [dusty, crumbling, desecrated, silent, echoing]).
 rm_adj(cavern, [damp, dark, winding, massive, glowing]).
@@ -71,27 +74,42 @@ tier_mult(2, 1.5).
 tier_mult(3, 2.0).
 tier_mult(4, 3.0).
 
+% Extensive list of monster types mapping to their broad categories
 mob_base(undead, skeleton).
 mob_base(undead, zombie).
 mob_base(undead, wraith).
+mob_base(undead, lich).
 mob_base(beast, wolf).
 mob_base(beast, bear).
 mob_base(beast, giant_spider).
+mob_base(beast, viper).
+mob_base(beast, dire_wolf).
 mob_base(humanoid, goblin).
 mob_base(humanoid, orc).
+mob_base(humanoid, hobgoblin).
+mob_base(humanoid, bandit).
 mob_base(demon, imp).
+mob_base(demon, hellhound).
+mob_base(demon, demon_brute).
 mob_base(fire, salamander).
 mob_base(earth, rock_worm).
+mob_base(earth, gargoyle).
 mob_base(steel, iron_golem).
+mob_base(magic, arcane_anomaly).
+mob_base(nature, treant).
 
-elite_mod(armored, armor, 2.0).
+% Affixes applied to Elite and Boss monsters
+elite_mod(armored, con, 2.0).
 elite_mod(berserk, str, 2.5).
 elite_mod(swift, dex, 2.5).
 elite_mod(titan, max_hp, 3.0).
+elite_mod(cunning, int, 2.5).
+elite_mod(vampiric, str, 1.5).
 
+% Probability of generating as a Safe Zone (0-100) based on Theme
 safe_zone_chance(village, 100).
 safe_zone_chance(monastery, 100).
-safe_zone_chance(grove, 0).
-safe_zone_chance(forest, 0).
-safe_zone_chance(wild, 0).
+safe_zone_chance(grove, 25).
+safe_zone_chance(forest, 5).
+safe_zone_chance(wild, 5).
 safe_zone_chance(_, 0).

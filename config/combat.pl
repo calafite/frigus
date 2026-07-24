@@ -1,8 +1,8 @@
 :- module(combat_config, [
-              wpn_dmg/2, wpn_trait/2, wpn_crit_mult/2,
-              spell_cost/2, spell_cooldown/2, spell_dmg/2,
-              spell_type/2, spell_affinity/2, spell_apply_tgt/2, spell_apply_self/2
-                         ]).
+    wpn_dmg/2, wpn_trait/2, wpn_crit_mult/2,
+    spell_cost/2, spell_cooldown/2, spell_dmg/2,
+    spell_type/2, spell_affinity/2, spell_apply_tgt/2, spell_apply_self/2
+]).
 
 :- discontiguous spell_type/2.
 :- discontiguous spell_cost/2.
@@ -13,7 +13,7 @@
 :- discontiguous spell_affinity/2.
 
 % ==========================================
-% WEAPON CONFIGURATION
+% WEAPON & INNATE MOB DAMAGE
 % ==========================================
 wpn_dmg(fists, [dmg(blunt, 3)]).
 wpn_dmg(dagger, [dmg(pierce, 5)]).
@@ -25,11 +25,31 @@ wpn_dmg(shortbow, [dmg(pierce, 7)]).
 wpn_dmg(staff, [dmg(blunt, 5)]).
 wpn_dmg(iron_sword, [dmg(slash, 10)]).
 
+% Innate mob attacks
 wpn_dmg(rat, [dmg(pierce, 2)]).
 wpn_dmg(wolf, [dmg(slash, 4)]).
 wpn_dmg(goblin, [dmg(slash, 5)]).
 wpn_dmg(orc, [dmg(blunt, 8)]).
 wpn_dmg(dragon, [dmg(fire, 25)]).
+wpn_dmg(bear, [dmg(slash, 8)]).
+wpn_dmg(viper, [dmg(pierce, 5)]).
+wpn_dmg(giant_spider, [dmg(pierce, 6)]).
+wpn_dmg(dire_wolf, [dmg(slash, 7)]).
+wpn_dmg(skeleton, [dmg(slash, 5)]).
+wpn_dmg(zombie, [dmg(blunt, 6)]).
+wpn_dmg(wraith, [dmg(magic, 8)]).
+wpn_dmg(lich, [dmg(magic, 18)]).
+wpn_dmg(hobgoblin, [dmg(blunt, 8)]).
+wpn_dmg(bandit, [dmg(slash, 7)]).
+wpn_dmg(imp, [dmg(fire, 5)]).
+wpn_dmg(hellhound, [dmg(fire, 8)]).
+wpn_dmg(demon_brute, [dmg(blunt, 12)]).
+wpn_dmg(salamander, [dmg(fire, 7)]).
+wpn_dmg(rock_worm, [dmg(blunt, 9)]).
+wpn_dmg(gargoyle, [dmg(slash, 8)]).
+wpn_dmg(iron_golem, [dmg(blunt, 14)]).
+wpn_dmg(arcane_anomaly, [dmg(magic, 9)]).
+wpn_dmg(treant, [dmg(blunt, 11)]).
 
 wpn_trait(sword, reliable).
 wpn_trait(iron_sword, reliable).
@@ -239,9 +259,9 @@ spell_affinity(choir_of_seraphim, [angel]).
 spell_cost(choir_of_seraphim, 60).
 spell_cooldown(choir_of_seraphim, 18).
 spell_apply_tgt(choir_of_seraphim,
-                [divine_protection(5, 40),
-                 regeneration(5, 8),
-                 blessed(5, 20)]).
+    [divine_protection(5, 40),
+     regeneration(5, 8),
+     blessed(5, 20)]).
 
 spell_type(heavenly_reckoning, area).
 spell_affinity(heavenly_reckoning, [angel]).
@@ -249,8 +269,8 @@ spell_cost(heavenly_reckoning, 70).
 spell_cooldown(heavenly_reckoning, 15).
 spell_dmg(heavenly_reckoning, 28).
 spell_apply_tgt(heavenly_reckoning,
-                [holy_fire(5, 12),
-                 blinded(2, 0)]).
+    [holy_fire(5, 12),
+     blinded(2, 0)]).
 
 spell_type(frost_nova, cc).
 spell_affinity(frost_nova, [high_elf, human]).

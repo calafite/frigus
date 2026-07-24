@@ -4,6 +4,7 @@
 :- use_module('../config/world').
 :- use_module('rng').
 :- use_module('names').
+:- use_module('spawn').
 
 chunk_id(X, Y, Z, Id) :- atomic_list_concat(['cell', X, Y, Z], '_', Id).
 
@@ -42,13 +43,12 @@ generate_cell(X, Y, Z, Id) :-
     Room = dict{id: Id, theme: Theme, type: outdoor, desc: Desc, name: Name, exits: FinalExits, props: Props},
     world:put_room(Room),
 
-    ( \+ member(safe, Props), (Hash mod 100) < 30 -> spawn_random_mob(Theme, Hash, Id) ; true ).
+    ( \+ member(safe, Props), (Hash mod 100) < 30 -> spawn_random_mob(Theme, Hash, X, Y, Z, Id) ; true ).
 
-spawn_random_mob(Theme, Hash, RId) :-
-    ( Theme == wild -> Tag = wolf ; Tag = goblin ),
-    world:gen_id(mob, MId),
+spawn_random_mob(Theme, Hash, X, Y, Z, RId) :-
+    Dist is sqrt(X*X + Y*Y + Z*Z*4),
+    Lvl is max(1, floor(Dist / 2)),
+    ( (Hash mod 100) < 5 -> Tier = elite ; Tier = normal ),
+    spawn:gen_mob(Theme, Lvl, Tier, RId, Mob),
 
-    names:gen_creature_name(Hash, GeneratedName, _),
-
-    Mob = mob{id: MId, tag: Tag, name: GeneratedName, lvl: 1, hp: 20, max_hp: 20, str: 10, dex: 10, int: 10, room: RId},
     world:put_entity(Mob).
