@@ -25,6 +25,11 @@ wpn_dmg(shortbow, [dmg(pierce, 7)]).
 wpn_dmg(staff, [dmg(blunt, 5)]).
 wpn_dmg(iron_sword, [dmg(slash, 10)]).
 
+% Unique Boss Weapons
+wpn_dmg(ancient_runesword, [dmg(slash, 18)]).
+wpn_dmg(vampire_fanged_blade, [dmg(pierce, 20)]).
+wpn_dmg(necromancer_staff, [dmg(magic, 16)]).
+
 % Innate mob attacks
 wpn_dmg(rat, [dmg(pierce, 2)]).
 wpn_dmg(wolf, [dmg(slash, 4)]).
@@ -51,9 +56,21 @@ wpn_dmg(iron_golem, [dmg(blunt, 14)]).
 wpn_dmg(arcane_anomaly, [dmg(magic, 9)]).
 wpn_dmg(treant, [dmg(blunt, 11)]).
 
+% Structure Anomaly Boss Attacks
+wpn_dmg(elder_dragon, [dmg(fire, 35)]).
+wpn_dmg(swamp_hag, [dmg(magic, 20)]).
+wpn_dmg(ruin_golem, [dmg(blunt, 30)]).
+wpn_dmg(ancient_treant_lord, [dmg(blunt, 25)]).
+wpn_dmg(vampire_lord, [dmg(pierce, 28)]).
+wpn_dmg(void_walker, [dmg(magic, 30)]).
+wpn_dmg(arch_necromancer, [dmg(magic, 32)]).
+
 wpn_trait(sword, reliable).
 wpn_trait(iron_sword, reliable).
 wpn_trait(shortsword, reliable).
+wpn_trait(ancient_runesword, reliable).
+wpn_trait(vampire_fanged_blade, flurry).
+wpn_trait(necromancer_staff, catalyst).
 wpn_trait(dagger, flurry).
 wpn_trait(battleaxe, massacre).
 wpn_trait(greatsword, massacre).
@@ -64,6 +81,7 @@ wpn_trait(_, standard).
 wpn_crit_mult(battleaxe, 2.5).
 wpn_crit_mult(greatsword, 2.5).
 wpn_crit_mult(dagger, 1.8).
+wpn_crit_mult(vampire_fanged_blade, 2.2).
 wpn_crit_mult(_, 2.0).
 
 % ==========================================

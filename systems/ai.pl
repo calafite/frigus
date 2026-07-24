@@ -5,6 +5,7 @@
 :- use_module('../core/events').
 :- use_module('../config/spawn').
 :- use_module('../worldgen/spawn').
+:- use_module('../worldgen/structures').
 :- use_module('combat').
 :- use_module('move').
 :- use_module(library(random)).
@@ -12,8 +13,10 @@
 
 do_ai_tick(Evts) :-
     world:all_mobs(Mobs),
-    process_mobs(Mobs, Evts),
-    replenish_settlements.
+    process_mobs(Mobs, MEvts),
+    replenish_settlements,
+    structures:tick_respawns(REvts),
+    append(MEvts, REvts, Evts).
 
 process_mobs([], []).
 process_mobs([Mob|T], Evts) :-
@@ -36,6 +39,11 @@ is_settlement_room(Room) :-
     ( get_dict(theme, Room, Theme), member(Theme, [village, keep, monastery, town]) ;
       get_dict(props, Room, Props), (member(safe, Props) ; member(landmark, Props)) ;
       get_dict(region, Room, shire) ), !.
+
+is_no_wander(Mob) :-
+    ( get_dict(wander, Mob, false)
+    ; get_dict(props, Mob, Props), (member(no_wander, Props) ; member(protector, Props))
+    ), !.
 
 % Keep town NPCs inside safe settlement boundaries
 valid_npc_move(Mob, NextRoomId) :-
@@ -130,8 +138,9 @@ act_mob(Mob, Evts) :-
     world:push_room_events(Room, PubEvts),
     Evts = PubEvts.
 
-% Controlled random wandering within valid boundaries (2% chance per tick to avoid spam)
+% Controlled random wandering (2% chance per tick, explicitly skipping non-wandering creatures)
 act_mob(Mob, Evts) :-
+    \+ is_no_wander(Mob),
     random_between(1, 100, R), R =< 2, !,
     get_dict(room, Mob, Room),
     world:get_room(Room, RoomNode),

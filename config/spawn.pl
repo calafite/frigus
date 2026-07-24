@@ -27,6 +27,15 @@ mob_xp(iron_golem, 120).
 mob_xp(arcane_anomaly, 55).
 mob_xp(treant, 110).
 mob_xp(dragon, 2000).
+
+% Structure Anomaly Boss XP Yields
+mob_xp(elder_dragon, 3000).
+mob_xp(swamp_hag, 1200).
+mob_xp(ruin_golem, 1800).
+mob_xp(ancient_treant_lord, 2000).
+mob_xp(vampire_lord, 2200).
+mob_xp(void_walker, 1600).
+mob_xp(arch_necromancer, 2500).
 mob_xp(_, 20).
 
 % mob_stats(Tag, BaseHp, BaseStr, BaseDex, BaseInt)
@@ -54,6 +63,15 @@ mob_stats(iron_golem, 90, 20, 5, 2).
 mob_stats(arcane_anomaly, 25, 4, 15, 20).
 mob_stats(treant, 70, 18, 6, 12).
 mob_stats(dragon, 500, 30, 20, 25).
+
+% Structure Anomaly Boss Baseline Stats
+mob_stats(elder_dragon, 600, 35, 20, 30).
+mob_stats(swamp_hag, 250, 12, 18, 35).
+mob_stats(ruin_golem, 500, 32, 10, 15).
+mob_stats(ancient_treant_lord, 550, 28, 10, 20).
+mob_stats(vampire_lord, 400, 28, 28, 25).
+mob_stats(void_walker, 320, 18, 28, 38).
+mob_stats(arch_necromancer, 380, 16, 20, 42).
 mob_stats(_, 20, 10, 10, 10). % fallback
 
 % Core Loot Tables
@@ -86,7 +104,34 @@ loot_table(arcane_anomaly, gold, 0.9, 15, 45).
 loot_table(treant, gold, 0.5, 10, 40).
 loot_table(dragon, gold, 1.0, 500, 2000).
 
-% Balanced
+% Structure Boss Unique Loot Drops
+loot_table(elder_dragon, gold, 1.0, 800, 2500).
+loot_table(elder_dragon, dragon_heart, 0.8, 1, 1).
+loot_table(elder_dragon, dragon_scale_mail, 0.5, 1, 1).
+
+loot_table(swamp_hag, gold, 1.0, 300, 800).
+loot_table(swamp_hag, witch_brew, 1.0, 1, 3).
+
+loot_table(ruin_golem, gold, 1.0, 400, 1200).
+loot_table(ruin_golem, ancient_core, 0.9, 1, 2).
+loot_table(ruin_golem, ancient_runesword, 0.4, 1, 1).
+
+loot_table(ancient_treant_lord, gold, 1.0, 350, 1000).
+loot_table(ancient_treant_lord, treant_heartwood, 0.9, 1, 2).
+loot_table(ancient_treant_lord, living_bark_shield, 0.5, 1, 1).
+
+loot_table(vampire_lord, gold, 1.0, 600, 1800).
+loot_table(vampire_lord, blood_ruby, 0.8, 1, 2).
+loot_table(vampire_lord, vampire_fanged_blade, 0.5, 1, 1).
+
+loot_table(void_walker, gold, 1.0, 450, 1400).
+loot_table(void_walker, astral_shard, 0.9, 1, 3).
+loot_table(void_walker, void_robe, 0.5, 1, 1).
+
+loot_table(arch_necromancer, gold, 1.0, 700, 2000).
+loot_table(arch_necromancer, necromancer_staff, 0.6, 1, 1).
+
+% Balanced Lineage Bonuses
 race_bonus(human, str, 2).
 race_bonus(human, dex, 2).
 race_bonus(human, con, 2).
@@ -237,3 +282,12 @@ is_aggressive(iron_golem).
 is_aggressive(arcane_anomaly).
 is_aggressive(treant).
 is_aggressive(dragon).
+
+% Structure Anomaly Bosses
+is_aggressive(elder_dragon).
+is_aggressive(swamp_hag).
+is_aggressive(ruin_golem).
+is_aggressive(ancient_treant_lord).
+is_aggressive(vampire_lord).
+is_aggressive(void_walker).
+is_aggressive(arch_necromancer).

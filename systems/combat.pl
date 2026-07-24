@@ -7,6 +7,7 @@
 :- use_module('../core/entity').
 :- use_module('../config/combat').
 :- use_module('../config/spawn').
+:- use_module('../worldgen/structures').
 :- use_module('prog').
 :- use_module('loot').
 :- use_module('ai').
@@ -30,7 +31,8 @@ get_weapon_tag(Ent, WTag) :-
 
 get_env_mods(Actor, RoomId, Env, MagicMult, CorrMult, MoonMult) :-
     ( world:get_room(RoomId, Room), get_dict(env, Room, REnv) ->
-        get_dict(magic, REnv, AmbientMagic), get_dict(corr, REnv, Corruption)
+        ( get_dict(magic, REnv, AmbientMagic) -> true ; AmbientMagic = 10 ),
+        ( get_dict(corr, REnv, Corruption) -> true ; Corruption = 0 )
     ; AmbientMagic = 10, Corruption = 0 ),
 
     MagicMult is 1.0 + (AmbientMagic / 100),
@@ -41,7 +43,8 @@ get_env_mods(Actor, RoomId, Env, MagicMult, CorrMult, MoonMult) :-
     ; CorrMult = 1.0 ),
 
     ( is_dict(Actor, mob) ->
-        get_dict(moon, Env, Moon), moon_mob_mult(Moon, MoonMult)
+        ( get_dict(moon, Env, Moon) -> true ; Moon = full_moon ),
+        moon_mob_mult(Moon, MoonMult)
     ; MoonMult = 1.0 ).
 
 moon_mob_mult(new_moon, 0.8).
@@ -306,7 +309,9 @@ do_cast(Id, Sp, TgtQuery, Evts) :-
       ( Mp < Cost -> Evts = [error(insufficient_mp(Id, Sp, mp_available(Mp), mp_required(Cost)))]
       ;
         % Check Mist (Environmental Miss)
-        world:env_state(Env), get_dict(mist, Env, Mist), MissChance is floor(Mist / 2),
+        world:env_state(Env),
+        ( get_dict(mist, Env, Mist) -> true ; Mist = 0 ),
+        MissChance is floor(Mist / 2),
         roll_dice(1, 100, Roll),
         ( Roll =< MissChance ->
             Evts = [spell_missed(Id, Sp)]
@@ -429,6 +434,9 @@ resolve_death(_SrcEnt, DeadTgt, []) :-
 
 resolve_death(SrcEnt, DeadMob, Evts) :-
     get_dict(id, DeadMob, MobId), get_dict(room, DeadMob, RoomId),
+    ( get_dict(struct_id, DeadMob, _) ->
+        structures:register_respawn(DeadMob)
+    ; true ),
     world:del_entity(MobId),
     ( is_dict(DeadMob, mob) ->
         get_dict(tag, DeadMob, RawTag), to_atom(RawTag, Tag), spawn_config:mob_xp(Tag, Xp),

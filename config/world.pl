@@ -1,7 +1,8 @@
 :- module(world_config, [
     theme_weight/2, theme_data/2, rm_adj/2, rm_noun/2,
     base_wpn/1, base_arm/1, base_acc/1, pref/4, suff/4, tier_mult/2,
-    mob_base/2, elite_mod/3, safe_zone_chance/2, theme_env_base/4
+    mob_base/2, elite_mod/3, safe_zone_chance/2, theme_env_base/4,
+    structure_env_base/4
 ]).
 
 theme_weight(grove, 100).
@@ -111,6 +112,7 @@ safe_zone_chance(forest, 5).
 safe_zone_chance(wild, 5).
 safe_zone_chance(_, 0).
 
+% theme_env_base(Theme, BaseTemp, BaseMagic, BaseCorruption).
 theme_env_base(crypt, 10, 5, 80).
 theme_env_base(cavern, 12, 15, 20).
 theme_env_base(ruins, 15, 40, 30).
@@ -125,3 +127,13 @@ theme_env_base(village, 20, 10, 0).
 theme_env_base(monastery, 20, 50, 0).
 theme_env_base(prison, 10, 0, 40).
 theme_env_base(_, 15, 10, 10).
+
+% Special Structure Anomaly Environmental Baselines
+% structure_env_base(StructId, BaseTemp, BaseMagic, BaseCorruption).
+structure_env_base(dragons_lair, 95, 35, 20).
+structure_env_base(witchs_hut, 22, 65, 15).
+structure_env_base(ancient_ruins, 18, 90, 5).
+structure_env_base(living_tree, 20, 70, 0).
+structure_env_base(vampires_manor, 12, 40, 75).
+structure_env_base(astral_rift, 5, 100, 30).
+structure_env_base(necro_crypt, 8, 30, 90).
