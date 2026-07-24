@@ -21,7 +21,7 @@ seed_hub :-
             theme: village,
             type: outdoor,
             desc: "The central town square. A cool mountain river rushes past a stone fountain here.",
-            exits: dict{north: tavern, south: temple, east: barracks, west: mine_entrance, forest: forest_trail, farm: farm_field, wild: 'cell_0_0_0'},
+            exits: dict{north: tavern, south: temple, east: barracks, west: mine_entrance, forest: forest_trail, farm: farm_field, mountain: mountain_trail, wild: 'cell_0_0_0'},
             props: [safe, landmark, square, river],
             region: shire
         },
@@ -91,7 +91,7 @@ seed_hub :-
             theme: plains,
             type: outdoor,
             desc: "A tilled farming field. Fertile soil stretches out in neat furrows under the open sky.",
-            exits: dict{east: orchard, south: windmill, square: square},
+            exits: dict{east: orchard, south: windmill, town: square},
             props: [safe, tilled],
             region: shire
         },
@@ -115,6 +115,26 @@ seed_hub :-
             exits: dict{north: farm_field},
             props: [safe],
             region: shire
+        },
+        dict{
+            id: mine_entrance, theme: mine, type: normal,
+            desc: "The dark, excavated entrance to an abandoned mine.",
+            exits: dict{east: square}, props: []
+        },
+        dict{
+            id: forest_trail, theme: forest, type: normal,
+            desc: "A sprawling ancient canopy marking the edge of the woods.",
+            exits: dict{town: square}, props: []
+        },
+        dict{
+            id: graveyard, theme: crypt, type: normal,
+            desc: "A dusty catacomb beneath the temple.",
+            exits: dict{up: temple}, props: []
+        },
+        dict{
+            id: mountain_trail, theme: volcano, type: normal,
+            desc: "A steep and magmatic trail ascending into the clouds.",
+            exits: dict{town: square}, props: []
         }
     ],
     forall(member(R, Rooms), world:put_room(R)).
@@ -129,11 +149,7 @@ assert_room(R, _Lvl) :-
     world:get_room(R.id, Existing), !,
     get_dict(exits, Existing, Ex1),
     get_dict(exits, R, Ex2),
-    dict_pairs(Ex1, _, P1),
-    dict_pairs(Ex2, _, P2),
-    append(P1, P2, PAll),
-    list_to_set(PAll, USet),
-    dict_pairs(NExits, _, USet),
+    NExits = Ex1.put(Ex2),
     NR = Existing.put(exits, NExits),
     world:put_room(NR).
 assert_room(R, Lvl) :-
@@ -169,94 +185,52 @@ theme_node(volcano, _, basalt_fissure).
 seed_citizens :-
     Mobs = [
         mob{
-            id: guard_sam,
-            tag: guard,
-            name: "Captain Sam",
-            lvl: 10,
+          id: guard_nycolas, tag: guard, name: "Guard Nycolas", lvl: 40,
+          hp: 300, max_hp: 300, mp: 30, max_mp: 30,
+          str: 50, dex: 45, con: 50, int: 25, wis: 25, cha: 35, luk: 20,
+          room: square, fac: guard, props: [protector],
+          equip: dict{wpn: iron_sword, shield: iron_shield, body: chainmail},
+          route: [square, barracks, prison], route_idx: 0, wander: false,
+          threats: dict{}, mems: dict{}
+        },
+        mob{
+            id: guard_sam, tag: guard, name: "Captain Sam", lvl: 10,
             hp: 150, max_hp: 150, mp: 30, max_mp: 30,
             str: 25, dex: 20, con: 25, int: 12, wis: 15, cha: 15, luk: 12,
-            room: square,
-            fac: guard,
-            props: [protector],
+            room: square, fac: guard, props: [protector],
             equip: dict{wpn: iron_sword, shield: iron_shield, body: chainmail},
-            route: [square, barracks, prison],
-            route_idx: 0,
-            wander: false,
-            threats: dict{},
-            mems: dict{}
+            route: [square, barracks, prison], route_idx: 0, wander: false,
+            threats: dict{}, mems: dict{}
         },
         mob{
-            id: peasant_bob,
-            tag: peasant,
-            name: "Bob the Farmer",
-            lvl: 1,
+            id: peasant_bob, tag: peasant, name: "Bob the Farmer", lvl: 1,
             hp: 30, max_hp: 30, mp: 10, max_mp: 10,
             str: 12, dex: 10, con: 14, int: 8, wis: 10, cha: 10, luk: 12,
-            room: square,
-            fac: citizen,
-            job: peasant,
-            home: tavern,
-            work: farm_field,
-            act_state: wander,
-            props: [],
-            equip: dict{wpn: fists, shield: none, body: tunic},
-            wander: true,
-            inv: [
-                stack{tag: wheat_seed, qty: 3},
-                stack{tag: bread, qty: 2}
-            ],
-            threats: dict{},
-            mems: dict{}
+            room: square, fac: citizen, job: peasant, home: tavern, work: farm_field,
+            act_state: wander, props: [], equip: dict{wpn: fists, shield: none, body: tunic},
+            wander: true, inv: [stack{tag: wheat_seed, qty: 3}, stack{tag: bread, qty: 2}],
+            threats: dict{}, mems: dict{}
         },
         mob{
-            id: merchant_silvia,
-            tag: merchant,
-            name: "Silvia the Merchant",
-            lvl: 5,
+            id: merchant_silvia, tag: merchant, name: "Silvia the Merchant", lvl: 5,
             hp: 60, max_hp: 60, mp: 40, max_mp: 40,
             str: 10, dex: 12, con: 12, int: 14, wis: 15, cha: 18, luk: 15,
-            room: square,
-            fac: merchant,
-            job: merchant,
-            home: tavern,
-            work: square,
-            act_state: wander,
-            props: [merchant],
-            equip: dict{wpn: dagger, shield: none, body: tunic},
-            wander: false,
-            inv: [
-                stack{tag: gold, qty: 500},
-                stack{tag: bread, qty: 10},
-                stack{tag: apple, qty: 10},
-                stack{tag: empty_waterskin, qty: 5},
-                stack{tag: flint_and_steel, qty: 2},
-                stack{tag: whetstone, qty: 2}
+            room: square, fac: merchant, job: merchant, home: tavern, work: square,
+            act_state: wander, props: [merchant], equip: dict{wpn: dagger, shield: none, body: tunic},
+            wander: false, inv: [
+                stack{tag: gold, qty: 500}, stack{tag: bread, qty: 10}, stack{tag: apple, qty: 10},
+                stack{tag: empty_waterskin, qty: 5}, stack{tag: flint_and_steel, qty: 2}, stack{tag: whetstone, qty: 2}
             ],
-            threats: dict{},
-            mems: dict{}
+            threats: dict{}, mems: dict{}
         },
         mob{
-            id: priest_luke,
-            tag: priest,
-            name: "Father Luke",
-            lvl: 8,
+            id: priest_luke, tag: priest, name: "Father Luke", lvl: 8,
             hp: 80, max_hp: 80, mp: 80, max_mp: 80,
             str: 10, dex: 10, con: 12, int: 16, wis: 20, cha: 15, luk: 12,
-            room: temple,
-            fac: citizen,
-            job: citizen,
-            home: temple,
-            work: temple,
-            act_state: wander,
-            props: [healer],
-            equip: dict{wpn: staff, shield: none, body: tunic},
-            wander: false,
-            inv: [
-                stack{tag: gold, qty: 100},
-                stack{tag: holy_water, qty: 5}
-            ],
-            threats: dict{},
-            mems: dict{}
+            room: temple, fac: citizen, job: citizen, home: temple, work: temple,
+            act_state: wander, props: [healer], equip: dict{wpn: staff, shield: none, body: tunic},
+            wander: false, inv: [stack{tag: gold, qty: 100}, stack{tag: holy_water, qty: 5}],
+            threats: dict{}, mems: dict{}
         }
     ],
     forall(member(M, Mobs), world:put_entity(M)),

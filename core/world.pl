@@ -1,6 +1,7 @@
 :- module(world, [
     get_entity/2, put_entity/1, del_entity/1,
     get_room/2, put_room/1, del_room/1,
+    env_state/1, put_env/1,
     room_entities/2, gen_id/2, all_mobs/1,
     push_room_event/2, push_room_events/2, pop_room_events/2,
     clear_db/0, save_db/1, load_db/1,
@@ -14,6 +15,7 @@
 :- dynamic db_room/2.
 :- dynamic db_room_event/2.
 :- dynamic db_bounty_index/2.
+:- dynamic db_env/1.
 
 to_atom(Var, unknown) :- var(Var), !.
 to_atom(Atom, Atom) :- atom(Atom), !.
@@ -91,6 +93,13 @@ del_room(RawId) :-
     to_atom(RawId, Id),
     retractall(db_room(Id, _)).
 
+env_state(Env) :- db_env(Env), !.
+env_state(env{time: 480, weather: clear}).
+
+put_env(Env) :-
+    retractall(db_env(_)),
+    assertz(db_env(Env)).
+
 room_entities(RawRoomId, Ents) :-
     to_atom(RawRoomId, RoomId),
     findall(E, (db_entity(_, E), get_dict(room, E, RoomId)), Ents).
@@ -116,12 +125,14 @@ clear_db :-
     retractall(db_entity(_, _)),
     retractall(db_room(_, _)),
     retractall(db_room_event(_, _)),
-    retractall(db_bounty_index(_, _)).
+    retractall(db_bounty_index(_, _)),
+    retractall(db_env(_)).
 
 save_db(Filename) :-
     findall(E, db_entity(_, E), Ents),
     findall(R, db_room(_, R), Rooms),
-    State = json{entities: Ents, rooms: Rooms},
+    env_state(Env),
+    State = json{entities: Ents, rooms: Rooms, env: Env},
     setup_call_cleanup(
         open(Filename, write, Stream),
         json_write_dict(Stream, State, [width(0)]),
@@ -141,7 +152,8 @@ load_db(Filename) :-
     ),
     clear_db,
     ( get_dict(entities, State, Ents) -> forall(member(E, Ents), put_entity(E)) ; true ),
-    ( get_dict(rooms, State, Rooms) -> forall(member(R, Rooms), put_room(R)) ; true ).
+    ( get_dict(rooms, State, Rooms) -> forall(member(R, Rooms), put_room(R)) ; true ),
+    ( get_dict(env, State, Env) -> put_env(Env) ; put_env(env{time: 480, weather: clear}) ).
 
 take(0, _, []) :- !.
 take(_, [], []) :- !.

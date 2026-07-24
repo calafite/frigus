@@ -11,6 +11,7 @@
 :- use_module('../worldgen/builder').
 :- use_module('../systems/ai').
 :- use_module('../systems/status').
+:- use_module('../systems/env').
 
 :- dynamic active_client/2.
 
@@ -41,6 +42,8 @@ ticker_loop :-
     ticker_loop.
 
 run_world_tick :-
+    env:tick_env(EnvEvts),
+    ( EnvEvts \== [] -> push_outdoors(EnvEvts) ; true ),
     ai:do_ai_tick(_),
     forall(active_client(_, ActorId), (
         status:do_tick(ActorId, TickEvts),
@@ -52,6 +55,10 @@ run_world_tick :-
         ; true )
     )),
     broadcast_room_events.
+
+push_outdoors(Evts) :-
+    findall(RId, (world:get_room(RId, R), get_dict(type, R, outdoor)), OutRooms),
+    forall(member(RId, OutRooms), world:push_room_events(RId, Evts)).
 
 broadcast_room_events :-
     findall(RId, world:db_room_event(RId, _), RawRooms),

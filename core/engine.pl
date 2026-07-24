@@ -10,6 +10,7 @@
 :- use_module('../systems/status').
 :- use_module('../systems/ai').
 :- use_module('../systems/prog').
+:- use_module('../systems/env').
 
 step(Id, move(Dir), Evts)     :- move:do_move(Id, Dir, Evts), !.
 step(Id, kill(Tgt), Evts)     :- combat:do_kill(Id, Tgt, Evts), !.
@@ -27,6 +28,7 @@ step(Id, status, Evts)        :- do_status(Id, Evts), !.
 step(Id, inventory, Evts)     :- do_inventory(Id, Evts), !.
 step(Id, bounties, Evts)      :- do_bounties(Id, Evts), !.
 step(Id, pay_bounty, Evts)    :- combat:do_pay_bounty(Id, Evts), !.
+step(Id, time, Evts)          :- do_time(Id, Evts), !.
 
 step(Id, ensure_player, [player_status(Id, Status)]) :-
     ( world:get_entity(Id, _) ->
@@ -49,23 +51,25 @@ is_public_event(say(_,_)).
 is_public_event(npc_arrived(_)).
 is_public_event(guard_reinforcement(_)).
 is_public_event(bounty_paid(_,_)).
+is_public_event(env_msg(_)).
 
 split_events([], [], []).
 split_events([E|Es], [E|Pubs], Privs) :- is_public_event(E), !, split_events(Es, Pubs, Privs).
 split_events([E|Es], Pubs, [E|Privs]) :- split_events(Es, Pubs, Privs).
 
 api_step(Req, Res) :-
+    ( catch(api_step_internal(Req, Res), Err, format_exception_res(Err, Req, Res)) ->
+        true
+    ;
+        Res = json{status: "error", error: "Goal evaluation failed catastrophically."}
+    ).
+
+api_step_internal(Req, Res) :-
     ( get_dict(actor, Req, RawActor) -> ensure_atom(RawActor, ActorId) ; ActorId = unknown ),
     ( get_dict(action, Req, ActionDict) -> true ; ActionDict = dict{} ),
     ( parse_act(ActionDict, ActTerm) ->
         ( step(ActorId, ActTerm, DirectEvts) ->
-            ( (ActorId \== unknown, ActTerm \== tick, ActTerm \== ensure_player) ->
-                status:do_tick(ActorId, TickEvts)
-            ;
-                TickEvts = []
-            ),
-            append(DirectEvts, TickEvts, AllEvts),
-            split_events(AllEvts, PubEvts, PrivEvts),
+            split_events(DirectEvts, PubEvts, PrivEvts),
 
             ( world:get_entity(ActorId, Actor), get_dict(room, Actor, RoomId) ->
                 world:push_room_events(RoomId, PubEvts)
@@ -151,6 +155,7 @@ parse_act(D, status)        :- get_dict(type, D, "status").
 parse_act(D, inventory)     :- get_dict(type, D, "inventory").
 parse_act(D, bounties)      :- ( get_dict(type, D, "bounties") ; get_dict(type, D, "bounty") ).
 parse_act(D, pay_bounty)    :- ( get_dict(type, D, "pay_bounty") ; get_dict(type, D, "pay") ; get_dict(type, D, "pardon") ).
+parse_act(D, time)          :- ( get_dict(type, D, "time") ; get_dict(type, D, "weather") ; get_dict(type, D, "env") ).
 parse_act(D, ai_tick)       :- get_dict(type, D, "ai_tick").
 parse_act(D, tick)          :- get_dict(type, D, "tick").
 parse_act(D, ensure_player) :- get_dict(type, D, "ensure_player").
@@ -176,6 +181,14 @@ do_look(Id, Evts) :-
             get_dict(hp, A, SelfHp), get_dict(max_hp, A, SelfMaxHp),
             get_dict(mp, A, SelfMp), get_dict(max_mp, A, SelfMaxMp),
             SelfStats = dict{hp: SelfHp, max_hp: SelfMaxHp, mp: SelfMp, max_mp: SelfMaxMp},
+
+            ( get_dict(type, Node, outdoor) ->
+                world:env_state(EnvState),
+                env:env_desc(EnvState, EnvDesc)
+            ;
+                EnvDesc = ""
+            ),
+
             findall(dict{id: OId, hp: OHp, max_hp: OMaxHp, bounty: OBty},
                     (member(O, Ents), is_plyr(O), get_dict(id, O, OId), OId \== Id,
                      get_dict(hp, O, OHp), get_dict(max_hp, O, OMaxHp), (get_dict(bounty, O, OBty) -> true ; OBty = 0)), OData),
@@ -186,7 +199,7 @@ do_look(Id, Evts) :-
             findall(dict{id: IId, tag: ITag, qty: IQty},
                     (member(I, Ents), is_item(I), get_dict(id, I, IId),
                      get_dict(tag, I, ITag), get_dict(qty, I, IQty)), IData),
-            Evts = [look(RId, Desc, Props, Exits, OData, MData, IData, SelfStats)]
+            Evts = [look(RId, Desc, Props, Exits, OData, MData, IData, SelfStats, EnvDesc)]
         ;
             Evts = [error(room_not_found(RoomId))]
         )
@@ -217,6 +230,10 @@ do_inventory(Id, [error(actor_not_found(Id))]).
 
 do_bounties(Id, [bounty_report(Id, List)]) :-
     world:get_bounty_leaderboard(10, List).
+
+do_time(Id, [time_report(Id, Desc)]) :-
+    world:env_state(Env),
+    env:env_desc(Env, Desc).
 
 default_player(Id, P) :-
     P = plyr{

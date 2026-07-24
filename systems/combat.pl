@@ -69,9 +69,10 @@ clear_local_threats(PId, Player) :-
     get_dict(room, Player, Room),
     world:room_entities(Room, Ents),
     forall(member(M, Ents), (
-        is_dict(M, mob),
-        entity:rem_threat(M, PId, NM),
-        world:put_entity(NM)
+        ( is_dict(M, mob) ->
+            entity:rem_threat(M, PId, NM),
+            world:put_entity(NM)
+        ; true )
     )).
 
 do_kill(Id, _TgtQuery, [error(actor_not_found(Id))]) :-
