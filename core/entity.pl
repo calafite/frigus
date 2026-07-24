@@ -1,11 +1,11 @@
-% ================================================
 :- module(entity, [
     is_alive/1,
     get_stat/3,
     mod_hp/3,
     has_item/2,
     add_item/4,
-    rem_item/4
+    rem_item/4,
+    add_threat/4
 ]).
 
 :- use_module(library(lists)).
@@ -67,3 +67,11 @@ rem_from_inv([Stack|Rest], Tag, Qty, NInv) :-
     ( NewQ =:= 0 -> NInv = Rest ; NStack = Stack.put(qty, NewQ), NInv = [NStack|Rest] ).
 rem_from_inv([Item|Rest], Tag, Qty, [Item|NRest]) :-
     rem_from_inv(Rest, Tag, Qty, NRest).
+
+add_threat(Ent, TgtId, Val, NEnt) :-
+    is_dict(Ent),
+    ( get_dict(threats, Ent, Th) -> true ; Th = dict{} ),
+    ( get_dict(TgtId, Th, CurVal) -> NVal is CurVal + Val ; NVal = Val ),
+    NTh = Th.put(TgtId, NVal),
+    NEnt = Ent.put(threats, NTh), !.
+add_threat(Ent, _, _, Ent).
