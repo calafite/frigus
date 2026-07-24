@@ -128,12 +128,12 @@ theme_env_base(monastery, 20, 50, 0).
 theme_env_base(prison, 10, 0, 40).
 theme_env_base(_, 15, 10, 10).
 
-% Special Structure Anomaly Environmental Baselines
+% Special Structure Anomaly Environmental Baselines (Through-the-roof magic)
 % structure_env_base(StructId, BaseTemp, BaseMagic, BaseCorruption).
-structure_env_base(dragons_lair, 95, 35, 20).
-structure_env_base(witchs_hut, 22, 65, 15).
-structure_env_base(ancient_ruins, 18, 90, 5).
-structure_env_base(living_tree, 20, 70, 0).
-structure_env_base(vampires_manor, 12, 40, 75).
-structure_env_base(astral_rift, 5, 100, 30).
-structure_env_base(necro_crypt, 8, 30, 90).
+structure_env_base(dragons_lair, 95, 250, 30).
+structure_env_base(witchs_hut, 22, 300, 40).
+structure_env_base(ancient_ruins, 18, 400, 15).
+structure_env_base(living_tree, 20, 350, 0).
+structure_env_base(vampires_manor, 12, 200, 180).
+structure_env_base(astral_rift, 5, 500, 80).
+structure_env_base(necro_crypt, 8, 220, 250).

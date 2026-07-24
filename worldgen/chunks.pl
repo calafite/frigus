@@ -39,15 +39,20 @@ generate_cell(X, Y, Z, Id) :-
         ( Chance > 0, SafeRoll < Chance -> Props = [safe] ; Props = [] )
     ),
 
-    % 2. Calculate Local Environment (using structure overrides if special)
+    % 2. Calculate Local Environment (with high magic and wide variable corruption for structures)
     ( IsSpecial == true, world_config:structure_env_base(StructId, BTemp, BMag, BCor) ->
-        true
+        TOff is (Hash mod 11) - 5,
+        MOff is ((Hash // 13) mod 61) - 30,  % Wide magic fluctuation (±30)
+        COff is ((Hash // 17) mod 101) - 50, % Extreme variable corruption (±50)
+        Temp is BTemp + TOff,
+        Mag is max(100, BMag + MOff),       % Guaranteed through-the-roof magic (min 100)
+        Cor is max(0, min(350, BCor + COff))
     ;
-        world_config:theme_env_base(Theme, BTemp, BMag, BCor)
+        world_config:theme_env_base(Theme, BTemp, BMag, BCor),
+        TOff is (Hash mod 11) - 5, MOff is ((Hash // 11) mod 11) - 5, COff is ((Hash // 121) mod 11) - 5,
+        Temp is BTemp + TOff, Mag is max(0, BMag + MOff), Cor is max(0, BCor + COff)
     ),
 
-    TOff is (Hash mod 11) - 5, MOff is ((Hash // 11) mod 11) - 5, COff is ((Hash // 121) mod 11) - 5,
-    Temp is BTemp + TOff, Mag is max(0, BMag + MOff), Cor is max(0, BCor + COff),
     REnv = dict{temp: Temp, magic: Mag, corr: Cor},
 
     % 3. Connect surrounding wilderness cells

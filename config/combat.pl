@@ -25,7 +25,8 @@ wpn_dmg(shortbow, [dmg(pierce, 7)]).
 wpn_dmg(staff, [dmg(blunt, 5)]).
 wpn_dmg(iron_sword, [dmg(slash, 10)]).
 
-% Unique Boss Weapons
+% Celestial & Legendary Weapons
+wpn_dmg(seraphs_blade, [dmg(fire, 22), dmg(slash, 12)]).
 wpn_dmg(ancient_runesword, [dmg(slash, 18)]).
 wpn_dmg(vampire_fanged_blade, [dmg(pierce, 20)]).
 wpn_dmg(necromancer_staff, [dmg(magic, 16)]).
@@ -69,6 +70,7 @@ wpn_trait(sword, reliable).
 wpn_trait(iron_sword, reliable).
 wpn_trait(shortsword, reliable).
 wpn_trait(ancient_runesword, reliable).
+wpn_trait(seraphs_blade, precision).
 wpn_trait(vampire_fanged_blade, flurry).
 wpn_trait(necromancer_staff, catalyst).
 wpn_trait(dagger, flurry).
@@ -80,6 +82,7 @@ wpn_trait(_, standard).
 
 wpn_crit_mult(battleaxe, 2.5).
 wpn_crit_mult(greatsword, 2.5).
+wpn_crit_mult(seraphs_blade, 2.5).
 wpn_crit_mult(dagger, 1.8).
 wpn_crit_mult(vampire_fanged_blade, 2.2).
 wpn_crit_mult(_, 2.0).

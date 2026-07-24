@@ -1,5 +1,6 @@
 :- module(item_config, [slot/2, weight/2, val/2, consumable/2]).
 
+% Equipment Slots
 slot(sword, wpn).
 slot(iron_sword, wpn).
 slot(dagger, wpn).
@@ -11,6 +12,7 @@ slot(battleaxe, wpn).
 slot(ancient_runesword, wpn).
 slot(vampire_fanged_blade, wpn).
 slot(necromancer_staff, wpn).
+slot(seraphs_blade, wpn).
 
 slot(iron_shield, shield).
 slot(wooden_shield, shield).
@@ -40,6 +42,7 @@ val(vampire_fanged_blade, 500).
 val(dragon_scale_mail, 750).
 val(ancient_runesword, 600).
 val(necromancer_staff, 550).
+val(seraphs_blade, 1000).
 val(_, 10).
 
 % Consumable Item Effects

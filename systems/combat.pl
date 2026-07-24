@@ -177,7 +177,7 @@ do_pay_bounty(Id, Evts) :-
     ( world:get_entity(Id, Actor) ->
         ( (get_dict(bounty, Actor, B), B > 0) ->
             ( entity:rem_item(Actor, gold, B, A1) ->
-                entity:clear_bounty(A1, FinalA), world:put_entity(FinalA), world:save_db('world_state.json'),
+                entity:clear_bounty(A1, FinalA), world:save_db('world_state.json'),
                 clear_local_threats(Id, FinalA), Evts = [bounty_paid(Id, B)]
             ; Evts = [error(insufficient_gold_for_bounty(Id, B))] )
         ; Evts = [error(no_bounty_to_pay(Id))] )
@@ -428,9 +428,27 @@ handle_death(SrcEnt, DeadTgt, Evts) :-
     resolve_death(NSrc, CleanTgt, BaseEvts),
     append(BountyEvts, BaseEvts, Evts).
 
-resolve_death(_SrcEnt, DeadTgt, []) :-
+resolve_death(_SrcEnt, DeadTgt, DropEvts) :-
     is_dict(DeadTgt, plyr), !,
-    Reborn = DeadTgt.put(hp, 0), world:put_entity(Reborn).
+    ( (get_dict(race, DeadTgt, angel) ; (get_dict(equip, DeadTgt, Eq), get_dict(wpn, Eq, seraphs_blade))) ->
+        get_dict(room, DeadTgt, RoomId),
+        world:gen_id(drop, DropId),
+        DropItem = item{id: DropId, tag: seraphs_blade, qty: 1, room: RoomId},
+        world:put_entity(DropItem),
+
+        % Strip Seraph's Blade from player equipment and inventory upon death
+        ( get_dict(equip, DeadTgt, Eq1), get_dict(wpn, Eq1, seraphs_blade) ->
+            NEq = Eq1.put(wpn, fists),
+            TmpP = DeadTgt.put(equip, NEq)
+        ; TmpP = DeadTgt ),
+        entity:rem_item(TmpP, seraphs_blade, 1, CleanP),
+
+        Reborn = CleanP.put(hp, 0), world:put_entity(Reborn),
+        DropEvts = [dropped(DropId, seraphs_blade, 1)]
+    ;
+        Reborn = DeadTgt.put(hp, 0), world:put_entity(Reborn),
+        DropEvts = []
+    ).
 
 resolve_death(SrcEnt, DeadMob, Evts) :-
     get_dict(id, DeadMob, MobId), get_dict(room, DeadMob, RoomId),

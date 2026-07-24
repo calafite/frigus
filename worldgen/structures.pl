@@ -50,10 +50,10 @@ spawn_structure_mobs(StructId, _Hash, X, Y, Z, Theme, RId) :-
         world:gen_id(mob, Id),
         spawn_config:mob_stats(BossTag, BHp, BStr, BDex, BInt),
         LevelMod is 1.0 + (Lvl * 0.2),
-        FinalH is floor(BHp * LevelMod * 2.0),
-        FinalS is max(1, floor(BStr * LevelMod * 1.3)),
-        FinalD is max(1, floor(BDex * LevelMod * 1.3)),
-        FinalI is max(1, floor(BInt * LevelMod * 1.3)),
+        FinalH is floor(BHp * LevelMod * 2.5), % Extremely tanky
+        FinalS is max(1, floor(BStr * LevelMod * 1.5)),
+        FinalD is max(1, floor(BDex * LevelMod * 1.5)),
+        FinalI is max(10, floor(BInt * LevelMod * 2.8)), % Supercharged Intelligence for spellcasting
 
         Mob = mob{
             id: Id,
