@@ -1,4 +1,7 @@
-:- module(combat, [do_kill/3, do_cast/4, is_town_npc/1, is_innocent/1]).
+:- module(combat, [
+    do_kill/3, do_cast/4, do_pay_bounty/2,
+    is_town_npc/1, is_innocent/1
+]).
 
 :- use_module('../core/world').
 :- use_module('../core/entity').
@@ -42,6 +45,30 @@ is_innocent(Ent) :-
 is_crime(Tgt) :-
     is_innocent(Tgt),
     ( get_dict(bounty, Tgt, B) -> B =< 0 ; true ).
+
+do_pay_bounty(Id, Evts) :-
+    world:get_entity(Id, Actor),
+    ( get_dict(bounty, Actor, B), B > 0 ->
+        ( entity:rem_item(Actor, gold, B, A1) ->
+            entity:clear_bounty(A1, FinalA),
+            world:put_entity(FinalA),
+            clear_local_threats(Id, FinalA),
+            Evts = [bounty_paid(Id, B)]
+        ;
+            Evts = [error(insufficient_gold_for_bounty(Id, B))]
+        )
+    ;
+        Evts = [error(no_bounty_to_pay(Id))]
+    ).
+
+clear_local_threats(PId, Player) :-
+    get_dict(room, Player, Room),
+    world:room_entities(Room, Ents),
+    forall(member(M, Ents), (
+        is_dict(M, mob),
+        entity:rem_threat(M, PId, NM),
+        world:put_entity(NM)
+    )).
 
 do_kill(Id, _TgtQuery, [error(actor_not_found(Id))]) :-
     \+ world:get_entity(Id, _), !.

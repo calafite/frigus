@@ -26,6 +26,7 @@ step(Id, look, Evts)          :- do_look(Id, Evts), !.
 step(Id, status, Evts)        :- do_status(Id, Evts), !.
 step(Id, inventory, Evts)     :- do_inventory(Id, Evts), !.
 step(Id, bounties, Evts)      :- do_bounties(Id, Evts), !.
+step(Id, pay_bounty, Evts)    :- combat:do_pay_bounty(Id, Evts), !.
 
 step(Id, ensure_player, [player_status(Id, Status)]) :-
     ( world:get_entity(Id, _) ->
@@ -47,6 +48,7 @@ is_public_event(healed(_,_,_,_)).
 is_public_event(say(_,_)).
 is_public_event(npc_arrived(_)).
 is_public_event(guard_reinforcement(_)).
+is_public_event(bounty_paid(_,_)).
 
 split_events([], [], []).
 split_events([E|Es], [E|Pubs], Privs) :- is_public_event(E), !, split_events(Es, Pubs, Privs).
@@ -148,6 +150,7 @@ parse_act(D, look)          :- get_dict(type, D, "look").
 parse_act(D, status)        :- get_dict(type, D, "status").
 parse_act(D, inventory)     :- get_dict(type, D, "inventory").
 parse_act(D, bounties)      :- ( get_dict(type, D, "bounties") ; get_dict(type, D, "bounty") ).
+parse_act(D, pay_bounty)    :- ( get_dict(type, D, "pay_bounty") ; get_dict(type, D, "pay") ; get_dict(type, D, "pardon") ).
 parse_act(D, ai_tick)       :- get_dict(type, D, "ai_tick").
 parse_act(D, tick)          :- get_dict(type, D, "tick").
 parse_act(D, ensure_player) :- get_dict(type, D, "ensure_player").

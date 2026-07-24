@@ -6,6 +6,7 @@
     add_item/4,
     rem_item/4,
     add_threat/4,
+    rem_threat/3,
     add_bounty/3,
     clear_bounty/2
 ]).
@@ -77,6 +78,12 @@ add_threat(Ent, TgtId, Val, NEnt) :-
     NTh = Th.put(TgtId, NVal),
     NEnt = Ent.put(threats, NTh), !.
 add_threat(Ent, _, _, Ent).
+
+rem_threat(Ent, TgtId, NEnt) :-
+    is_dict(Ent),
+    ( get_dict(threats, Ent, Th) ->
+        ( del_dict(TgtId, Th, _, NTh) -> NEnt = Ent.put(threats, NTh) ; NEnt = Ent )
+    ; NEnt = Ent ).
 
 add_bounty(Ent, Val, NEnt) :-
     is_dict(Ent),
