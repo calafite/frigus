@@ -3,7 +3,8 @@
     get_room/2, put_room/1, del_room/1,
     room_entities/2, gen_id/2, all_mobs/1,
     push_room_event/2, push_room_events/2, pop_room_events/2,
-    clear_db/0, save_db/1, load_db/1
+    clear_db/0, save_db/1, load_db/1,
+    get_bounty_leaderboard/2
 ]).
 
 :- use_module(library(json)).
@@ -12,6 +13,7 @@
 :- dynamic db_entity/2.
 :- dynamic db_room/2.
 :- dynamic db_room_event/2.
+:- dynamic db_bounty_index/2.
 
 to_atom(Var, unknown) :- var(Var), !.
 to_atom(Atom, Atom) :- atom(Atom), !.
@@ -64,11 +66,16 @@ put_entity(Ent) :-
     clean_entity(Ent, CleanEnt),
     get_dict(id, CleanEnt, Id),
     retractall(db_entity(Id, _)),
-    assertz(db_entity(Id, CleanEnt)).
+    assertz(db_entity(Id, CleanEnt)),
+    retractall(db_bounty_index(Id, _)),
+    ( get_dict(bounty, CleanEnt, B), B > 0 ->
+        assertz(db_bounty_index(Id, B))
+    ; true ).
 
 del_entity(RawId) :-
     to_atom(RawId, Id),
-    retractall(db_entity(Id, _)).
+    retractall(db_entity(Id, _)),
+    retractall(db_bounty_index(Id, _)).
 
 get_room(RawId, Room) :-
     to_atom(RawId, Id),
@@ -108,7 +115,8 @@ pop_room_events(RawRoomId, Events) :-
 clear_db :-
     retractall(db_entity(_, _)),
     retractall(db_room(_, _)),
-    retractall(db_room_event(_, _)).
+    retractall(db_room_event(_, _)),
+    retractall(db_bounty_index(_, _)).
 
 save_db(Filename) :-
     findall(E, db_entity(_, E), Ents),
@@ -134,3 +142,19 @@ load_db(Filename) :-
     clear_db,
     ( get_dict(entities, State, Ents) -> forall(member(E, Ents), put_entity(E)) ; true ),
     ( get_dict(rooms, State, Rooms) -> forall(member(R, Rooms), put_room(R)) ; true ).
+
+take(0, _, []) :- !.
+take(_, [], []) :- !.
+take(N, [H|T], [H|Rest]) :-
+    N > 0, N1 is N - 1,
+    take(N1, T, Rest).
+
+get_bounty_leaderboard(Limit, Leaderboard) :-
+    findall(B-Id, db_bounty_index(Id, B), Pairs),
+    keysort(Pairs, Sorted),
+    reverse(Sorted, Desc),
+    take(Limit, Desc, RawList),
+    maplist(format_bounty_entry, RawList, Leaderboard).
+
+format_bounty_entry(Bounty-Id, dict{id: Id, name: Name, bounty: Bounty}) :-
+    ( db_entity(Id, Ent), get_dict(name, Ent, Name) -> true ; Name = Id ).
