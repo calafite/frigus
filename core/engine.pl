@@ -25,6 +25,7 @@ step(Id, tick, Evts)          :- status:do_tick(Id, Evts), !.
 step(Id, look, Evts)          :- do_look(Id, Evts), !.
 step(Id, status, Evts)        :- do_status(Id, Evts), !.
 step(Id, inventory, Evts)     :- do_inventory(Id, Evts), !.
+step(Id, bounties, Evts)      :- do_bounties(Id, Evts), !.
 
 step(Id, ensure_player, [player_status(Id, Status)]) :-
     ( world:get_entity(Id, _) ->
@@ -52,13 +53,6 @@ split_events([E|Es], [E|Pubs], Privs) :- is_public_event(E), !, split_events(Es,
 split_events([E|Es], Pubs, [E|Privs]) :- split_events(Es, Pubs, Privs).
 
 api_step(Req, Res) :-
-    ( catch(api_step_internal(Req, Res), Err, format_exception_res(Err, Req, Res)) ->
-        true
-    ;
-        Res = json{status: "error", error: "Goal evaluation failed catastrophically."}
-    ).
-
-api_step_internal(Req, Res) :-
     ( get_dict(actor, Req, RawActor) -> ensure_atom(RawActor, ActorId) ; ActorId = unknown ),
     ( get_dict(action, Req, ActionDict) -> true ; ActionDict = dict{} ),
     ( parse_act(ActionDict, ActTerm) ->
@@ -153,6 +147,7 @@ parse_act(D, allocate(S)) :-
 parse_act(D, look)          :- get_dict(type, D, "look").
 parse_act(D, status)        :- get_dict(type, D, "status").
 parse_act(D, inventory)     :- get_dict(type, D, "inventory").
+parse_act(D, bounties)      :- ( get_dict(type, D, "bounties") ; get_dict(type, D, "bounty") ).
 parse_act(D, ai_tick)       :- get_dict(type, D, "ai_tick").
 parse_act(D, tick)          :- get_dict(type, D, "tick").
 parse_act(D, ensure_player) :- get_dict(type, D, "ensure_player").
@@ -178,9 +173,9 @@ do_look(Id, Evts) :-
             get_dict(hp, A, SelfHp), get_dict(max_hp, A, SelfMaxHp),
             get_dict(mp, A, SelfMp), get_dict(max_mp, A, SelfMaxMp),
             SelfStats = dict{hp: SelfHp, max_hp: SelfMaxHp, mp: SelfMp, max_mp: SelfMaxMp},
-            findall(dict{id: OId, hp: OHp, max_hp: OMaxHp},
+            findall(dict{id: OId, hp: OHp, max_hp: OMaxHp, bounty: OBty},
                     (member(O, Ents), is_plyr(O), get_dict(id, O, OId), OId \== Id,
-                     get_dict(hp, O, OHp), get_dict(max_hp, O, OMaxHp)), OData),
+                     get_dict(hp, O, OHp), get_dict(max_hp, O, OMaxHp), (get_dict(bounty, O, OBty) -> true ; OBty = 0)), OData),
             findall(dict{id: MId, name: MName, tag: MTag, hp: MHp, max_hp: MMaxHp},
                     (member(M, Ents), is_mob(M), get_dict(hp, M, MHp), MHp > 0,
                      get_dict(id, M, MId), (get_dict(name, M, MName) -> true ; MName = MTag),
@@ -196,13 +191,14 @@ do_look(Id, Evts) :-
         Evts = [error(actor_not_found(Id))]
     ).
 
-do_status(Id, [status_info(Id, Lvl, Xp, ReqXp, StatPoints, Stats, Health)]) :-
+do_status(Id, [status_info(Id, Lvl, Xp, ReqXp, StatPoints, Stats, Health, Bty)]) :-
     world:get_entity(Id, A), !,
     get_dict(hp, A, Hp), get_dict(max_hp, A, MaxHp),
     get_dict(mp, A, Mp), get_dict(max_mp, A, MaxMp),
     get_dict(lvl, A, Lvl), get_dict(xp, A, Xp),
     ReqXp is Lvl * Lvl * 100,
     ( get_dict(stat_points, A, StatPoints) -> true ; StatPoints = 0 ),
+    ( get_dict(bounty, A, Bty) -> true ; Bty = 0 ),
     entity:get_stat(A, str, Str), entity:get_stat(A, dex, Dex),
     entity:get_stat(A, con, Con), entity:get_stat(A, int, Int),
     entity:get_stat(A, wis, Wis), entity:get_stat(A, cha, Cha),
@@ -216,10 +212,13 @@ do_inventory(Id, [inventory_info(Id, Inv, Eq)]) :-
     get_dict(inv, A, Inv), get_dict(equip, A, Eq).
 do_inventory(Id, [error(actor_not_found(Id))]).
 
+do_bounties(Id, [bounty_report(Id, List)]) :-
+    world:get_bounty_leaderboard(10, List).
+
 default_player(Id, P) :-
     P = plyr{
         id: Id, tag: player, class: fighter, race: human, lvl: 1, xp: 0,
-        stat_points: 3,
+        stat_points: 3, bounty: 0,
         hp: 50, max_hp: 50, mp: 20, max_mp: 20,
         str: 12, dex: 12, con: 12, int: 10, wis: 10, cha: 10, luk: 10,
         room: square, equip: equip{wpn: fists, shield: none, body: none},

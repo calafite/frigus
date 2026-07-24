@@ -54,6 +54,26 @@ is_hostile_mob(Mob) :-
     to_atom(Tag, AtomTag),
     spawn_config:is_aggressive(AtomTag).
 
+highest_bounty(Ents, TopId) :-
+    findall(B-Id, (
+        member(E, Ents),
+        get_dict(bounty, E, B), B > 0,
+        get_dict(id, E, Id),
+        entity:is_alive(E)
+    ), Pairs),
+    Pairs \== [],
+    keysort(Pairs, Sorted),
+    reverse(Sorted, [_-TopId|_]).
+
+act_mob(Mob, Evts) :-
+    is_guard(Mob),
+    get_dict(room, Mob, Room),
+    world:room_entities(Room, Ents),
+    highest_bounty(Ents, TgtId), !,
+    get_dict(id, Mob, MId),
+    combat:do_kill(MId, TgtId, Evts),
+    world:push_room_events(Room, Evts).
+
 act_mob(Mob, Evts) :-
     get_dict(threats, Mob, Threats),
     dict_keys(Threats, Keys), Keys \== [],
@@ -87,7 +107,7 @@ act_mob(Mob, Evts) :-
     is_hostile_mob(Mob),
     world:room_entities(Room, Ents),
     member(P, Ents), is_dict(P, plyr),
-    get_dict(hp, P, Hp), Hp > 0, !,
+    entity:is_alive(P), !,
     get_dict(id, P, PId), get_dict(id, Mob, MId),
     combat:do_kill(MId, PId, Evts),
     world:push_room_events(Room, Evts).

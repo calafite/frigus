@@ -5,7 +5,9 @@
     has_item/2,
     add_item/4,
     rem_item/4,
-    add_threat/4
+    add_threat/4,
+    add_bounty/3,
+    clear_bounty/2
 ]).
 
 :- use_module(library(lists)).
@@ -75,3 +77,13 @@ add_threat(Ent, TgtId, Val, NEnt) :-
     NTh = Th.put(TgtId, NVal),
     NEnt = Ent.put(threats, NTh), !.
 add_threat(Ent, _, _, Ent).
+
+add_bounty(Ent, Val, NEnt) :-
+    is_dict(Ent),
+    ( get_dict(bounty, Ent, Cur) -> true ; Cur = 0 ),
+    New is Cur + Val,
+    NEnt = Ent.put(bounty, New).
+
+clear_bounty(Ent, NEnt) :-
+    is_dict(Ent),
+    NEnt = Ent.put(bounty, 0).
