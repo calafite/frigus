@@ -1,4 +1,8 @@
-:- module(auth, [handle_validate_key/3, handle_ensure_player/6]).
+:- module(auth, [
+    handle_validate_key/3,
+    handle_login/3,
+    handle_register/6
+]).
 
 :- use_module(library(md5)).
 :- use_module('world').
@@ -7,17 +11,31 @@
 handle_validate_key(Id, Key, [key_status(Id, Key, Status)]) :-
     ( admin_key(Key) -> Status = valid ; Status = invalid ).
 
-handle_ensure_player(Id, Pass, Key, Race, Stats, Evts) :-
+% Strict Login logic
+handle_login(Id, Pass, Evts) :-
     hash_pass(Pass, Hash),
     ( world:get_entity(Id, Player) ->
         ( get_dict(pass_hash, Player, StoredHash) ->
-            ( StoredHash == Hash -> Evts = [player_status(Id, exists)]
-            ; Evts = [error(invalid_password(Id))] )
+            ( same_hash(StoredHash, Hash) ->
+                Evts = [player_status(Id, exists)]
+            ;
+                Evts = [error(invalid_password(Id))]
+            )
         ;
+            % Legacy password assignment
             NPlayer = Player.put(pass_hash, Hash),
-            world:put_entity(NPlayer), world:save_db('world_state.json'),
+            world:put_entity(NPlayer),
+            world:save_db('world_state.json'),
             Evts = [player_status(Id, exists)]
         )
+    ;
+        Evts = [error(account_does_not_exist(Id))]
+    ).
+
+% Strict Registration logic
+handle_register(Id, Pass, Key, Race, Stats, Evts) :-
+    ( world:get_entity(Id, _) ->
+        Evts = [error(account_already_exists(Id))]
     ;
         ( (is_restricted(Race), \+ admin_key(Key)) ->
             Evts = [error(restricted_race_denied(Id, Race))]
@@ -25,13 +43,21 @@ handle_ensure_player(Id, Pass, Key, Race, Stats, Evts) :-
             ( admin_key(Key) -> IsAdmin = true ; IsAdmin = false ),
             ( chk_alloc(Stats, IsAdmin, CleanStats) ->
                 default_player(Id, Pass, Race, IsAdmin, CleanStats, NewPlayer),
-                world:put_entity(NewPlayer), world:save_db('world_state.json'),
+                world:put_entity(NewPlayer),
+                world:save_db('world_state.json'),
                 Evts = [player_status(Id, created)]
             ;
                 Evts = [error(stat_allocation_invalid(Id))]
             )
         )
     ).
+
+% Type-agnostic hash equality check (Atom vs String)
+same_hash(H1, H2) :-
+    nonvar(H1), nonvar(H2),
+    atom_string(H1, S1),
+    atom_string(H2, S2),
+    S1 == S2.
 
 admin_key(RawKey) :-
     nonvar(RawKey),
@@ -60,9 +86,11 @@ chk_alloc(Stats, IsAdmin, CleanStats) :-
     Spent =< MaxPts,
     CleanStats = dict{str: S, dex: D, con: C, int: I, wis: W, cha: Ch, luk: L}.
 
-hash_pass(Pass, Hash) :-
+hash_pass(Pass, HashStr) :-
     ( atom(Pass) ; string(Pass) ), Pass \== "", !,
-    atom_string(Pass, Str), md5_hash(Str, Hash, []).
+    atom_string(Pass, Str),
+    md5_hash(Str, RawHash, []),
+    atom_string(RawHash, HashStr).
 hash_pass(_, "nohash").
 
 default_player(Id, Pass, Race, IsAdmin, Stats, P) :-
