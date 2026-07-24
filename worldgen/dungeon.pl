@@ -19,7 +19,11 @@ room_name(Theme, Name) :-
 
 init_room(Id, Theme, Lvl, R) :-
     room_name(Theme, Name),
-    R = dict{id: Id, type: normal, desc: Name, name: Name, exits: dict{}, props: [], theme: Theme, lvl: Lvl}.
+    world_config:safe_zone_chance(Theme, Chance),
+    ( Chance > 0, random_between(1, 100, Roll), Roll =< Chance ->
+        Props = [safe]
+    ; Props = [] ),
+    R = dict{id: Id, type: normal, desc: Name, name: Name, exits: dict{}, props: Props, theme: Theme, lvl: Lvl}.
 
 add_exit(R, Dir, Tgt, NR) :-
     E = R.exits.put(Dir, Tgt),
@@ -32,7 +36,7 @@ gen_dun(Theme, Lvl, Size, EntryId, Dun) :-
     init_room(RootId, Theme, Lvl, Root),
     add_exit(Root, up, EntryId, FRoot),
     build_path(Theme, Lvl, Size, FRoot, up, NRooms, Mobs, Items),
-    Dun = dict{rooms: [FEntry  |NRooms], mobs: Mobs, items: Items}.
+    Dun = dict{rooms: [FEntry | NRooms], mobs: Mobs, items: Items}.
 
 build_path(_, _, 0, R, _, [R], [], []) :- !.
 build_path(Theme, Lvl, Len, Cur, PrevDir, Rooms, Mobs, Items) :-
@@ -40,10 +44,16 @@ build_path(Theme, Lvl, Len, Cur, PrevDir, Rooms, Mobs, Items) :-
     world:gen_id(room, NextId),
     rand_dir(PrevDir, OutDir, RevDir),
     add_exit(Cur, OutDir, NextId, FCur),
+
     init_room(NextId, Theme, Lvl, Next),
     add_exit(Next, RevDir, Cur.id, FNext),
 
-    spawn:gen_grp(Theme, Lvl, NextId, NMobs),
+    get_dict(props, Next, NextProps),
+    ( member(safe, NextProps) ->
+        NMobs = []
+    ;
+        spawn:gen_grp(Theme, Lvl, NextId, NMobs)
+    ),
     proc_loot:gen_chest(Lvl, NextId, NItems),
 
     build_path(Theme, Lvl, NLen, FNext, RevDir, RestRooms, RestMobs, RestItems),

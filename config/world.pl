@@ -1,8 +1,8 @@
 :- module(world_config, [
-              theme_weight/2, theme_data/2, rm_adj/2, rm_noun/2,
-              base_wpn/1, base_arm/1, base_acc/1, pref/4, suff/4, tier_mult/2,
-              mob_base/2, elite_mod/3
-                        ]).
+    theme_weight/2, theme_data/2, rm_adj/2, rm_noun/2,
+    base_wpn/1, base_arm/1, base_acc/1, pref/4, suff/4, tier_mult/2,
+    mob_base/2, elite_mod/3, safe_zone_chance/2
+]).
 
 theme_weight(grove, 100).
 theme_weight(forest, 100).
@@ -26,7 +26,7 @@ rm_adj(cavern, [damp, dark, winding, massive, glowing]).
 rm_adj(ruins, [overgrown, ancient, forgotten, shattered]).
 rm_adj(keep, [fortified, ruined, grand, imposing]).
 rm_adj(forest, [verdant, shadowy, ancient, dense]).
-rm_adj(mine, [excavated, abandoned, collapsed, 'resource-rich']). % <--- Fixed!
+rm_adj(mine, [excavated, abandoned, collapsed, 'resource-rich']).
 rm_adj(volcano, [magmatic, unstable, erupting, heated]).
 
 rm_noun(crypt, [tomb, catacomb, sepulcher, vault, mausoleum]).
@@ -88,3 +88,10 @@ elite_mod(armored, armor, 2.0).
 elite_mod(berserk, str, 2.5).
 elite_mod(swift, dex, 2.5).
 elite_mod(titan, max_hp, 3.0).
+
+safe_zone_chance(village, 100).
+safe_zone_chance(monastery, 100).
+safe_zone_chance(grove, 0).
+safe_zone_chance(forest, 0).
+safe_zone_chance(wild, 0).
+safe_zone_chance(_, 0).
