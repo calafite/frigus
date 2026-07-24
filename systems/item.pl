@@ -3,6 +3,7 @@
 :- use_module('../core/world').
 :- use_module('../core/entity').
 :- use_module('../config/item').
+:- use_module('../worldgen/structures').
 
 resolve_room_item(RoomId, Query, Item) :-
     world:room_entities(RoomId, Ents),
@@ -40,10 +41,10 @@ do_equip(Id, Tag, Evts) :-
     NEq = Eq.put(Slot, Tag),
     entity:rem_item(Actor, Tag, 1, TmpAct),
     ( OldTag == none ->
-          NActor = TmpAct.put(equip, NEq)
+        NActor = TmpAct.put(equip, NEq)
     ;
-      entity:add_item(TmpAct, OldTag, 1, NActor_WOld),
-      NActor = NActor_WOld.put(equip, NEq)
+        entity:add_item(TmpAct, OldTag, 1, NActor_WOld),
+        NActor = NActor_WOld.put(equip, NEq)
     ),
     world:put_entity(NActor),
     Evts = [equipped(Id, Tag, Slot)].
@@ -61,7 +62,7 @@ do_unequip(Id, SlotStr, Evts) :-
     get_dict(Slot, Eq, Tag), Tag \== none, !,
     NEq = Eq.put(Slot, none),
     entity:add_item(Actor, Tag, 1, TmpAct),
-    NActor = TmpAct.put(equip, NEq),
+    NActor = Actor.put(equip, NEq),
     world:put_entity(NActor),
     Evts = [unequipped(Id, Tag, Slot)].
 
@@ -76,15 +77,17 @@ do_use(Id, Tag, Evts) :-
     entity:has_item(Actor, Tag),
     item_config:consumable(Tag, Effect), !,
     entity:rem_item(Actor, Tag, 1, TmpAct),
-    apply_effect(Effect, TmpAct, NActor),
+    apply_effect(Effect, TmpAct, NActor, ExtraEvts),
     world:put_entity(NActor),
-    Evts = [used(Id, Tag, Effect)].
+    append([used(Id, Tag, Effect)], ExtraEvts, Evts).
 
 do_use(Id, Tag, [error(cannot_use(Id, Tag))]) :-
     world:get_entity(Id, _).
 
-apply_effect(heal(Amt), A, NA) :- entity:mod_hp(A, Amt, NA).
-apply_effect(restore_mp(Amt), A, NA) :-
+apply_effect(heal(Amt), A, NA, []) :- entity:mod_hp(A, Amt, NA).
+apply_effect(restore_mp(Amt), A, NA, []) :-
     get_dict(mp, A, Mp), get_dict(max_mp, A, Max),
     NMp is min(Max, Mp + Amt),
     NA = A.put(mp, NMp).
+apply_effect(locate_anomaly, A, A, [env_msg(LocText)]) :-
+    structures:find_or_gen_anomaly(LocText).

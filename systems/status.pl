@@ -1,11 +1,11 @@
 :- module(status, [
-              do_tick/2,
-              is_cced/2,
-              is_silenced/2,
-              is_rooted/2,
-              is_panicked/2,
-              do_respawn/2
-                  ]).
+    do_tick/2,
+    is_cced/2,
+    is_silenced/2,
+    is_rooted/2,
+    is_panicked/2,
+    do_respawn/2
+]).
 
 :- use_module('../core/world').
 :- use_module('../core/entity').
@@ -43,21 +43,21 @@ do_respawn(Id, Evts) :-
 
 do_tick(Id, Evts) :-
     ( world:get_entity(Id, Actor) ->
-          ( entity:is_alive(Actor) ->
-                tick_regen(Actor, Act1, RegenEvts),
-                tick_cds(Act1, Act2),
-                tick_affs(Act2, Act3, AffEvts),
-                ( entity:is_alive(Act3) ->
-                      world:put_entity(Act3),
-                      append(RegenEvts, AffEvts, Evts)
-                ;
-                  combat:resolve_death(environment, Act3, DeathEvts),
-                  get_dict(id, Act3, TgtId),
-                  ( get_dict(name, Act3, TgtName) -> true ; TgtName = TgtId ),
-                  append(RegenEvts, AffEvts, TmpEvts),
-                  append(TmpEvts, [dead(TgtId, TgtName)  |DeathEvts], Evts)
-                )
-          ; Evts = [] )
+        ( entity:is_alive(Actor) ->
+            tick_regen(Actor, Act1, RegenEvts),
+            tick_cds(Act1, Act2),
+            tick_affs(Act2, Act3, AffEvts),
+            ( entity:is_alive(Act3) ->
+                world:put_entity(Act3),
+                append(RegenEvts, AffEvts, Evts)
+            ;
+                combat:resolve_death(environment, Act3, DeathEvts),
+                get_dict(id, Act3, TgtId),
+                combat:get_display_name(Act3, TgtName),
+                append(RegenEvts, AffEvts, TmpEvts),
+                append(TmpEvts, [dead(TgtId, TgtName) | DeathEvts], Evts)
+            )
+        ; Evts = [] )
     ; Evts = [] ).
 
 regen_mult(Act, HpMult, MpMult) :-
@@ -74,25 +74,25 @@ tick_regen(Act, Act, []) :-
 
 tick_regen(Act, NAct, Evts) :-
     ( get_dict(cds, Act, Cds), get_dict(combat, Cds, CCd), CCd > 0 ->
-          NAct = Act, Evts = []
+        NAct = Act, Evts = []
     ;
-      ( get_dict(hp, Act, Hp) -> true ; Hp = 50 ),
-      ( get_dict(max_hp, Act, MaxHp) -> true ; MaxHp = 50 ),
-      ( get_dict(mp, Act, Mp) -> true ; Mp = 20 ),
-      ( get_dict(max_mp, Act, MaxMp) -> true ; MaxMp = 20 ),
+        ( get_dict(hp, Act, Hp) -> true ; Hp = 50 ),
+        ( get_dict(max_hp, Act, MaxHp) -> true ; MaxHp = 50 ),
+        ( get_dict(mp, Act, Mp) -> true ; Mp = 20 ),
+        ( get_dict(max_mp, Act, MaxMp) -> true ; MaxMp = 20 ),
 
-      entity:get_stat(Act, con, Con), entity:get_stat(Act, wis, Wis),
-      regen_mult(Act, HpMult, MpMult),
-      BaseHp is 2 + floor(Con * 0.2), BaseMp is 2 + floor(Wis * 0.2),
-      HpRegen is floor(BaseHp * HpMult), MpRegen is floor(BaseMp * MpMult),
+        entity:get_stat(Act, con, Con), entity:get_stat(Act, wis, Wis),
+        regen_mult(Act, HpMult, MpMult),
+        BaseHp is 2 + floor(Con * 0.2), BaseMp is 2 + floor(Wis * 0.2),
+        HpRegen is floor(BaseHp * HpMult), MpRegen is floor(BaseMp * MpMult),
 
-      ( Hp < MaxHp -> NHp is min(MaxHp, Hp + HpRegen) ; NHp = Hp ),
-      ( Mp < MaxMp -> NMp is min(MaxMp, Mp + MpRegen) ; NMp = Mp ),
+        ( Hp < MaxHp -> NHp is min(MaxHp, Hp + HpRegen) ; NHp = Hp ),
+        ( Mp < MaxMp -> NMp is min(MaxMp, Mp + MpRegen) ; NMp = Mp ),
 
-      NAct = Act.put(hp, NHp).put(mp, NMp),
-      ( (Hp \== NHp ; Mp \== NMp) ->
-            get_dict(id, Act, ActId), Evts = [regenerated(ActId, NHp, NMp)]
-      ; Evts = [] )
+        NAct = Act.put(hp, NHp).put(mp, NMp),
+        ( (Hp \== NHp ; Mp \== NMp) ->
+            combat:get_display_name(Act, ActName), Evts = [regenerated(ActName, NHp, NMp)]
+        ; Evts = [] )
     ).
 
 tick_cds(Act, NAct) :-
@@ -114,23 +114,23 @@ process_aff_pairs([AffTag-AffNode|Rest], Act, FinalAct, Evts) :-
     NDur is Dur - 1,
 
     ( is_dot(AffTag) ->
-          entity:mod_hp(Act, -Mag, Act1), get_dict(id, Act1, AId),
-          TickEvt = [aff_tick(AId, AffTag, Mag)]
+        entity:mod_hp(Act, -Mag, Act1), combat:get_display_name(Act1, AName),
+        TickEvt = [aff_tick(AName, AffTag, Mag)]
     ; AffTag == regeneration ->
-          entity:mod_hp(Act, Mag, Act1), get_dict(id, Act1, AId),
-          get_dict(hp, Act1, CurHp), ( get_dict(max_hp, Act1, MaxHp) -> true ; MaxHp = CurHp ),
-          TickEvt = [healed(AId, Mag, CurHp, MaxHp)]
+        entity:mod_hp(Act, Mag, Act1), combat:get_display_name(Act1, AName),
+        get_dict(hp, Act1, CurHp), ( get_dict(max_hp, Act1, MaxHp) -> true ; MaxHp = CurHp ),
+        TickEvt = [healed(AName, Mag, CurHp, MaxHp)]
     ;
-      Act1 = Act, TickEvt = []
+        Act1 = Act, TickEvt = []
     ),
 
-    get_dict(id, Act1, AId2),
+    combat:get_display_name(Act1, AName2),
 
     ( NDur =< 0 ->
-          entity:remove_aff(Act1, AffTag, Act2), FadeEvt = [aff_faded(AId2, AffTag)]
+        entity:remove_aff(Act1, AffTag, Act2), FadeEvt = [aff_faded(AName2, AffTag)]
     ;
-      NAffNode = AffNode.put(dur, NDur), get_dict(affs, Act1, CurAffs),
-      NAffs = CurAffs.put(AffTag, NAffNode), Act2 = Act1.put(affs, NAffs), FadeEvt = []
+        NAffNode = AffNode.put(dur, NDur), get_dict(affs, Act1, CurAffs),
+        NAffs = CurAffs.put(AffTag, NAffNode), Act2 = Act1.put(affs, NAffs), FadeEvt = []
     ),
 
     process_aff_pairs(Rest, Act2, FinalAct, RestEvts),

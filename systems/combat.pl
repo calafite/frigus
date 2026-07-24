@@ -1,6 +1,7 @@
 :- module(combat, [
     do_kill/3, do_cast/4, do_pay_bounty/2,
-    is_town_npc/1, is_innocent/1, resolve_death/3
+    is_town_npc/1, is_innocent/1, resolve_death/3,
+    get_display_name/2
 ]).
 
 :- use_module('../core/world').
@@ -23,6 +24,21 @@ to_atom(Number, Atom) :- number(Number), !, atom_number(Atom, Number).
 to_atom(_, unknown).
 
 roll_dice(Min, Max, Val) :- random_between(Min, Max, Val).
+
+% Helper to derive display names for entities/IDs
+get_display_name(Ent, Name) :-
+    is_dict(Ent),
+    ( get_dict(name, Ent, RawName), RawName \== "" -> Name = RawName
+    ; get_dict(tag, Ent, RawTag), RawTag \== "" -> to_atom(RawTag, Name)
+    ; get_dict(id, Ent, Name) -> true
+    ; Name = unknown ), !.
+get_display_name(RawId, Name) :-
+    to_atom(RawId, Id),
+    ( world:get_entity(Id, Ent) ->
+        get_display_name(Ent, Name)
+    ;
+        Name = Id
+    ).
 
 get_weapon_tag(Ent, WTag) :-
     ( get_dict(equip, Ent, Eq), is_dict(Eq), get_dict(wpn, Eq, Raw), Raw \== none -> to_atom(Raw, WTag)
@@ -171,13 +187,13 @@ apply_affliction_list(Ent, [Aff|Rest], NEnt) :-
 extract_aff_tags([], []).
 extract_aff_tags([Aff|Rest], [Tag|TRest]) :- Aff =.. [Tag, _, _], extract_aff_tags(Rest, TRest).
 
-aff_event(TgtId, Tag, aff_applied(TgtId, Tag)).
+aff_event(TgtName, Tag, aff_applied(TgtName, Tag)).
 
 do_pay_bounty(Id, Evts) :-
     ( world:get_entity(Id, Actor) ->
         ( (get_dict(bounty, Actor, B), B > 0) ->
             ( entity:rem_item(Actor, gold, B, A1) ->
-                entity:clear_bounty(A1, FinalA), world:save_db('world_state.json'),
+                entity:clear_bounty(A1, FinalA), world:put_entity(FinalA), world:save_db('world_state.json'),
                 clear_local_threats(Id, FinalA), Evts = [bounty_paid(Id, B)]
             ; Evts = [error(insufficient_gold_for_bounty(Id, B))] )
         ; Evts = [error(no_bounty_to_pay(Id))] )
@@ -207,6 +223,9 @@ do_kill(Id, TgtQuery, [error(target_not_found(Id, TgtQuery, room(Room)))]) :- wo
 
 apply_damage(SrcId, SrcEnt, Tgt, WTag, Evts) :-
     get_dict(id, Tgt, TgtId), get_dict(room, SrcEnt, RoomId), world:env_state(Env),
+    get_display_name(SrcEnt, SrcName),
+    get_display_name(Tgt, TgtName),
+
     entity:mark_combat(SrcEnt, CbtSrc), entity:mark_combat(Tgt, CbtTgt),
     ( is_crime(CbtTgt), is_dict(CbtSrc, plyr) ->
         BInc is 50, entity:add_bounty(CbtSrc, BInc, NAttacker), world:save_db('world_state.json'), CrimeEvts = [bounty_gained(SrcId, BInc)]
@@ -214,7 +233,7 @@ apply_damage(SrcId, SrcEnt, Tgt, WTag, Evts) :-
     world:put_entity(NAttacker),
 
     ( chk_dodge(NAttacker, CbtTgt) ->
-        Evts = [dodged(TgtId, SrcId) | CrimeEvts],
+        Evts = [dodged(TgtName, SrcName) | CrimeEvts],
         ( (is_dict(CbtTgt, mob), is_dict(NAttacker, plyr)) -> entity:add_threat(CbtTgt, SrcId, 5, ThreatTgt), world:put_entity(ThreatTgt) ; true )
     ;
         calc_melee_raw(NAttacker, RoomId, Env, WTag, RawDmg), chk_melee_crit(NAttacker, WTag, IsCrit, Mult), DmgWithCrit is floor(RawDmg * Mult),
@@ -222,12 +241,12 @@ apply_damage(SrcId, SrcEnt, Tgt, WTag, Evts) :-
 
         entity:mod_hp(CbtTgt, -FinalDmg, NTgt), get_dict(hp, NTgt, CurHp), ( get_dict(max_hp, NTgt, MaxHp) -> true ; MaxHp = CurHp ),
 
-        ( IsCrit == true -> HitEvt = crit(SrcId, TgtId, FinalDmg, CurHp, MaxHp) ; HitEvt = hit(SrcId, TgtId, FinalDmg, CurHp, MaxHp) ),
+        ( IsCrit == true -> HitEvt = crit(SrcName, TgtName, FinalDmg, CurHp, MaxHp) ; HitEvt = hit(SrcName, TgtName, FinalDmg, CurHp, MaxHp) ),
 
         ( entity:get_aff(CbtTgt, thornskin, dict{mag: TMag}) ->
             entity:mod_hp(NAttacker, -TMag, NAttackerThorns),
             get_dict(hp, NAttackerThorns, AttackerHp), ( get_dict(max_hp, NAttackerThorns, AttackerMaxHp) -> true ; AttackerMaxHp = AttackerHp ),
-            ThornEvts = [hit(TgtId, SrcId, TMag, AttackerHp, AttackerMaxHp)]
+            ThornEvts = [hit(TgtName, SrcName, TMag, AttackerHp, AttackerMaxHp)]
         ; NAttackerThorns = NAttacker, ThornEvts = [] ),
         world:put_entity(NAttackerThorns),
 
@@ -241,33 +260,36 @@ apply_damage(SrcId, SrcEnt, Tgt, WTag, Evts) :-
             append([HitEvt | CrimeEvts], ThornEvts, TmpE1),
             append(TmpE1, FlurryEvts, TmpE2), append(TmpE2, RetalEvts, Evts)
         ;
-            handle_death(NAttackerThorns, NTgt, DeathEvts), ( get_dict(name, NTgt, TgtName) -> true ; TgtName = TgtId ),
+            handle_death(NAttackerThorns, NTgt, DeathEvts),
             append([HitEvt, dead(TgtId, TgtName) | CrimeEvts], ThornEvts, TmpE1),
             append(TmpE1, DeathEvts, Evts)
         )
     ).
 
-flurry_strike(SrcId, SrcEnt, Tgt, [flurry(SrcId, TgtId), HitEvt]) :-
-    get_dict(id, Tgt, TgtId), get_weapon_tag(SrcEnt, WTag), get_dict(room, SrcEnt, RoomId), world:env_state(Env),
+flurry_strike(_SrcId, SrcEnt, Tgt, [flurry(SrcName, TgtName), HitEvt]) :-
+    get_display_name(SrcEnt, SrcName), get_display_name(Tgt, TgtName),
+    get_weapon_tag(SrcEnt, WTag), get_dict(room, SrcEnt, RoomId), world:env_state(Env),
     calc_melee_raw(SrcEnt, RoomId, Env, WTag, RawDmg), calc_mitigation(Tgt, RawDmg, FinalDmg),
     entity:mod_hp(Tgt, -FinalDmg, NTgt), get_dict(hp, NTgt, CurHp), ( get_dict(max_hp, NTgt, MaxHp) -> true ; MaxHp = CurHp ),
-    world:put_entity(NTgt), HitEvt = hit(SrcId, TgtId, FinalDmg, CurHp, MaxHp).
+    world:put_entity(NTgt), HitEvt = hit(SrcName, TgtName, FinalDmg, CurHp, MaxHp).
 
 mob_retaliate(Mob, Player, RetalEvts) :-
     ( \+ entity:is_alive(Player) -> RetalEvts = [] ; status:is_cced(Mob, _) -> RetalEvts = [] ;
-        get_dict(id, Mob, MId), get_dict(id, Player, PId), get_weapon_tag(Mob, WTag), get_dict(room, Mob, RoomId), world:env_state(Env),
+        get_dict(id, Player, PId), get_weapon_tag(Mob, WTag), get_dict(room, Mob, RoomId), world:env_state(Env),
+        get_display_name(Mob, MName), get_display_name(Player, PName),
+
         entity:mark_combat(Mob, CbtMob), entity:mark_combat(Player, CbtPlayer),
         ( chk_dodge(CbtMob, CbtPlayer) ->
-            world:put_entity(CbtMob), world:put_entity(CbtPlayer), RetalEvts = [dodged(PId, MId)]
+            world:put_entity(CbtMob), world:put_entity(CbtPlayer), RetalEvts = [dodged(PName, MName)]
         ;
             calc_melee_raw(CbtMob, RoomId, Env, WTag, RawDmg), chk_melee_crit(CbtMob, WTag, _, CritMult),
             DmgWithCrit is floor(RawDmg * CritMult), calc_mitigation(CbtPlayer, DmgWithCrit, FinalDmg),
             entity:mod_hp(CbtPlayer, -FinalDmg, NPlayer), get_dict(hp, NPlayer, PCurHp), ( get_dict(max_hp, NPlayer, PMaxHp) -> true ; PMaxHp = PCurHp ),
             world:put_entity(CbtMob),
             ( entity:is_alive(NPlayer) ->
-                world:put_entity(NPlayer), RetalEvts = [hit(MId, PId, FinalDmg, PCurHp, PMaxHp)]
-            ; handle_death(CbtMob, NPlayer, DeathEvts), ( get_dict(name, NPlayer, PName) -> true ; PName = PId ),
-              RetalEvts = [hit(MId, PId, FinalDmg, 0, PMaxHp), dead(PId, PName) | DeathEvts]
+                world:put_entity(NPlayer), RetalEvts = [hit(MName, PName, FinalDmg, PCurHp, PMaxHp)]
+            ; handle_death(CbtMob, NPlayer, DeathEvts),
+              RetalEvts = [hit(MName, PName, FinalDmg, 0, PMaxHp), dead(PId, PName) | DeathEvts]
             )
         )
     ).
@@ -298,6 +320,7 @@ do_cast(Id, Sp, TgtQuery, Evts) :-
     get_dict(room, Actor, RoomId),
     world:get_room(RoomId, RoomNode),
     combat_config:spell_type(Sp, Type),
+    get_display_name(Actor, ActName),
 
     ( member(Type, [damage, area, group_harm, cc]), get_dict(props, RoomNode, Props), member(safe, Props) ->
         Evts = [error(safe_zone(Id))]
@@ -314,7 +337,7 @@ do_cast(Id, Sp, TgtQuery, Evts) :-
         MissChance is floor(Mist / 2),
         roll_dice(1, 100, Roll),
         ( Roll =< MissChance ->
-            Evts = [spell_missed(Id, Sp)]
+            Evts = [spell_missed(ActName, Sp)]
         ;
             resolve_spell_targets(Actor, Type, TgtQuery, Targets),
             ( Targets == [] -> Evts = [error(no_valid_targets(Id, Sp))]
@@ -337,10 +360,11 @@ resolve_spell_targets(Actor, Type, TgtQuery, Targets) :-
 execute_spell_on_targets(Type, Sp, Id, Actor, Targets, Evts) :-
     ( combat_config:spell_apply_self(Sp, SelfAffs) -> true ; SelfAffs = [] ),
     apply_affliction_list(Actor, SelfAffs, NAct1), world:put_entity(NAct1),
+    get_display_name(Actor, ActName),
 
-    ( Type == area -> BaseEvt = [cast_area(Id, Sp)]
-    ; member(Type, [group_harm, group_heal, group_buff]) -> BaseEvt = [cast_group(Id, Sp)]
-    ; Targets = [SingleTgt|_], get_dict(id, SingleTgt, TgtId), BaseEvt = [cast(Id, Sp, TgtId)]
+    ( Type == area -> BaseEvt = [cast_area(ActName, Sp)]
+    ; member(Type, [group_harm, group_heal, group_buff]) -> BaseEvt = [cast_group(ActName, Sp)]
+    ; Targets = [SingleTgt|_], get_display_name(SingleTgt, SingleTgtName), BaseEvt = [cast(ActName, Sp, SingleTgtName)]
     ; BaseEvt = [] ),
 
     world:env_state(Env), get_dict(room, Actor, RoomId),
@@ -360,6 +384,9 @@ process_targets(Type, Sp, Id, Potency, [Tgt|Rest], Evts) :-
     ; process_targets(Type, Sp, Id, Potency, Rest, Evts) ).
 
 process_single_target(Type, Sp, Id, Actor, Tgt, Potency, Evts) :-
+    get_display_name(Actor, ActName),
+    get_display_name(Tgt, TgtName),
+
     ( member(Type, [damage, cc, area, group_harm]) ->
         get_dict(id, Tgt, TgtId),
         ( combat_config:spell_dmg(Sp, BaseDmg) -> true ; BaseDmg = 0 ),
@@ -387,35 +414,33 @@ process_single_target(Type, Sp, Id, Actor, Tgt, Potency, Evts) :-
         apply_affliction_list(NTgt1, TgtAffs, NTgt),
         get_dict(hp, NTgt, CurHp), ( get_dict(max_hp, NTgt, MaxHp) -> true ; MaxHp = CurHp ),
 
-        ( IsCrit == true -> CritEvt = [cast_crit(Id, Sp, TgtId)] ; CritEvt = [] ),
-        ( BaseDmg > 0 -> HitEvt = [hit(Id, TgtId, FinalDmg, CurHp, MaxHp)] ; HitEvt = [] ),
+        ( IsCrit == true -> CritEvt = [cast_crit(ActName, Sp, TgtName)] ; CritEvt = [] ),
+        ( BaseDmg > 0 -> HitEvt = [hit(ActName, TgtName, FinalDmg, CurHp, MaxHp)] ; HitEvt = [] ),
         append(CritEvt, HitEvt, CastEvt),
 
-        extract_aff_tags(TgtAffs, TgtTags), maplist(aff_event(TgtId), TgtTags, AffEvts),
+        extract_aff_tags(TgtAffs, TgtTags), maplist(aff_event(TgtName), TgtTags, AffEvts),
 
         ( entity:is_alive(NTgt) ->
             world:put_entity(NTgt),
             append(CastEvt, AffEvts, TmpE1), append(TmpE1, CrimeEvts, Evts)
-        ; handle_death(NAttacker, NTgt, DeathEvts), ( get_dict(name, NTgt, TgtName) -> true ; TgtName = TgtId ),
+        ; handle_death(NAttacker, NTgt, DeathEvts),
           append(CastEvt, [dead(TgtId, TgtName) | AffEvts], TmpE2),
           append(TmpE2, CrimeEvts, TmpE3), append(TmpE3, DeathEvts, Evts) )
 
     ; member(Type, [heal, group_heal]) ->
-        get_dict(id, Tgt, TgtId),
         ( combat_config:spell_dmg(Sp, BaseHeal) -> true ; BaseHeal = 30 ),
         entity:get_stat(Actor, int, Int), HealAmt is floor((BaseHeal + floor(Int * 0.5)) * Potency),
         entity:mod_hp(Tgt, HealAmt, NTgt1),
         ( combat_config:spell_apply_tgt(Sp, TgtAffs) -> true ; TgtAffs = [] ),
         apply_affliction_list(NTgt1, TgtAffs, NTgt), world:put_entity(NTgt),
         get_dict(hp, NTgt, CurHp), ( get_dict(max_hp, NTgt, MaxHp) -> true ; MaxHp = CurHp ),
-        extract_aff_tags(TgtAffs, TgtTags), maplist(aff_event(TgtId), TgtTags, AffEvts),
-        append([healed(TgtId, HealAmt, CurHp, MaxHp)], AffEvts, Evts)
+        extract_aff_tags(TgtAffs, TgtTags), maplist(aff_event(TgtName), TgtTags, AffEvts),
+        append([healed(TgtName, HealAmt, CurHp, MaxHp)], AffEvts, Evts)
 
     ; member(Type, [buff, group_buff]) ->
-        get_dict(id, Tgt, TgtId),
         ( combat_config:spell_apply_tgt(Sp, TgtAffs) -> true ; TgtAffs = [] ),
         apply_affliction_list(Tgt, TgtAffs, NTgt), world:put_entity(NTgt),
-        extract_aff_tags(TgtAffs, TgtTags), maplist(aff_event(TgtId), TgtTags, Evts)
+        extract_aff_tags(TgtAffs, TgtTags), maplist(aff_event(TgtName), TgtTags, Evts)
     ).
 
 % --- Death Resolving ---

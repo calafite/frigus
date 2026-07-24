@@ -30,7 +30,7 @@ generate_cell(X, Y, Z, Id) :-
         Props = SProps
     ;
         IsSpecial = false,
-        ( Z < 0 -> Theme = cavern ; Theme = wild ),
+        Theme = wild,
         rng:gen_room_desc(Theme, Hash, Name, Desc, _),
 
         % Safe zone processing (only applies to normal chunks)
@@ -39,13 +39,13 @@ generate_cell(X, Y, Z, Id) :-
         ( Chance > 0, SafeRoll < Chance -> Props = [safe] ; Props = [] )
     ),
 
-    % 2. Calculate Local Environment (with high magic and wide variable corruption for structures)
+    % 2. Calculate Local Environment
     ( IsSpecial == true, world_config:structure_env_base(StructId, BTemp, BMag, BCor) ->
         TOff is (Hash mod 11) - 5,
-        MOff is ((Hash // 13) mod 61) - 30,  % Wide magic fluctuation (±30)
-        COff is ((Hash // 17) mod 101) - 50, % Extreme variable corruption (±50)
+        MOff is ((Hash // 13) mod 61) - 30,
+        COff is ((Hash // 17) mod 101) - 50,
         Temp is BTemp + TOff,
-        Mag is max(100, BMag + MOff),       % Guaranteed through-the-roof magic (min 100)
+        Mag is max(100, BMag + MOff),
         Cor is max(0, min(350, BCor + COff))
     ;
         world_config:theme_env_base(Theme, BTemp, BMag, BCor),
@@ -55,17 +55,14 @@ generate_cell(X, Y, Z, Id) :-
 
     REnv = dict{temp: Temp, magic: Mag, corr: Cor},
 
-    % 3. Connect surrounding wilderness cells
+    % 3. Connect surrounding surface wilderness cells (2D grid: North, South, East, West)
     X1 is X + 1, chunk_id(X1, Y, Z, IdEast),
     X2 is X - 1, chunk_id(X2, Y, Z, IdWest),
     Y1 is Y + 1, chunk_id(X, Y1, Z, IdNorth),
     Y2 is Y - 1, chunk_id(X, Y2, Z, IdSouth),
 
     Exits0 = dict{north: IdNorth, south: IdSouth, east: IdEast, west: IdWest},
-    ( Z > -5 -> Z1 is Z - 1, chunk_id(X, Y, Z1, IdDown), Exits1 = Exits0.put(down, IdDown) ; Exits1 = Exits0 ),
-    ( Z < 5  -> Z2 is Z + 1, chunk_id(X, Y, Z2, IdUp),   Exits2 = Exits1.put(up, IdUp) ; Exits2 = Exits1 ),
-
-    ( X == 0, Y == 0, Z == 0 -> FinalExits = Exits2.put(town, square) ; FinalExits = Exits2 ),
+    ( X == 0, Y == 0, Z == 0 -> FinalExits = Exits0.put(town, square) ; FinalExits = Exits0 ),
 
     Room = dict{id: Id, theme: Theme, type: outdoor, desc: Desc, name: Name, exits: FinalExits, props: Props, env: REnv},
     world:put_room(Room),
@@ -78,8 +75,8 @@ generate_cell(X, Y, Z, Id) :-
         ( \+ member(safe, Props), (Hash mod 100) < 30 -> spawn_random_mob(Theme, Hash, X, Y, Z, Id) ; true )
     ).
 
-spawn_random_mob(Theme, Hash, X, Y, Z, RId) :-
-    Dist is sqrt(X*X + Y*Y + Z*Z*4),
+spawn_random_mob(Theme, Hash, X, Y, _Z, RId) :-
+    Dist is sqrt(X*X + Y*Y),
     Lvl is max(1, floor(Dist / 2)),
     ( (Hash mod 100) < 5 -> Tier = elite ; Tier = normal ),
     spawn:gen_mob(Theme, Lvl, Tier, RId, Mob),

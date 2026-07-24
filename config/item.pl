@@ -32,6 +32,7 @@ weight(_, 1.0).
 val(gold, 1).
 val(sword, 15).
 val(health_potion, 20).
+val(diviners_orb, 1200). % High-value ancient artifact
 val(dragon_heart, 300).
 val(witch_brew, 150).
 val(ancient_core, 250).
@@ -54,3 +55,4 @@ consumable(dragon_heart, heal(250)).
 consumable(treant_heartwood, heal(150)).
 consumable(witch_brew, restore_mp(150)).
 consumable(astral_shard, restore_mp(200)).
+consumable(diviners_orb, locate_anomaly).

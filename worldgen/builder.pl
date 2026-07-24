@@ -227,7 +227,7 @@ seed_citizens :-
             room: square, fac: merchant, job: merchant, home: tavern, work: square,
             act_state: wander, props: [merchant], equip: dict{wpn: dagger, shield: none, body: tunic},
             wander: false, inv: [
-                stack{tag: gold, qty: 500}, stack{tag: bread, qty: 10}, stack{tag: apple, qty: 10},
+                stack{tag: gold, qty: 500}, stack{tag: diviners_orb, qty: 1}, stack{tag: bread, qty: 10}, stack{tag: apple, qty: 10},
                 stack{tag: empty_waterskin, qty: 5}, stack{tag: flint_and_steel, qty: 2}, stack{tag: whetstone, qty: 2}
             ],
             threats: dict{}, mems: dict{}

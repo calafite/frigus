@@ -3,36 +3,62 @@
     spawn_structure_mobs/7,
     spawn_structure_features/3,
     register_respawn/1,
-    tick_respawns/1
+    tick_respawns/1,
+    find_or_gen_anomaly/1
 ]).
 
 :- use_module('../core/world').
 :- use_module('../config/spawn').
 :- use_module('spawn').
 :- use_module('loot').
+:- use_module('chunks').
 
 :- dynamic db_structure_respawn/7.
 
-% check_special_structure(Hash, X, Y, Z, StructId, Theme, Name, Desc, Props).
-check_special_structure(Hash, X, Y, Z, StructId, Theme, Name, Desc, Props) :-
-    Dist is sqrt(X*X + Y*Y + Z*Z*4),
+% Guaranteed structure anomaly locations strictly within 40 units of origin (0, 0, 0)
+guaranteed_structure(10, 0, 0, dragons_lair).       % Dist = 10
+guaranteed_structure(-12, 12, 0, witchs_hut).      % Dist = 17
+guaranteed_structure(0, -18, 0, ancient_ruins).    % Dist = 18
+guaranteed_structure(-22, -8, 0, living_tree).     % Dist = 23
+guaranteed_structure(25, -15, 0, vampires_manor).  % Dist = 29
+guaranteed_structure(-30, 20, 0, astral_rift).     % Dist = 36
+guaranteed_structure(32, 10, 0, necro_crypt).      % Dist = 33
+
+% 1. Check for Guaranteed Inner Anomalies (Radius <= 40)
+check_special_structure(_Hash, X, Y, Z, StructId, Theme, Name, Desc, Props) :-
+    guaranteed_structure(X, Y, Z, StructId), !,
+    structure_data_by_id(StructId, Theme, BaseName, Desc),
+    atomic_list_concat([BaseName, ' (Anomaly)'], Name),
+    Props = [landmark, no_wander].
+
+% 2. Check for Random Outer Anomalies (Radius > 5, 1.5% chance)
+check_special_structure(Hash, X, Y, _Z, StructId, Theme, Name, Desc, Props) :-
+    Dist is sqrt(X*X + Y*Y),
     Dist > 5,
     Roll is Hash mod 1000,
     Roll < 15, !,
 
     TypeRoll is (Hash // 1000) mod 7,
-    structure_data(TypeRoll, StructId, Theme, BaseName, Desc),
+    structure_data_by_index(TypeRoll, StructId, Theme, BaseName, Desc),
 
     atomic_list_concat([BaseName, ' (Anomaly)'], Name),
     Props = [landmark, no_wander].
 
-structure_data(0, dragons_lair, volcano, "Dragon's Lair", "Scorched earth and melted stone form a massive, smoldering crater. The air is suffocatingly hot and thick with ash.").
-structure_data(1, witchs_hut, grove, "Witch's Hut", "A crooked, rotting hut sits precariously on overgrown roots. Strange, colorful fumes billow from the chimney, carrying a sickeningly sweet scent.").
-structure_data(2, ancient_ruins, ruins, "Ancient Ruins", "Crumbling pillars of pale stone crackle with residual magical energy from a bygone era. Time seems to stand still here.").
-structure_data(3, living_tree, forest, "The Living Tree", "A colossal tree whose branches pierce the clouds. The bark hums with a deep, rhythmic heartbeat that vibrates through the ground.").
-structure_data(4, vampires_manor, keep, "Vampire's Manor", "An imposing gothic manor shrouded in unnatural darkness. The wrought iron gates are twisted into the shapes of grasping claws.").
-structure_data(5, astral_rift, wild, "Astral Rift", "A tear in the fabric of reality. Fragments of floating earth drift aimlessly in a sea of starry, humming void.").
-structure_data(6, necro_crypt, crypt, "Necromancer's Crypt", "An unearthed mausoleum stinking of death and decay. Green balefire flickers ominously in the surrounding braziers.").
+structure_data_by_id(dragons_lair, volcano, "Dragon's Lair", "Scorched earth and melted stone form a massive, smoldering crater. The air is suffocatingly hot and thick with ash.").
+structure_data_by_id(witchs_hut, grove, "Witch's Hut", "A crooked, rotting hut sits precariously on overgrown roots. Strange, colorful fumes billow from the chimney, carrying a sickeningly sweet scent.").
+structure_data_by_id(ancient_ruins, ruins, "Ancient Ruins", "Crumbling pillars of pale stone crackle with residual magical energy from a bygone era. Time seems to stand still here.").
+structure_data_by_id(living_tree, forest, "The Living Tree", "A colossal tree whose branches pierce the clouds. The bark hums with a deep, rhythmic heartbeat that vibrates through the ground.").
+structure_data_by_id(vampires_manor, keep, "Vampire's Manor", "An imposing gothic manor shrouded in unnatural darkness. The wrought iron gates are twisted into the shapes of grasping claws.").
+structure_data_by_id(astral_rift, wild, "Astral Rift", "A tear in the fabric of reality. Fragments of floating earth drift aimlessly in a sea of starry, humming void.").
+structure_data_by_id(necro_crypt, crypt, "Necromancer's Crypt", "An unearthed mausoleum stinking of death and decay. Green balefire flickers ominously in the surrounding braziers.").
+
+structure_data_by_index(0, StructId, Theme, Name, Desc) :- structure_data_by_id(StructId, Theme, Name, Desc), StructId = dragons_lair, !.
+structure_data_by_index(1, StructId, Theme, Name, Desc) :- structure_data_by_id(StructId, Theme, Name, Desc), StructId = witchs_hut, !.
+structure_data_by_index(2, StructId, Theme, Name, Desc) :- structure_data_by_id(StructId, Theme, Name, Desc), StructId = ancient_ruins, !.
+structure_data_by_index(3, StructId, Theme, Name, Desc) :- structure_data_by_id(StructId, Theme, Name, Desc), StructId = living_tree, !.
+structure_data_by_index(4, StructId, Theme, Name, Desc) :- structure_data_by_id(StructId, Theme, Name, Desc), StructId = vampires_manor, !.
+structure_data_by_index(5, StructId, Theme, Name, Desc) :- structure_data_by_id(StructId, Theme, Name, Desc), StructId = astral_rift, !.
+structure_data_by_index(6, StructId, Theme, Name, Desc) :- structure_data_by_id(StructId, Theme, Name, Desc), StructId = necro_crypt, !.
 
 boss_tag(dragons_lair, elder_dragon, "Elder Dragon").
 boss_tag(witchs_hut, swamp_hag, "Swamp Hag").
@@ -43,17 +69,17 @@ boss_tag(astral_rift, void_walker, "Void Walker").
 boss_tag(necro_crypt, arch_necromancer, "Arch-Necromancer").
 
 spawn_structure_mobs(StructId, _Hash, X, Y, Z, Theme, RId) :-
-    Dist is sqrt(X*X + Y*Y + Z*Z*4),
+    Dist is sqrt(X*X + Y*Y),
     Lvl is max(10, floor(Dist * 1.5)),
 
     ( boss_tag(StructId, BossTag, CustomTitle) ->
         world:gen_id(mob, Id),
         spawn_config:mob_stats(BossTag, BHp, BStr, BDex, BInt),
         LevelMod is 1.0 + (Lvl * 0.2),
-        FinalH is floor(BHp * LevelMod * 2.5), % Extremely tanky
+        FinalH is floor(BHp * LevelMod * 2.5),
         FinalS is max(1, floor(BStr * LevelMod * 1.5)),
         FinalD is max(1, floor(BDex * LevelMod * 1.5)),
-        FinalI is max(10, floor(BInt * LevelMod * 2.8)), % Supercharged Intelligence for spellcasting
+        FinalI is max(10, floor(BInt * LevelMod * 2.8)),
 
         Mob = mob{
             id: Id,
@@ -108,6 +134,28 @@ spawn_structure_features(living_tree, _Hash, RId) :-
     world:put_entity(item{id: AppleId, tag: apple, qty: 5, room: RId}).
 
 spawn_structure_features(_, _, _).
+
+% --- Structure Anomaly Finder (Generates Chunk in Advance) ---
+
+find_or_gen_anomaly(LocText) :-
+    between(6, 40, R),
+    search_radius(R, X, Y),
+    Z = 0,
+    Hash is (X * 73856093) xor (Y * 19349663) xor (Z * 83492791) xor 1337,
+    check_special_structure(Hash, X, Y, Z, _StructId, _Theme, Name, _Desc, _Props), !,
+
+    atomic_list_concat(['cell', X, Y, Z], '_', CellId),
+    chunks:ensure_chunk(CellId),
+
+    format(string(LocText), "🔮 The Diviner's Orb pulses with celestial radiance, revealing a boss anomaly at Wilderness [~w, ~w, ~w]: ~w!", [X, Y, Z, Name]).
+find_or_gen_anomaly("🔮 The Diviner's Orb glimmers faintly, but senses no nearby anomalies in this realm.").
+
+search_radius(R, X, Y) :-
+    between(-R, R, X),
+    ( Y is R ; Y is -R ).
+search_radius(R, X, Y) :-
+    between(-R, R, Y),
+    ( X is R ; X is -R ).
 
 % --- Respawn System (Every 4 In-Game Hours = 240 Ticks) ---
 
