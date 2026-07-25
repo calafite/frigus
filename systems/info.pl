@@ -2,6 +2,8 @@
 
 :- use_module('../core/world').
 :- use_module('../core/entity').
+:- use_module('../config/spawn').
+:- use_module('combat').
 :- use_module('env').
 
 is_plyr(E) :- is_dict(E, plyr), !.
@@ -12,6 +14,11 @@ is_item(E) :- is_dict(E), get_dict(qty, E, _).
 
 is_mob(E) :- is_dict(E, mob), !.
 is_mob(E) :- is_dict(E), \+ is_plyr(E), \+ is_item(E), get_dict(hp, E, _).
+
+check_hostile(M, MTag, IsHostile) :-
+    ( spawn_config:is_aggressive(MTag) ; \+ combat:is_innocent(M) ), !,
+    IsHostile = true.
+check_hostile(_, _, false).
 
 do_look(Id, Evts) :-
     ( world:get_entity(Id, A) ->
@@ -32,10 +39,12 @@ do_look(Id, Evts) :-
                 findall(dict{id: OId, hp: OHp, max_hp: OMaxHp, bounty: OBty, affs: OAffs},
                         (member(O, Ents), is_plyr(O), get_dict(id, O, OId), OId \== Id,
                          get_dict(hp, O, OHp), get_dict(max_hp, O, OMaxHp), (get_dict(bounty, O, OBty) -> true ; OBty = 0), (get_dict(affs, O, OAffs) -> true ; OAffs = dict{})), OData),
-                findall(dict{id: MId, name: MName, tag: MTag, hp: MHp, max_hp: MMaxHp, affs: MAffs},
+                findall(dict{id: MId, name: MName, tag: MTag, hp: MHp, max_hp: MMaxHp, affs: MAffs, hostile: IsHostile},
                         (member(M, Ents), is_mob(M), get_dict(hp, M, MHp), MHp > 0,
                          get_dict(id, M, MId), (get_dict(name, M, MName) -> true ; MName = MTag),
-                         get_dict(tag, M, MTag), (get_dict(max_hp, M, MMaxHp) -> true ; MMaxHp = MHp), (get_dict(affs, M, MAffs) -> true ; MAffs = dict{})), MData),
+                         get_dict(tag, M, MTag), (get_dict(max_hp, M, MMaxHp) -> true ; MMaxHp = MHp),
+                         (get_dict(affs, M, MAffs) -> true ; MAffs = dict{}),
+                         check_hostile(M, MTag, IsHostile)), MData),
                 findall(dict{id: IId, tag: ITag, qty: IQty},
                         (member(I, Ents), is_item(I), get_dict(id, I, IId),
                          get_dict(tag, I, ITag), get_dict(qty, I, IQty)), IData),
