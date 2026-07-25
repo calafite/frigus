@@ -23,12 +23,12 @@ calc_stealth_score(Ent, Score) :-
     entity:get_stat(Ent, luk, Luk),
     entity:get_stat(Ent, cha, Cha),
     get_vis(Ent, Vis),
-    Score is max(1, floor(Dex * 1.5 + Luk * 1.0 + Cha * 0.5 - Vis * 0.5)).
+    Score is max(1, floor(Dex * 0.5 + Luk * 0.3 + Cha * 0.2 - Vis * 0.2)).
 
 calc_detect_score(Ent, Score) :-
     entity:get_stat(Ent, wis, Wis),
     entity:get_stat(Ent, luk, Luk),
-    Score is floor(Wis * 1.5 + Luk * 0.5).
+    Score is floor(Wis * 0.5 + Luk * 0.3).
 
 do_search(ActorId, Evts) :-
     world:get_entity(ActorId, Actor),
@@ -38,7 +38,7 @@ do_search(ActorId, Evts) :-
     entity:get_stat(Actor, int, Int),
     entity:get_stat(Actor, wis, Wis),
     entity:get_stat(Actor, luk, Luk),
-    SearchScore is floor(Int * 1.2 + Wis * 1.5 + Luk * 0.5),
+    SearchScore is floor(Int * 0.4 + Wis * 0.5 + Luk * 0.2),
 
     world:room_entities(RoomId, Ents),
     findall(Evt, (
@@ -48,8 +48,8 @@ do_search(ActorId, Evts) :-
                 entity:is_alive(E),
                 entity:has_aff(E, stealthed),
                 calc_stealth_score(E, TargetStealthScore),
-                random_between(1, 20, SRoll),
-                random_between(1, 20, TRoll),
+                random_between(1, 100, SRoll),
+                random_between(1, 100, TRoll),
                 ( SRoll + SearchScore >= TRoll + TargetStealthScore ->
                       entity:remove_aff(E, stealthed, NE),
                       world:put_entity(NE),
@@ -74,9 +74,9 @@ check_mob_spot_stealthed(Mob, RoomId, Evts) :-
                 entity:has_aff(P, stealthed),
                 combat_factions:is_enemy(Mob, P),
                 calc_stealth_score(P, PSS),
-                random_between(1, 20, MRoll),
-                random_between(1, 20, PRoll),
-                ( MRoll + MobDS >= PRoll + PSS ->
+                random_between(1, 100, MRoll),
+                random_between(1, 100, PRoll),
+                ( MRoll + MobDS + 25 >= PRoll + PSS ->
                       entity:remove_aff(P, stealthed, NP),
                       world:put_entity(NP),
                       combat_core:get_display_name(P, PName),
@@ -112,11 +112,11 @@ check_room_entry_stealth(ActorId, RoomId, Evts) :-
       ),
 
       calc_stealth_score(Actor, SS),
-      random_between(1, 20, PRoll),
-      random_between(1, 20, ERoll),
+      random_between(1, 100, PRoll),
+      random_between(1, 100, ERoll),
 
       PRes is PRoll + SS,
-      ERes is ERoll + MaxDS,
+      ERes is ERoll + MaxDS + 25,
 
       combat_core:get_display_name(Actor, Name),
 
