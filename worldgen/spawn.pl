@@ -73,7 +73,8 @@ gen_summon(Tag, OwnerId, Lvl, RId, Summon) :-
     FinalS is max(1, floor(BStr * LevelMod)),
     FinalD is max(1, floor(BDex * LevelMod)),
     FinalI is max(1, floor(BInt * LevelMod)),
-    atomic_list_concat(['Summoned ', Tag], '_', RawName),
+    atomic_list_concat([summoned, Tag], '_', RawName),
+
     Summon = mob{
         id: Id, tag: Tag, name: RawName, lvl: Lvl,
         hp: FinalH, max_hp: FinalH, str: FinalS, dex: FinalD, int: FinalI,
