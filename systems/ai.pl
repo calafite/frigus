@@ -35,9 +35,11 @@ is_settlement_room(Room) :-
       get_dict(props, Room, Props), (member(safe, Props) ; member(landmark, Props)) ;
       get_dict(region, Room, shire) ), !.
 
-% Prevent merchants and protected/anchored mobs from wandering
+% Prevent merchants, summons, and protected/anchored mobs from wandering
 is_no_wander(Mob) :-
     get_dict(tag, Mob, merchant), !.
+is_no_wander(Mob) :-
+    get_dict(owner, Mob, _), !.
 is_no_wander(Mob) :-
     ( get_dict(wander, Mob, false)
     ; get_dict(props, Mob, Props), (member(no_wander, Props) ; member(protector, Props) ; member(merchant, Props))
@@ -84,6 +86,21 @@ act_mob(Mob, Evts) :-
     world:room_entities(Room, Ents),
     highest_bounty(Ents, TgtId), !,
     get_dict(id, Mob, MId),
+    combat:do_kill(MId, TgtId, RawEvts),
+    events:split_events(RawEvts, PubEvts, _PrivEvts),
+    world:push_room_events(Room, PubEvts),
+    Evts = PubEvts.
+
+% Summons intelligently attack their owner's enemies
+act_mob(Mob, Evts) :-
+    get_dict(owner, Mob, _OwnerId),
+    get_dict(room, Mob, Room),
+    \+ world:is_safe_room(Room),
+    world:room_entities(Room, Ents),
+    member(Tgt, Ents),
+    entity:is_alive(Tgt),
+    combat:is_enemy(Mob, Tgt), !,
+    get_dict(id, Mob, MId), get_dict(id, Tgt, TgtId),
     combat:do_kill(MId, TgtId, RawEvts),
     events:split_events(RawEvts, PubEvts, _PrivEvts),
     world:push_room_events(Room, PubEvts),
@@ -169,7 +186,6 @@ replenish_settlements :-
     ( TotalTownMobs < 6 ->
           random_between(1, 100, Roll),
           ( Roll =< 5 ->
-                % Generate NPC and default to square if there is no other location context
                 spawn:gen_town_npc(square, NewNpc),
                 world:put_entity(NewNpc),
                 get_dict(name, NewNpc, Name),

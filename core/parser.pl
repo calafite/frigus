@@ -29,11 +29,12 @@ parse_act(D, login(Pass)) :-
     get_dict(type, D, "login"),
     ( get_dict(pass, D, RawP) -> ensure_atom(RawP, Pass) ; Pass = "" ).
 
-parse_act(D, register(Pass, Key, Race, Stats)) :-
+parse_act(D, register(Pass, Key, Race, Class, Stats)) :-
     get_dict(type, D, "register"),
     ( get_dict(pass, D, RawP) -> ensure_atom(RawP, Pass) ; Pass = "" ),
     ( get_dict(key, D, RawK) -> ensure_atom(RawK, Key) ; Key = "" ),
     ( get_dict(race, D, RawR) -> ensure_atom(RawR, Race) ; Race = human ),
+    ( get_dict(class, D, RawC) -> ensure_atom(RawC, Class) ; Class = fighter ),
     ( get_dict(stats, D, SDict), is_dict(SDict) -> Stats = SDict ; Stats = dict{} ).
 
 parse_act(D, admin_cmd(SubCmd, Arg)) :-

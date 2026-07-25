@@ -21,10 +21,10 @@
 :- use_module('../systems/shop').
 
 % ROUTER
-step(Id, validate_key(Key), Evts)                  :- auth:handle_validate_key(Id, Key, Evts), !.
-step(Id, login(Pass), Evts)                        :- auth:handle_login(Id, Pass, Evts), !.
-step(Id, register(Pass, Key, Race, S), Evts)       :- auth:handle_register(Id, Pass, Key, Race, S, Evts), !.
-step(Id, respawn, Evts)                            :- status:do_respawn(Id, Evts), !.
+step(Id, validate_key(Key), Evts)                     :- auth:handle_validate_key(Id, Key, Evts), !.
+step(Id, login(Pass), Evts)                           :- auth:handle_login(Id, Pass, Evts), !.
+step(Id, register(Pass, Key, Race, Class, S), Evts)   :- auth:handle_register(Id, Pass, Key, Race, Class, S, Evts), !.
+step(Id, respawn, Evts)                               :- status:do_respawn(Id, Evts), !.
 
 step(Id, move(Dir), Evts)     :- move:do_move(Id, Dir, Evts), !.
 step(Id, walk(Dest), Evts)    :- move:do_start_walk(Id, Dest, Evts), !.

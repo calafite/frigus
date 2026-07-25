@@ -1,7 +1,7 @@
 :- module(combat, [
               do_kill/3, do_cast/4, do_pay_bounty/2,
               is_town_npc/1, is_innocent/1, resolve_death/3,
-              get_display_name/2
+              get_display_name/2, is_enemy/2, is_friendly/2
                   ]).
 
 :- use_module('../core/world').
@@ -9,6 +9,7 @@
 :- use_module('../config/combat').
 :- use_module('../config/spawn').
 :- use_module('../worldgen/structures').
+:- use_module('../worldgen/spawn').
 :- use_module('prog').
 :- use_module('loot').
 :- use_module('ai').
@@ -143,16 +144,23 @@ is_town_npc(Ent) :- get_dict(fac, Ent, RawFac), to_atom(RawFac, Fac), member(Fac
 is_innocent(Ent) :- is_town_npc(Ent) ; is_dict(Ent, plyr).
 is_crime(Tgt) :- is_innocent(Tgt), ( get_dict(bounty, Tgt, B) -> B =< 0 ; true ).
 
+% Proxy checks intelligently trace summoned entities back to their owners
+get_proxy_ent(Ent, Proxy) :-
+    is_dict(Ent), get_dict(owner, Ent, OwnerId), world:get_entity(OwnerId, Proxy), !.
+get_proxy_ent(Ent, Ent).
+
 is_enemy(Actor, Tgt) :-
-    get_dict(id, Actor, AId), get_dict(id, Tgt, TId), AId \== TId,
-    ( is_dict(Actor, plyr) -> is_dict(Tgt, mob), \+ is_innocent(Tgt)
-    ; is_dict(Tgt, plyr) ; is_town_npc(Tgt) ).
+    get_proxy_ent(Actor, PActor), get_proxy_ent(Tgt, PTgt),
+    get_dict(id, PActor, PAId), get_dict(id, PTgt, PTId), PAId \== PTId,
+    ( is_dict(PActor, plyr) -> is_dict(PTgt, mob), \+ is_innocent(PTgt)
+    ; is_dict(PTgt, plyr) ; is_town_npc(PTgt) ).
 
 is_friendly(Actor, Tgt) :-
-    get_dict(id, Actor, AId), get_dict(id, Tgt, TId),
-    ( AId == TId ; is_dict(Actor, plyr), is_dict(Tgt, plyr)
-    ; is_dict(Actor, plyr), is_innocent(Tgt)
-    ; is_dict(Actor, mob), is_dict(Tgt, mob), \+ is_enemy(Actor, Tgt) ).
+    get_proxy_ent(Actor, PActor), get_proxy_ent(Tgt, PTgt),
+    get_dict(id, PActor, PAId), get_dict(id, PTgt, PTId),
+    ( PAId == PTId ; is_dict(PActor, plyr), is_dict(PTgt, plyr)
+    ; is_dict(PActor, plyr), is_innocent(PTgt)
+    ; is_dict(PActor, mob), is_dict(PTgt, mob), \+ is_enemy(PActor, PTgt) ).
 
 resolve_target(Actor, self, Target) :- !, Target = Actor.
 resolve_target(Actor, none, Target) :-
@@ -203,6 +211,13 @@ clear_local_threats(PId, Player) :-
     get_dict(room, Player, Room), world:room_entities(Room, Ents),
     forall(member(M, Ents), ( ( is_dict(M, mob) -> entity:rem_threat(M, PId, NM), world:put_entity(NM) ; true ) )).
 
+% Check if an actor already commands a live summon
+has_active_summon(OwnerId) :-
+    world:all_mobs(Mobs),
+    member(M, Mobs),
+    get_dict(owner, M, OwnerId),
+    entity:is_alive(M), !.
+
 % --- Melee Combat Core ---
 do_kill(Id, _TgtQuery, [error(actor_not_found(Id))]) :- \+ world:get_entity(Id, _), !.
 do_kill(Id, TgtQuery, Evts) :-
@@ -226,14 +241,17 @@ apply_damage(SrcId, SrcEnt, Tgt, WTag, Evts) :-
     get_display_name(Tgt, TgtName),
 
     entity:mark_combat(SrcEnt, CbtSrc), entity:mark_combat(Tgt, CbtTgt),
-    ( is_crime(CbtTgt), is_dict(CbtSrc, plyr) ->
-          BInc is 50, entity:add_bounty(CbtSrc, BInc, NAttacker), world:save_db('world_state.json'), CrimeEvts = [bounty_gained(SrcId, BInc)]
+
+    get_proxy_ent(CbtSrc, ProxySrc),
+    ( is_crime(CbtTgt), is_dict(ProxySrc, plyr) ->
+          BInc is 50, entity:add_bounty(ProxySrc, BInc, NAttackerProxy), world:save_db('world_state.json'), CrimeEvts = [bounty_gained(SrcId, BInc)],
+          ( get_dict(id, CbtSrc, ProxSrcId), get_dict(id, NAttackerProxy, ProxSrcId) -> NAttacker = NAttackerProxy ; NAttacker = CbtSrc, world:put_entity(NAttackerProxy) )
     ; CrimeEvts = [], NAttacker = CbtSrc ),
     world:put_entity(NAttacker),
 
     ( chk_dodge(NAttacker, CbtTgt) ->
           Evts = [dodged(TgtName, SrcName)  |CrimeEvts],
-          ( (is_dict(CbtTgt, mob), is_dict(NAttacker, plyr)) -> entity:add_threat(CbtTgt, SrcId, 5, ThreatTgt), world:put_entity(ThreatTgt) ; true )
+          ( (is_dict(CbtTgt, mob), is_dict(ProxySrc, plyr)) -> entity:add_threat(CbtTgt, SrcId, 5, ThreatTgt), world:put_entity(ThreatTgt) ; true )
     ;
       calc_melee_raw(NAttacker, RoomId, Env, WTag, RawDmg), chk_melee_crit(NAttacker, WTag, IsCrit, Mult), DmgWithCrit is floor(RawDmg * Mult),
       calc_mitigation(CbtTgt, DmgWithCrit, FinalDmg),
@@ -250,10 +268,10 @@ apply_damage(SrcId, SrcEnt, Tgt, WTag, Evts) :-
       world:put_entity(NAttackerThorns),
 
       ( entity:is_alive(NTgt) ->
-            ( (is_dict(NTgt, mob), is_dict(NAttackerThorns, plyr)) -> entity:add_threat(NTgt, SrcId, FinalDmg, ThreatTgt) ; ThreatTgt = NTgt ),
+            ( (is_dict(NTgt, mob), is_dict(ProxySrc, plyr)) -> entity:add_threat(NTgt, SrcId, FinalDmg, ThreatTgt) ; ThreatTgt = NTgt ),
             world:put_entity(ThreatTgt),
             ( chk_flurry(NAttackerThorns, WTag) -> flurry_strike(SrcId, NAttackerThorns, ThreatTgt, FlurryEvts) ; FlurryEvts = [] ),
-            ( (is_dict(ThreatTgt, mob), is_dict(NAttackerThorns, plyr)) ->
+            ( (is_dict(ThreatTgt, mob), is_dict(ProxySrc, plyr)) ->
                   ( is_town_npc(ThreatTgt) -> town_brawl_retaliate(ThreatTgt, NAttackerThorns, RetalEvts) ; mob_retaliate(ThreatTgt, NAttackerThorns, RetalEvts) )
             ; RetalEvts = [] ),
             append([HitEvt  |CrimeEvts], ThornEvts, TmpE1),
@@ -334,10 +352,10 @@ do_cast(Id, Sp, TgtQuery, Evts) :-
     ; status:is_silenced(Actor, CC) -> Evts = [error(cc_prevented(Id, CC))]
     ; (member(Type, [damage, cc, area, group_harm]), status:is_panicked(Actor, CC)) -> Evts = [error(cc_prevented(Id, CC))]
     ; \+ check_affinity(Actor, Sp) -> Evts = [error(spell_affinity_denied(Id, Sp))]
+    ; Type == summon, has_active_summon(Id) -> Evts = [error(already_have_summon(Id))]
     ; combat_config:spell_cost(Sp, Cost), get_dict(mp, Actor, Mp),
       ( Mp < Cost -> Evts = [error(insufficient_mp(Id, Sp, mp_available(Mp), mp_required(Cost)))]
       ;
-        % Check Mist (Environmental Miss)
         world:env_state(Env),
         ( get_dict(mist, Env, Mist) -> true ; Mist = 0 ),
         MissChance is floor(Mist / 2),
@@ -355,7 +373,8 @@ do_cast(Id, Sp, TgtQuery, Evts) :-
     ).
 
 resolve_spell_targets(Actor, Type, TgtQuery, Targets) :-
-    ( member(Type, [area, group_harm, group_heal, group_buff]) ->
+    ( Type == summon -> Targets = [Actor]
+    ; member(Type, [area, group_harm, group_heal, group_buff]) ->
           get_room_targets(Actor, Type, Targets)
     ;
       ( (Type == buff ; Type == heal), (TgtQuery == none ; TgtQuery == self) -> Target = Actor
@@ -371,6 +390,22 @@ execute_spell_on_targets(Type, Sp, Id, Actor, Targets, Evts) :-
 
     ( Type == area -> BaseEvt = [cast_area(ActName, Sp, Desc)]
     ; member(Type, [group_harm, group_heal, group_buff]) -> BaseEvt = [cast_group(ActName, Sp, Desc)]
+    ; Type == summon ->
+          ( combat_config:spell_difficulty(Sp, Diff) -> true ; Diff = 0 ),
+          entity:get_stat(Actor, int, Int), entity:get_stat(Actor, wis, Wis),
+          roll_dice(1, 100, Roll),
+          Score is Roll + floor(Int * 1.2) + floor(Wis * 0.8),
+
+          ( Score >= Diff ->
+                combat_config:spell_summon_tag(Sp, SumTag),
+                get_dict(lvl, Actor, Lvl), get_dict(room, Actor, RoomId),
+                spawn:gen_summon(SumTag, Id, Lvl, RoomId, Summon),
+                world:put_entity(Summon),
+                get_display_name(Summon, SumName),
+                BaseEvt = [summoned(ActName, Sp, SumName, Desc)]
+          ;
+                BaseEvt = [summon_failed(ActName, Sp, Desc)]
+          )
     ; Targets = [SingleTgt|_], get_display_name(SingleTgt, SingleTgtName), BaseEvt = [cast(ActName, Sp, SingleTgtName, Desc)]
     ; BaseEvt = [] ),
 
@@ -378,8 +413,12 @@ execute_spell_on_targets(Type, Sp, Id, Actor, Targets, Evts) :-
     get_env_mods(Actor, RoomId, Env, MagicMult, CorrMult, MoonMult),
     Potency is MagicMult * CorrMult * MoonMult,
 
-    process_targets(Type, Sp, Id, Potency, Targets, TgtEvts),
-    append(BaseEvt, TgtEvts, Evts).
+    ( Type \== summon ->
+        process_targets(Type, Sp, Id, Potency, Targets, TgtEvts),
+        append(BaseEvt, TgtEvts, Evts)
+    ;
+        Evts = BaseEvt
+    ).
 
 process_targets(_, _, _, _, [], []).
 process_targets(Type, Sp, Id, Potency, [Tgt|Rest], Evts) :-
@@ -399,9 +438,11 @@ process_single_target(Type, Sp, Id, Actor, Tgt, Potency, Evts) :-
           ( combat_config:spell_dmg(Sp, BaseDmg) -> true ; BaseDmg = 0 ),
           entity:mark_combat(Actor, CbtActor), entity:mark_combat(Tgt, CbtTgt),
 
-          ( is_crime(CbtTgt), is_dict(CbtActor, plyr) ->
-                BInc is 50, entity:add_bounty(CbtActor, BInc, NAttacker), world:save_db('world_state.json'),
-                CrimeEvts = [bounty_gained(Id, BInc)]
+          get_proxy_ent(CbtActor, ProxyActor),
+          ( is_crime(CbtTgt), is_dict(ProxyActor, plyr) ->
+                BInc is 50, entity:add_bounty(ProxyActor, BInc, NAttackerProxy), world:save_db('world_state.json'),
+                CrimeEvts = [bounty_gained(Id, BInc)],
+                ( get_dict(id, CbtActor, ProxId), get_dict(id, NAttackerProxy, ProxId) -> NAttacker = NAttackerProxy ; NAttacker = CbtActor, world:put_entity(NAttackerProxy) )
           ; CrimeEvts = [], NAttacker = CbtActor ),
           world:put_entity(NAttacker),
 
@@ -452,8 +493,9 @@ process_single_target(Type, Sp, Id, Actor, Tgt, Potency, Evts) :-
 
 % --- Death Resolving ---
 handle_death(SrcEnt, DeadTgt, Evts) :-
-    ( get_dict(bounty, DeadTgt, B), B > 0, is_dict(SrcEnt, plyr) ->
-          get_dict(id, SrcEnt, SrcId), entity:add_item(SrcEnt, gold, B, NSrc), world:put_entity(NSrc),
+    get_proxy_ent(SrcEnt, ProxySrc),
+    ( get_dict(bounty, DeadTgt, B), B > 0, is_dict(ProxySrc, plyr) ->
+          get_dict(id, ProxySrc, SrcId), entity:add_item(ProxySrc, gold, B, NSrc), world:put_entity(NSrc),
           BountyEvts = [bounty_claimed(SrcId, DeadTgt.id, B)]
     ; BountyEvts = [], NSrc = SrcEnt ),
     entity:clear_bounty(DeadTgt, CleanTgt), world:put_entity(CleanTgt), world:save_db('world_state.json'),
@@ -480,6 +522,12 @@ resolve_death(_SrcEnt, DeadTgt, DropEvts) :-
       Reborn = DeadTgt.put(hp, 0), world:put_entity(Reborn),
       DropEvts = []
     ).
+
+resolve_death(_SrcEnt, DeadMob, Evts) :-
+    get_dict(owner, DeadMob, _), !,
+    get_dict(id, DeadMob, MobId),
+    world:del_entity(MobId),
+    Evts = []. % Summons dissipate immediately without yielding XP/drops
 
 resolve_death(SrcEnt, DeadMob, Evts) :-
     get_dict(id, DeadMob, MobId), get_dict(room, DeadMob, RoomId),

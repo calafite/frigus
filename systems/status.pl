@@ -47,15 +47,18 @@ do_tick(Id, Evts) :-
                 tick_regen(Actor, Act1, RegenEvts),
                 tick_cds(Act1, Act2),
                 tick_affs(Act2, Act3, AffEvts),
-                ( entity:is_alive(Act3) ->
-                      world:put_entity(Act3),
-                      append(RegenEvts, AffEvts, Evts)
+                tick_lifespan(Act3, Act4, LifeEvts),
+                ( entity:is_alive(Act4) ->
+                      world:put_entity(Act4),
+                      append(RegenEvts, AffEvts, Tmp1),
+                      append(Tmp1, LifeEvts, Evts)
                 ;
-                  combat:resolve_death(environment, Act3, DeathEvts),
-                  get_dict(id, Act3, TgtId),
-                  combat:get_display_name(Act3, TgtName),
+                  combat:resolve_death(environment, Act4, DeathEvts),
+                  get_dict(id, Act4, TgtId),
+                  combat:get_display_name(Act4, TgtName),
                   append(RegenEvts, AffEvts, TmpEvts),
-                  append(TmpEvts, [dead(TgtId, TgtName)  |DeathEvts], Evts)
+                  append(TmpEvts, LifeEvts, TmpEvts2),
+                  append(TmpEvts2, [dead(TgtId, TgtName)  |DeathEvts], Evts)
                 )
           ; Evts = [] )
     ; Evts = [] ).
@@ -140,6 +143,20 @@ process_aff_pairs([AffTag-AffNode|Rest], Act, FinalAct, Evts) :-
 
     process_aff_pairs(Rest, Act2, FinalAct, RestEvts),
     append(TickEvt, FadeEvt, E1), append(E1, RestEvts, Evts).
+
+% Deduct lifespan for summoned creatures, killing them gently when it runs out.
+tick_lifespan(Act, NAct, Evts) :-
+    get_dict(lifespan, Act, L), !,
+    NL is L - 1,
+    ( NL =< 0 ->
+        NAct = Act.put(hp, 0),
+        combat:get_display_name(Act, Name),
+        Evts = [summon_expired(Name)]
+    ;
+        NAct = Act.put(lifespan, NL),
+        Evts = []
+    ).
+tick_lifespan(Act, Act, []).
 
 is_dot(poisoned).
 is_dot(bleeding).

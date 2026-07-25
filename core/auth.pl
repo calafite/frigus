@@ -1,7 +1,7 @@
 :- module(auth, [
               handle_validate_key/3,
               handle_login/3,
-              handle_register/6
+              handle_register/7
                 ]).
 
 :- use_module(library(md5)).
@@ -36,7 +36,7 @@ handle_login(Id, Pass, Evts) :-
     ).
 
 % Strict Registration logic
-handle_register(Id, Pass, Key, Race, Stats, Evts) :-
+handle_register(Id, Pass, Key, Race, Class, Stats, Evts) :-
     ( world:get_entity(Id, _) ->
           Evts = [error(account_already_exists(Id))]
     ;
@@ -45,7 +45,7 @@ handle_register(Id, Pass, Key, Race, Stats, Evts) :-
       ;
         ( admin_key(Key) -> IsAdmin = true ; IsAdmin = false ),
         ( chk_alloc(Stats, IsAdmin, CleanStats) ->
-              default_player(Id, Pass, Race, IsAdmin, CleanStats, NewPlayer),
+              default_player(Id, Pass, Race, Class, IsAdmin, CleanStats, NewPlayer),
               world:put_entity(NewPlayer),
               world:save_db('world_state.json'),
               Evts = [player_status(Id, created)]
@@ -95,7 +95,7 @@ hash_pass(Pass, HashStr) :-
     atom_string(RawHash, HashStr).
 hash_pass(_, "nohash").
 
-default_player(Id, Pass, Race, IsAdmin, Stats, P) :-
+default_player(Id, Pass, Race, Class, IsAdmin, Stats, P) :-
     hash_pass(Pass, Hash),
     get_dict(str, Stats, S), get_dict(dex, Stats, D), get_dict(con, Stats, C),
     get_dict(int, Stats, I), get_dict(wis, Stats, W), get_dict(cha, Stats, Ch), get_dict(luk, Stats, L),
@@ -107,7 +107,7 @@ default_player(Id, Pass, Race, IsAdmin, Stats, P) :-
     ; StartingEquip = equip{wpn: fists, shield: none, body: tunic} ),
 
     P = plyr{
-            id: Id, name: Id, tag: player, class: fighter, race: Race, lvl: 1, xp: 0,
+            id: Id, name: Id, tag: player, class: Class, race: Race, lvl: 1, xp: 0,
             stat_points: 0, bounty: 0, pass_hash: Hash, admin: IsAdmin,
             hp: MaxHp, max_hp: MaxHp, mp: MaxMp, max_mp: MaxMp, affs: dict{},
             str: S, dex: D, con: C, int: I, wis: W, cha: Ch, luk: L,

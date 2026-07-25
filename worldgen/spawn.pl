@@ -1,5 +1,6 @@
 :- module(spawn, [
-              gen_mob/5, gen_grp/4, gen_town_npc/2, gen_guard_npc/2, gen_citizen_npc/2, gen_merchant_npc/2
+              gen_mob/5, gen_grp/4, gen_town_npc/2, gen_guard_npc/2, gen_citizen_npc/2, gen_merchant_npc/2,
+              gen_summon/5
                  ]).
 
 :- use_module('../core/world').
@@ -63,6 +64,22 @@ gen_mob(Theme, Lvl, Tier, RId, Mob) :-
 
     Mob = mob{id: Id, tag: BaseTag, name: RawName, lvl: Lvl, hp: FinalH, max_hp: FinalH, str: FinalS, dex: FinalD, int: FinalI, room: RId, props: Props}.
 
+% Creates a summoned creature dynamically tied to an owner.
+gen_summon(Tag, OwnerId, Lvl, RId, Summon) :-
+    world:gen_id(summon, Id),
+    spawn_config:mob_stats(Tag, BHp, BStr, BDex, BInt),
+    LevelMod is 1.0 + (Lvl * 0.2),
+    FinalH is floor(BHp * LevelMod),
+    FinalS is max(1, floor(BStr * LevelMod)),
+    FinalD is max(1, floor(BDex * LevelMod)),
+    FinalI is max(1, floor(BInt * LevelMod)),
+    atomic_list_concat(['Summoned ', Tag], '_', RawName),
+    Summon = mob{
+        id: Id, tag: Tag, name: RawName, lvl: Lvl,
+        hp: FinalH, max_hp: FinalH, str: FinalS, dex: FinalD, int: FinalI,
+        room: RId, owner: OwnerId, lifespan: 30, props: [summon, no_wander]
+    }.
+
 gen_grp(Theme, Lvl, RId, Mobs) :-
     random_between(0, 2, Count),
     findall(M, (between(1, Count, _), roll_tier(T), gen_mob(Theme, Lvl, T, RId, M)), Mobs).
@@ -89,7 +106,6 @@ gen_merchant_npc(RoomId, Npc) :-
     names:gen_npc_name(Seed, RawName, _),
     atomic_list_concat([RawName, ' the Merchant'], Name),
 
-    % Roll against the merchant stock table to generate their inventory pool
     findall(stack{tag: T, qty: Q}, (
         spawn_config:merchant_stock(T, Chance, Min, Max),
         random(F), F =< Chance,

@@ -10,6 +10,8 @@ is_public_event(dead(_, _)).
 is_public_event(cast(_, _, _, _)).
 is_public_event(cast_area(_, _, _)).
 is_public_event(cast_group(_, _, _)).
+is_public_event(summoned(_, _, _, _)).
+is_public_event(summon_failed(_, _, _)).
 is_public_event(cast_crit(_, _, _)).
 is_public_event(healed(_, _, _, _)).
 is_public_event(spell_missed(_, _)).
@@ -21,6 +23,7 @@ is_public_event(npc_arrived(_)).
 is_public_event(guard_reinforcement(_)).
 is_public_event(bounty_paid(_, _)).
 is_public_event(env_msg(_)).
+is_public_event(summon_expired(_)).
 
 % Status effects
 is_public_event(aff_applied(_, _)).

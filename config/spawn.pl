@@ -6,6 +6,7 @@
 % Experience Points yield based on base tag
 mob_xp(rat, 10).
 mob_xp(wolf, 40).
+mob_xp(spectral_wolf, 0). % Summons yield 0 XP natively
 mob_xp(bear, 80).
 mob_xp(viper, 30).
 mob_xp(giant_spider, 60).
@@ -42,6 +43,7 @@ mob_xp(_, 20).
 % mob_stats(Tag, BaseHp, BaseStr, BaseDex, BaseInt)
 mob_stats(rat, 10, 5, 10, 2).
 mob_stats(wolf, 25, 12, 14, 4).
+mob_stats(spectral_wolf, 30, 14, 15, 4).
 mob_stats(bear, 50, 18, 8, 4).
 mob_stats(viper, 15, 8, 18, 2).
 mob_stats(giant_spider, 35, 14, 16, 5).
@@ -281,6 +283,7 @@ is_aggressive(bear).
 is_aggressive(viper).
 is_aggressive(giant_spider).
 is_aggressive(dire_wolf).
+is_aggressive(spectral_wolf).
 is_aggressive(goblin).
 is_aggressive(orc).
 is_aggressive(hobgoblin).
