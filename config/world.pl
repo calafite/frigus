@@ -5,6 +5,11 @@
               structure_env_base/4
                         ]).
 
+:- discontiguous rm_adj/2.
+:- discontiguous rm_noun/2.
+:- discontiguous mob_base/2.
+:- discontiguous theme_node/3.
+
 theme_weight(grove, 100).
 theme_weight(forest, 100).
 theme_weight(keep, 100).
@@ -15,8 +20,8 @@ theme_weight(volcano, 20).
 theme_weight(crypt, 20).
 
 theme_data(crypt, [undead, dark]).
-theme_data(cavern, [beast, earth]).
-theme_data(ruins, [humanoid, magic]).
+theme_data(cavern, [beast, earth, humanoid]).
+theme_data(ruins, [humanoid, magic, undead]).
 theme_data(keep, [humanoid, steel]).
 theme_data(forest, [beast, nature]).
 theme_data(mine, [beast, earth, steel]).
@@ -84,10 +89,13 @@ mob_base(beast, bear).
 mob_base(beast, giant_spider).
 mob_base(beast, viper).
 mob_base(beast, dire_wolf).
+mob_base(beast, crab).
 mob_base(humanoid, goblin).
 mob_base(humanoid, orc).
 mob_base(humanoid, hobgoblin).
 mob_base(humanoid, bandit).
+mob_base(humanoid, pirate).
+mob_base(humanoid, cultist).
 mob_base(demon, imp).
 mob_base(demon, hellhound).
 mob_base(demon, demon_brute).
@@ -112,7 +120,6 @@ safe_zone_chance(forest, 5).
 safe_zone_chance(wild, 5).
 safe_zone_chance(_, 0).
 
-% theme_env_base(Theme, BaseTemp, BaseMagic, BaseCorruption).
 theme_env_base(crypt, 10, 5, 80).
 theme_env_base(cavern, 12, 15, 20).
 theme_env_base(ruins, 15, 40, 30).
@@ -128,8 +135,6 @@ theme_env_base(monastery, 20, 50, 0).
 theme_env_base(prison, 10, 0, 40).
 theme_env_base(_, 15, 10, 10).
 
-% Special Structure Anomaly Environmental Baselines (Through-the-roof magic)
-% structure_env_base(StructId, BaseTemp, BaseMagic, BaseCorruption).
 structure_env_base(dragons_lair, 95, 250, 30).
 structure_env_base(witchs_hut, 22, 300, 40).
 structure_env_base(ancient_ruins, 18, 400, 15).

@@ -14,6 +14,11 @@ slot(vampire_fanged_blade, wpn).
 slot(necromancer_staff, wpn).
 slot(seraphs_blade, wpn).
 
+% New Weapons
+slot(pirate_cutlass, wpn).
+slot(dwarven_hammer, wpn).
+slot(elven_longbow, wpn).
+
 slot(iron_shield, shield).
 slot(wooden_shield, shield).
 slot(living_bark_shield, shield).
@@ -32,7 +37,7 @@ weight(_, 1.0).
 val(gold, 1).
 val(sword, 15).
 val(health_potion, 20).
-val(diviners_orb, 1200). % High-value ancient artifact
+val(diviners_orb, 1200).
 val(dragon_heart, 300).
 val(witch_brew, 150).
 val(ancient_core, 250).
@@ -44,6 +49,13 @@ val(dragon_scale_mail, 750).
 val(ancient_runesword, 600).
 val(necromancer_staff, 550).
 val(seraphs_blade, 1000).
+
+val(pirate_cutlass, 30).
+val(dwarven_hammer, 65).
+val(elven_longbow, 50).
+val(crab_meat, 5).
+val(ancient_relic, 200).
+val(scrap_metal, 15).
 val(_, 10).
 
 % Consumable Item Effects
@@ -51,6 +63,7 @@ consumable(health_potion, heal(50)).
 consumable(mana_potion, restore_mp(50)).
 consumable(apple, heal(10)).
 consumable(bread, heal(15)).
+consumable(crab_meat, heal(25)).
 consumable(dragon_heart, heal(250)).
 consumable(treant_heartwood, heal(150)).
 consumable(witch_brew, restore_mp(150)).

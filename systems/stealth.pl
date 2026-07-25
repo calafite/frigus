@@ -12,15 +12,9 @@
 :- use_module(library(random)).
 :- use_module(library(lists)).
 
-to_atom(Var, unknown) :- var(Var), !.
-to_atom(Atom, Atom) :- atom(Atom), !.
-to_atom(String, Atom) :- string(String), !, atom_string(Atom, String).
-to_atom(Number, Atom) :- number(Number), !, atom_number(Atom, Number).
-to_atom(_, unknown).
-
 get_vis(Ent, Vis) :-
-    ( get_dict(race, Ent, RawRace) -> to_atom(RawRace, Race)
-    ; get_dict(tag, Ent, RawTag) -> to_atom(RawTag, Race)
+    ( get_dict(race, Ent, RawRace) -> combat_core:to_atom(RawRace, Race)
+    ; get_dict(tag, Ent, RawTag) -> combat_core:to_atom(RawTag, Race)
     ; Race = human ),
     ( spawn_config:race_vis(Race, Vis) -> true ; Vis = 60 ).
 
@@ -36,7 +30,6 @@ calc_detect_score(Ent, Score) :-
     entity:get_stat(Ent, luk, Luk),
     Score is floor(Wis * 1.5 + Luk * 0.5).
 
-% Search command: Uses INT, WIS, and LUK to uncover hidden entities in the room
 do_search(ActorId, Evts) :-
     world:get_entity(ActorId, Actor),
     get_dict(room, Actor, RoomId),
@@ -69,7 +62,6 @@ do_search(ActorId, Evts) :-
         Evts = RevealedEvts
     ; Evts = [search_nothing(ActName)] ).
 
-% Periodic detection check during AI ticks for hostile mobs against stealthed players
 check_mob_spot_stealthed(Mob, RoomId, Evts) :-
     \+ world:is_safe_room(RoomId),
     world:room_entities(RoomId, Ents),
