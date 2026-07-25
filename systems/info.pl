@@ -16,10 +16,13 @@ is_item(E) :- is_dict(E), get_dict(qty, E, _).
 is_mob(E) :- is_dict(E, mob), !.
 is_mob(E) :- is_dict(E), \+ is_plyr(E), \+ is_item(E), get_dict(hp, E, _).
 
-check_hostile(M, MTag, IsHostile) :-
-    ( spawn_config:is_aggressive(MTag) ; \+ combat:is_innocent(M) ), !,
-    IsHostile = true.
-check_hostile(_, _, false).
+% Dynamically checks if the mob should be rendered as hostile to the observer
+check_hostile(Actor, M, MTag, IsHostile) :-
+    ( combat:is_friendly(Actor, M) -> IsHostile = false
+    ; spawn_config:is_aggressive(MTag) -> IsHostile = true
+    ; \+ combat:is_innocent(M) -> IsHostile = true
+    ; IsHostile = false
+    ).
 
 % An entity is visible if it is NOT stealthed, or if it IS stealthed but shares a party with the observer.
 is_visible_to(Observer, Target) :-
@@ -47,13 +50,14 @@ do_look(Id, Evts) :-
                         (member(O, Ents), is_plyr(O), get_dict(id, O, OId), OId \== Id,
                          is_visible_to(A, O), % Stealth Filter
                          get_dict(hp, O, OHp), get_dict(max_hp, O, OMaxHp), (get_dict(bounty, O, OBty) -> true ; OBty = 0), (get_dict(affs, O, OAffs) -> true ; OAffs = dict{})), OData),
-                findall(dict{id: MId, name: MName, tag: MTag, hp: MHp, max_hp: MMaxHp, affs: MAffs, hostile: IsHostile},
+                findall(dict{id: MId, name: MName, tag: MTag, hp: MHp, max_hp: MMaxHp, affs: MAffs, hostile: IsHostile, owner: MOwn},
                         (member(M, Ents), is_mob(M), get_dict(hp, M, MHp), MHp > 0,
                          is_visible_to(A, M), % Stealth Filter
                          get_dict(id, M, MId), (get_dict(name, M, MName) -> true ; MName = MTag),
                          get_dict(tag, M, MTag), (get_dict(max_hp, M, MMaxHp) -> true ; MMaxHp = MHp),
                          (get_dict(affs, M, MAffs) -> true ; MAffs = dict{}),
-                         check_hostile(M, MTag, IsHostile)), MData),
+                         (get_dict(owner, M, MOwn) -> true ; MOwn = none),
+                         check_hostile(A, M, MTag, IsHostile)), MData),
                 findall(dict{id: IId, tag: ITag, qty: IQty},
                         (member(I, Ents), is_item(I), get_dict(id, I, IId),
                          get_dict(tag, I, ITag), get_dict(qty, I, IQty)), IData),
@@ -86,4 +90,4 @@ do_bounties(Id, [bounty_report(Id, List)]) :- world:get_bounty_leaderboard(10, L
 do_time(Id, [time_report(Id, Desc)]) :- world:env_state(Env), env:env_desc(Env, Desc).
 
 do_help(Id, [help_info(Id, Text)]) :-
-    Text = "<div style='border: 1px solid var(--accent); padding: 12px; border-radius: 6px; background: var(--bg-surface); margin: 6px 0;'>\n      <strong style='color: var(--accent); font-size: 1.05rem;'>--- COMMAND HELP ---</strong><br>\n      <div style='margin-top: 8px; line-height: 1.6;'>\n      • <strong>look / l</strong> — Inspect current location<br>\n              • <strong>n / s / e / w / u / d</strong> — Directional movement<br>\n              • <strong>go &lt;exit&gt;</strong> — Move to custom exit (e.g. <i>go wild</i>)<br>\n              • <strong>walk &lt;x&gt; &lt;y&gt; [&lt;z&gt;]</strong> — Auto-walk to wild coordinates<br>\n              • <strong>cancel_walk</strong> — Stop auto-walking<br>\n              • <strong>k / kill &lt;target&gt;</strong> — Attack target (e.g. <i>k goblin</i>)<br>\n        • <strong>c / cast &lt;spell&gt; [target]</strong> — Cast spell (e.g. <i>c mend</i>, <i>c fireball orc</i>)<br>\n        • <strong>get / g &lt;item&gt;</strong> — Pick up item from ground<br>\n        • <strong>equip / unequip</strong> — Manage weapon and armor slots<br>\n        • <strong>use &lt;item&gt;</strong> — Consume potion or food<br>\n        • <strong>browse &lt;npc&gt;</strong> — View a merchant's wares<br>\n        • <strong>buy &lt;npc&gt; &lt;item&gt;</strong> — Purchase an item<br>\n        • <strong>sell &lt;npc&gt; &lt;item&gt;</strong> — Sell an item<br>\n        • <strong>train / allocate &lt;stat&gt;</strong> — Train stat points (e.g. <i>train str</i>)<br>\n        • <strong>party new / invite / accept / leave / kick</strong> — Form a group<br>\n        • <strong>say / party_say / p</strong> — Chat with others<br>\n        • <strong>status / inv / time / bounty</strong> — View character & realm status\n      </div>\n    </div>".
+    Text = "<div style='border: 1px solid var(--accent); padding: 12px; border-radius: 6px; background: var(--bg-surface); margin: 6px 0;'>\n      <strong style='color: var(--accent); font-size: 1.05rem;'>--- COMMAND HELP ---</strong><br>\n      <div style='margin-top: 8px; line-height: 1.6;'>\n      • <strong>look / l</strong> — Inspect current location<br>\n              • <strong>n / s / e / w / u / d</strong> — Directional movement<br>\n              • <strong>go &lt;exit&gt;</strong> — Move to custom exit (e.g. <i>go wild</i>)<br>\n              • <strong>walk &lt;x&gt; &lt;y&gt; [&lt;z&gt;]</strong> — Auto-walk to wild coordinates<br>\n              • <strong>cancel_walk</strong> — Stop auto-walking<br>\n              • <strong>k / kill &lt;target&gt;</strong> — Attack target (e.g. <i>k goblin</i>)<br>\n        • <strong>c / cast &lt;spell&gt; [target]</strong> — Cast spell (e.g. <i>c mend</i>, <i>c fireball orc</i>)<br>\n        • <strong>get / g &lt;item&gt;</strong> — Pick up item from ground<br>\n        • <strong>equip / unequip</strong> — Manage weapon and armor slots<br>\n        • <strong>use &lt;item&gt;</strong> — Consume potion or food<br>\n        • <strong>browse &lt;npc&gt;</strong> — View a merchant's wares<br>\n        • <strong>buy &lt;npc&gt; &lt;item&gt;</strong> — Purchase an item<br>\n        • <strong>sell &lt;npc&gt; &lt;item&gt;</strong> — Sell an item<br>\n        • <strong>train / allocate &lt;stat&gt;</strong> — Train stat points (e.g. <i>train str</i>)<br>\n        • <strong>party new / invite / accept / leave / kick</strong> — Form a group<br>\n        • <strong>quest list / read / accept / finish / progress</strong> — Manage local quests<br>\n        • <strong>say / party_say / p</strong> — Chat with others<br>\n        • <strong>status / inv / time / bounty</strong> — View character & realm status\n      </div>\n    </div>".
