@@ -54,7 +54,13 @@ do_cast(Id, Sp, TgtQuery, Evts) :-
             MissChance is floor(Mist / 2),
             combat_core:roll_dice(1, 100, Roll),
             ( Roll =< MissChance ->
-                  Evts = [spell_missed(ActName, Sp)]
+                  % Break stealth even on a spell fizzle/miss
+                  ( entity:has_aff(Actor, stealthed) ->
+                      entity:remove_aff(Actor, stealthed, NAct2),
+                      world:put_entity(NAct2),
+                      StealthBreakEvt = [aff_faded(ActName, stealthed)]
+                  ; StealthBreakEvt = [] ),
+                  append([spell_missed(ActName, Sp)], StealthBreakEvt, Evts)
             ;
               resolve_spell_targets(Actor, Type, TgtQuery, Targets),
               ( Targets == [] -> Evts = [error(no_valid_targets(Id, Sp))]
@@ -99,7 +105,17 @@ execute_spell_on_targets(Type, Sp, Id, Actor, Targets, Evts) :-
 
     ( Type \== summon ->
         process_targets(Type, Sp, Id, Potency, Targets, TgtEvts),
-        append(BaseEvt, TgtEvts, Evts)
+
+        % Break stealth at the very end of spell execution
+        ( entity:has_aff(Actor, stealthed) ->
+            world:get_entity(Id, TmpActor),
+            entity:remove_aff(TmpActor, stealthed, FinalActor),
+            world:put_entity(FinalActor),
+            StealthBreakEvt = [aff_faded(ActName, stealthed)]
+        ; StealthBreakEvt = [] ),
+
+        append(BaseEvt, TgtEvts, Tmp1),
+        append(Tmp1, StealthBreakEvt, Evts)
     ;
         Evts = BaseEvt
     ).
@@ -136,7 +152,10 @@ process_single_target(Type, Sp, Id, Actor, Tgt, Potency, Evts) :-
           ( entity:get_aff(NAttacker, empowered, dict{mag: EMag}) -> EMult = (100 + EMag)/100 ; EMult = 1.0 ),
           ( entity:get_aff(NAttacker, weakened, dict{mag: WMag}) -> WMult = (100 - WMag)/100 ; WMult = 1.0 ),
 
-          RawDmg is floor((BaseDmg + floor(Int * 0.5)) * Mult1 * EMult * WMult * Potency),
+          % Apply stealth multiplier
+          ( entity:get_aff(NAttacker, stealthed, dict{mag: SMag}) -> SMult = (SMag)/100 ; SMult = 1.0 ),
+
+          RawDmg is floor((BaseDmg + floor(Int * 0.5)) * Mult1 * EMult * WMult * Potency * SMult),
 
           combat_core:chk_spell_crit(NAttacker, Sp, CbtTgt, IsCrit, CritMult), DmgWithCrit is floor(RawDmg * CritMult),
           combat_core:calc_spell_mitigation(CbtTgt, DmgWithCrit, FinalDmg),

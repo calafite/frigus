@@ -49,21 +49,36 @@ apply_damage(SrcId, SrcEnt, Tgt, WTag, Evts) :-
     world:put_entity(NAttacker),
 
     ( combat_core:chk_dodge(NAttacker, CbtTgt) ->
-          Evts = [dodged(TgtName, SrcName)  |CrimeEvts],
+
+          % Still break stealth on dodge
+          ( entity:has_aff(NAttacker, stealthed) ->
+              entity:remove_aff(NAttacker, stealthed, NAttacker2),
+              world:put_entity(NAttacker2),
+              StealthBreakEvt = [aff_faded(SrcName, stealthed)]
+          ; StealthBreakEvt = [] ),
+
+          append([dodged(TgtName, SrcName)], CrimeEvts, TmpE),
+          append(TmpE, StealthBreakEvt, Evts),
           ( (is_dict(CbtTgt, mob), is_dict(ProxySrc, plyr)) -> entity:add_threat(CbtTgt, SrcId, 5, ThreatTgt), world:put_entity(ThreatTgt) ; true )
     ;
       combat_core:calc_melee_raw(NAttacker, RoomId, Env, WTag, RawDmg), combat_core:chk_melee_crit(NAttacker, WTag, IsCrit, Mult), DmgWithCrit is floor(RawDmg * Mult),
       combat_core:calc_mitigation(CbtTgt, DmgWithCrit, FinalDmg),
+
+      % Break stealth after the attack is fully calculated
+      ( entity:has_aff(NAttacker, stealthed) ->
+          entity:remove_aff(NAttacker, stealthed, NAttacker2),
+          StealthBreakEvt = [aff_faded(SrcName, stealthed)]
+      ; NAttacker2 = NAttacker, StealthBreakEvt = [] ),
 
       entity:mod_hp(CbtTgt, -FinalDmg, NTgt), get_dict(hp, NTgt, CurHp), ( get_dict(max_hp, NTgt, MaxHp) -> true ; MaxHp = CurHp ),
 
       ( IsCrit == true -> HitEvt = crit(SrcName, TgtName, FinalDmg, CurHp, MaxHp) ; HitEvt = hit(SrcName, TgtName, FinalDmg, CurHp, MaxHp) ),
 
       ( entity:get_aff(CbtTgt, thornskin, dict{mag: TMag}) ->
-            entity:mod_hp(NAttacker, -TMag, NAttackerThorns),
+            entity:mod_hp(NAttacker2, -TMag, NAttackerThorns),
             get_dict(hp, NAttackerThorns, AttackerHp), ( get_dict(max_hp, NAttackerThorns, AttackerMaxHp) -> true ; AttackerMaxHp = AttackerHp ),
             ThornEvts = [hit(TgtName, SrcName, TMag, AttackerHp, AttackerMaxHp)]
-      ; NAttackerThorns = NAttacker, ThornEvts = [] ),
+      ; NAttackerThorns = NAttacker2, ThornEvts = [] ),
       world:put_entity(NAttackerThorns),
 
       ( entity:is_alive(NTgt) ->
@@ -74,11 +89,13 @@ apply_damage(SrcId, SrcEnt, Tgt, WTag, Evts) :-
                   ( combat_factions:is_town_npc(ThreatTgt) -> town_brawl_retaliate(ThreatTgt, NAttackerThorns, RetalEvts) ; mob_retaliate(ThreatTgt, NAttackerThorns, RetalEvts) )
             ; RetalEvts = [] ),
             append([HitEvt  |CrimeEvts], ThornEvts, TmpE1),
-            append(TmpE1, FlurryEvts, TmpE2), append(TmpE2, RetalEvts, Evts)
+            append(TmpE1, FlurryEvts, TmpE2), append(TmpE2, RetalEvts, TmpE3),
+            append(TmpE3, StealthBreakEvt, Evts)
       ;
         combat_death:handle_death(NAttackerThorns, NTgt, DeathEvts),
         append([HitEvt, dead(TgtId, TgtName)  |CrimeEvts], ThornEvts, TmpE1),
-        append(TmpE1, DeathEvts, Evts)
+        append(TmpE1, StealthBreakEvt, TmpE2),
+        append(TmpE2, DeathEvts, Evts)
       )
     ).
 

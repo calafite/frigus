@@ -115,7 +115,8 @@ calc_melee_raw(Src, RoomId, EnvState, WTag, RawDmg) :-
     Raw1 is Base + Var + floor(Str * 0.4),
     ( entity:get_aff(Src, bloodlust, dict{mag: BMag}) -> BMult = (100 + BMag)/100 ; BMult = 1.0 ),
     ( entity:get_aff(Src, weakened, dict{mag: WMag}) -> WMult = (100 - WMag)/100 ; WMult = 1.0 ),
-    RawDmg is floor(Raw1 * BMult * WMult * CorrMult * MoonMult).
+    ( entity:get_aff(Src, stealthed, dict{mag: SMag}) -> SMult = (SMag)/100 ; SMult = 1.0 ), % Apply stealth multiplier
+    RawDmg is floor(Raw1 * BMult * WMult * CorrMult * MoonMult * SMult).
 
 chk_flurry(Src, WTag) :-
     ( combat_config:wpn_trait(WTag, flurry) ; entity:has_trait(Src, quick) ),

@@ -25,7 +25,12 @@ is_public_event(bounty_paid(_, _)).
 is_public_event(env_msg(_)).
 is_public_event(summon_expired(_)).
 
-% Party System
+% Status effects
+is_public_event(aff_applied(_, _)).
+is_public_event(aff_tick(_, _, _)).
+is_public_event(aff_faded(_, _)).
+
+% Party events
 is_public_event(party_created(_, _)).
 is_public_event(party_invite_sent(_, _, _)).
 is_public_event(party_joined(_, _)).
@@ -33,10 +38,8 @@ is_public_event(party_left(_, _)).
 is_public_event(party_kicked(_, _)).
 is_public_event(party_disbanded(_)).
 
-% Status effects
-is_public_event(aff_applied(_, _)).
-is_public_event(aff_tick(_, _, _)).
-is_public_event(aff_faded(_, _)).
+% Stealth Events
+is_public_event(stealth_spotted(_)).
 
 split_events([], [], []).
 split_events([E|Es], [E|Pubs], Privs) :- is_public_event(E), !, split_events(Es, Pubs, Privs).

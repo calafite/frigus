@@ -1,6 +1,6 @@
 :- module(spawn_config, [
-              mob_xp/2, loot_table/5, race_bonus/3, race_trait/2, is_aggressive/1, mob_stats/5,
-              merchant_stock/4
+              mob_xp/2, loot_table/5, race_bonus/3, race_trait/2,
+              race_vis/2, is_aggressive/1, mob_stats/5, merchant_stock/4
                         ]).
 
 % Experience Points yield based on base tag
@@ -177,6 +177,36 @@ merchant_stock(iron_shield, 0.4, 1, 2).
 merchant_stock(whetstone, 0.8, 2, 6).
 merchant_stock(flint_and_steel, 0.8, 2, 6).
 merchant_stock(diviners_orb, 0.1, 1, 1).
+
+% --- Base Visibility Footprint ---
+% Higher numbers mean the race is BIGGER, CLUMSIER, and EASIER to spot.
+% Lower numbers mean the race is SMALLER, STEALTHIER, and HARDER to spot.
+race_vis(giant, 180).
+race_vis(troll, 150).
+race_vis(dragon, 200).
+race_vis(elder_dragon, 300).
+race_vis(ogre, 140).
+race_vis(ruin_golem, 180).
+race_vis(iron_golem, 140).
+race_vis(treant, 130).
+race_vis(demon_brute, 120).
+race_vis(bear, 110).
+race_vis(orc, 100).
+race_vis(dwarf, 70).
+race_vis(human, 60).
+race_vis(demon, 60).
+race_vis(angel, 65).
+race_vis(high_elf, 55).
+race_vis(wolfkin, 50).
+race_vis(nymph, 45).
+race_vis(wood_elf, 40).
+race_vis(dark_elf, 35).
+race_vis(goblin, 35).
+race_vis(halfling, 25).
+race_vis(rat, 20).
+race_vis(viper, 20).
+race_vis(kobold, 15).
+race_vis(_, 60). % Fallback
 
 % Balanced Lineage Bonuses
 race_bonus(human, str, 2).

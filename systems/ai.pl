@@ -8,6 +8,7 @@
 :- use_module('../worldgen/structures').
 :- use_module('combat').
 :- use_module('move').
+:- use_module('status').
 :- use_module(library(random)).
 :- use_module(library(lists)).
 
@@ -20,9 +21,20 @@ do_ai_tick(Evts) :-
 
 process_mobs([], []).
 process_mobs([Mob|T], Evts) :-
-    ( act_mob(Mob, AEvt) -> true ; AEvt = [] ),
+    get_dict(id, Mob, MobId),
+    ( get_dict(room, Mob, RoomId) -> true ; RoomId = square ),
+
+    status:do_tick(MobId, TickEvts),
+    events:split_events(TickEvts, PubTick, _),
+    ( PubTick \== [] -> world:push_room_events(RoomId, PubTick) ; true ),
+
+    ( world:get_entity(MobId, FreshMob), entity:is_alive(FreshMob) ->
+          ( act_mob(FreshMob, AEvt) -> true ; AEvt = [] )
+    ; AEvt = [] ),
+
     process_mobs(T, REvts),
-    append(AEvt, REvts, Evts).
+    append(TickEvts, AEvt, TmpEvts),
+    append(TmpEvts, REvts, Evts).
 
 to_atom(Var, unknown) :- var(Var), !.
 to_atom(Atom, Atom) :- atom(Atom), !.
@@ -35,7 +47,6 @@ is_settlement_room(Room) :-
       get_dict(props, Room, Props), (member(safe, Props) ; member(landmark, Props)) ;
       get_dict(region, Room, shire) ), !.
 
-% Prevent merchants, summons, and protected/anchored mobs from wandering
 is_no_wander(Mob) :-
     get_dict(tag, Mob, merchant), !.
 is_no_wander(Mob) :-
@@ -72,13 +83,14 @@ highest_bounty(Ents, TopId) :-
                 member(E, Ents),
                 get_dict(bounty, E, B), B > 0,
                 get_dict(id, E, Id),
-                entity:is_alive(E)
+                entity:is_alive(E),
+                \+ entity:has_aff(E, stealthed) % Guards cannot see stealthed criminals
                   ), Pairs),
     Pairs \== [],
     keysort(Pairs, Sorted),
     reverse(Sorted, [_-TopId|_]).
 
-% Guard attacks criminals (only outside safe zones)
+% Guard attacks criminals
 act_mob(Mob, Evts) :-
     is_guard(Mob),
     get_dict(room, Mob, Room),
@@ -99,6 +111,7 @@ act_mob(Mob, Evts) :-
     world:room_entities(Room, Ents),
     member(Tgt, Ents),
     entity:is_alive(Tgt),
+    \+ entity:has_aff(Tgt, stealthed), % Summons cannot see stealthed targets
     combat:is_enemy(Mob, Tgt), !,
     get_dict(id, Mob, MId), get_dict(id, Tgt, TgtId),
     combat:do_kill(MId, TgtId, RawEvts),
@@ -106,7 +119,7 @@ act_mob(Mob, Evts) :-
     world:push_room_events(Room, PubEvts),
     Evts = PubEvts.
 
-% Mobs respond to threats (only outside safe zones)
+% Mobs respond to threats
 act_mob(Mob, Evts) :-
     get_dict(room, Mob, Room),
     \+ world:is_safe_room(Room),
@@ -116,14 +129,15 @@ act_mob(Mob, Evts) :-
     member(Tgt, Ents),
     get_dict(id, Tgt, TgtId),
     member(TgtId, Keys),
-    entity:is_alive(Tgt), !,
+    entity:is_alive(Tgt),
+    \+ entity:has_aff(Tgt, stealthed), !, % Cannot retaliate against a stealthed threat
     get_dict(id, Mob, MId),
     combat:do_kill(MId, TgtId, RawEvts),
     events:split_events(RawEvts, PubEvts, _PrivEvts),
     world:push_room_events(Room, PubEvts),
     Evts = PubEvts.
 
-% Guard attacks hostile monsters in room (only outside safe zones)
+% Guard attacks hostile monsters
 act_mob(Mob, Evts) :-
     is_guard(Mob),
     get_dict(room, Mob, Room),
@@ -131,33 +145,34 @@ act_mob(Mob, Evts) :-
     world:room_entities(Room, Ents),
     member(Monster, Ents),
     is_dict(Monster, mob),
-    \+ get_dict(owner, Monster, _), % Guards don't blindly attack player summons
+    \+ get_dict(owner, Monster, _),
     get_dict(id, Monster, MonId),
     get_dict(id, Mob, GuardId),
     MonId \== GuardId,
     is_hostile_mob(Monster),
-    entity:is_alive(Monster), !,
+    entity:is_alive(Monster),
+    \+ entity:has_aff(Monster, stealthed), !, % Cannot target stealthed monsters
     combat:do_kill(GuardId, MonId, RawEvts),
     events:split_events(RawEvts, PubEvts, _PrivEvts),
     world:push_room_events(Room, PubEvts),
     Evts = PubEvts.
 
-% Hostile mob attacks player (only outside safe zones)
+% Hostile mob attacks player
 act_mob(Mob, Evts) :-
     get_dict(room, Mob, Room),
     \+ world:is_safe_room(Room),
-    \+ get_dict(owner, Mob, _), % Summons do not use generic aggro fallback
+    \+ get_dict(owner, Mob, _),
     is_hostile_mob(Mob),
     world:room_entities(Room, Ents),
     member(P, Ents), is_dict(P, plyr),
-    entity:is_alive(P), !,
+    entity:is_alive(P),
+    \+ entity:has_aff(P, stealthed), !, % Cannot automatically aggro a stealthed player
     get_dict(id, P, PId), get_dict(id, Mob, MId),
     combat:do_kill(MId, PId, RawEvts),
     events:split_events(RawEvts, PubEvts, _PrivEvts),
     world:push_room_events(Room, PubEvts),
     Evts = PubEvts.
 
-% Controlled random wandering (2% chance per tick, explicitly skipping non-wandering creatures)
 act_mob(Mob, Evts) :-
     \+ is_no_wander(Mob),
     random_between(1, 100, R), R =< 2, !,
@@ -174,7 +189,6 @@ act_mob(Mob, Evts) :-
     world:push_room_events(Room, PubEvts),
     Evts = PubEvts.
 
-% Global replenishment with hard settlement cap
 replenish_settlements :-
     findall(M, (
                 world:db_entity(_, M),
