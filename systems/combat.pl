@@ -93,8 +93,10 @@ calc_spell_mitigation(Tgt, RawDmg, FinalDmg) :-
 
 % --- Offense & Output ---
 chk_melee_crit(Src, WTag, IsCrit, FinalMult) :-
-    entity:get_stat(Src, str, SStr), entity:get_stat(Src, luk, SLuk), combat_config:wpn_trait(WTag, Trait),
-    ( Trait == precision -> Prec = 15 ; Prec = 0 ), ( entity:has_trait(Src, feral) -> Feral = 15 ; Feral = 0 ),
+    entity:get_stat(Src, str, SStr), entity:get_stat(Src, luk, SLuk),
+    % Support checking multiple traits
+    ( combat_config:wpn_trait(WTag, precision) -> Prec = 15 ; Prec = 0 ),
+    ( entity:has_trait(Src, feral) -> Feral = 15 ; Feral = 0 ),
     Rate is max(5, min(85, floor(SStr * 0.4 + SLuk * 0.5 + Prec + Feral))),
     roll_dice(1, 100, Roll),
     ( Roll =< Rate -> IsCrit = true, combat_config:wpn_crit_mult(WTag, BaseMult),
@@ -120,8 +122,8 @@ is_holy_spell(_, Src) :- entity:has_trait(Src, celestial).
 
 calc_melee_raw(Src, RoomId, EnvState, WTag, RawDmg) :-
     ( combat_config:wpn_dmg(WTag, [dmg(_, Base)|_]) -> true ; Base = 4 ),
-    combat_config:wpn_trait(WTag, Trait), entity:get_stat(Src, str, Str),
-    ( Trait == reliable -> roll_dice(3, 6, Var) ; roll_dice(1, 10, Var) ),
+    entity:get_stat(Src, str, Str),
+    ( combat_config:wpn_trait(WTag, reliable) -> roll_dice(3, 6, Var) ; roll_dice(1, 10, Var) ),
     get_env_mods(Src, RoomId, EnvState, _, CorrMult, MoonMult),
     Raw1 is Base + Var + floor(Str * 0.4),
     ( entity:get_aff(Src, bloodlust, dict{mag: BMag}) -> BMult = (100 + BMag)/100 ; BMult = 1.0 ),
@@ -129,7 +131,7 @@ calc_melee_raw(Src, RoomId, EnvState, WTag, RawDmg) :-
     RawDmg is floor(Raw1 * BMult * WMult * CorrMult * MoonMult).
 
 chk_flurry(Src, WTag) :-
-    combat_config:wpn_trait(WTag, Trait), ( Trait == flurry ; entity:has_trait(Src, quick) ),
+    ( combat_config:wpn_trait(WTag, flurry) ; entity:has_trait(Src, quick) ),
     entity:get_stat(Src, dex, SDex), entity:get_stat(Src, luk, SLuk),
     Rate is max(10, min(60, floor(SDex * 0.6 + SLuk * 0.3))),
     roll_dice(1, 100, Roll), Roll =< Rate.
@@ -446,8 +448,8 @@ process_single_target(Type, Sp, Id, Actor, Tgt, Potency, Evts) :-
           ; CrimeEvts = [], NAttacker = CbtActor ),
           world:put_entity(NAttacker),
 
-          get_weapon_tag(NAttacker, WTag), combat_config:wpn_trait(WTag, Trait),
-          ( Trait == catalyst -> Mult1 = 1.25 ; Mult1 = 1.0 ),
+          get_weapon_tag(NAttacker, WTag),
+          ( combat_config:wpn_trait(WTag, catalyst) -> Mult1 = 1.25 ; Mult1 = 1.0 ),
           entity:get_stat(NAttacker, int, Int),
           ( entity:get_aff(NAttacker, empowered, dict{mag: EMag}) -> EMult = (100 + EMag)/100 ; EMult = 1.0 ),
           ( entity:get_aff(NAttacker, weakened, dict{mag: WMag}) -> WMult = (100 - WMag)/100 ; WMult = 1.0 ),
