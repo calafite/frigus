@@ -48,17 +48,20 @@ do_tick(Id, Evts) :-
                 tick_cds(Act1, Act2),
                 tick_affs(Act2, Act3, AffEvts),
                 tick_lifespan(Act3, Act4, LifeEvts),
-                ( entity:is_alive(Act4) ->
-                      world:put_entity(Act4),
+                tick_env_hazards(Act4, Act5, HazardEvts),
+                ( entity:is_alive(Act5) ->
+                      world:put_entity(Act5),
                       append(RegenEvts, AffEvts, Tmp1),
-                      append(Tmp1, LifeEvts, Evts)
+                      append(Tmp1, LifeEvts, Tmp2),
+                      append(Tmp2, HazardEvts, Evts)
                 ;
-                  combat:resolve_death(environment, Act4, DeathEvts),
-                  get_dict(id, Act4, TgtId),
-                  combat:get_display_name(Act4, TgtName),
+                  combat:resolve_death(environment, Act5, DeathEvts),
+                  get_dict(id, Act5, TgtId),
+                  combat:get_display_name(Act5, TgtName),
                   append(RegenEvts, AffEvts, TmpEvts),
                   append(TmpEvts, LifeEvts, TmpEvts2),
-                  append(TmpEvts2, [dead(TgtId, TgtName)  |DeathEvts], Evts)
+                  append(TmpEvts2, HazardEvts, TmpEvts3),
+                  append(TmpEvts3, [dead(TgtId, TgtName)  |DeathEvts], Evts)
                 )
           ; Evts = [] )
     ; Evts = [] ).
@@ -165,3 +168,37 @@ is_dot(frostbite).
 is_dot(soul_rot).
 is_dot(holy_fire).
 is_dot(venom).
+
+tick_env_hazards(Act, NAct, Evts) :-
+    world:env_state(Env),
+    ( get_dict(weather, Env, Weather) -> true ; Weather = clear ),
+    ( get_dict(season, Env, Season) -> true ; Season = spring ),
+    get_dict(room, Act, RoomId),
+    ( world:get_room(RoomId, Room) -> get_dict(type, Room, RoomType) ; RoomType = normal ),
+    combat:get_display_name(Act, ActName),
+
+    ( RoomType == outdoor ->
+        % Lightning Strike (Storming) - 0.5% chance per tick outdoors
+        ( Weather == storming, random_between(1, 1000, Roll), Roll =< 5 ->
+            Dmg = 35,
+            entity:mod_hp(Act, -Dmg, TmpAct1),
+            entity:apply_aff(TmpAct1, stunned, 3, 0, TmpAct2),
+            get_dict(hp, TmpAct2, CurHp), (get_dict(max_hp, TmpAct2, MaxHp) -> true ; MaxHp = CurHp),
+            LightEvts = [
+                env_msg("⚡ A massive bolt of lightning strikes the ground nearby!"),
+                hit("Lightning", ActName, Dmg, CurHp, MaxHp),
+                aff_applied(ActName, stunned)
+            ]
+        ; TmpAct2 = Act, LightEvts = [] ),
+
+        % Blizzard (Winter + Precipitating/Storming) - 2% chance per tick outdoors to apply severe frostbite
+        ( Season == winter, (Weather == precipitating ; Weather == storming) ->
+            ( random_between(1, 100, BlizRoll), BlizRoll =< 2 ->
+                entity:apply_aff(TmpAct2, frostbite, 5, 4, NAct),
+                BlizEvts = [aff_applied(ActName, frostbite)]
+            ; NAct = TmpAct2, BlizEvts = [] )
+        ; NAct = TmpAct2, BlizEvts = [] )
+
+    ; NAct = Act, LightEvts = [], BlizEvts = [] ),
+
+    append(LightEvts, BlizEvts, Evts).

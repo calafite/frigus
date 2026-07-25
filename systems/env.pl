@@ -17,6 +17,7 @@ tick_env(Evts) :-
     ( get_dict(moon, Cur, RawM) -> to_atom(RawM, M) ; M = full_moon ),
     ( get_dict(mist, Cur, Mist) -> true ; Mist = 0 ),
     ( get_dict(weather, Cur, RawW) -> to_atom(RawW, W) ; W = clear ),
+    ( get_dict(active_event, Cur, RawE) -> to_atom(RawE, AE) ; AE = none ),
 
     % Advance 1 minute per tick (1 second real-time = 1 minute game time -> 24 min full day)
     NT is (T + 1) mod 1440,
@@ -29,11 +30,23 @@ tick_env(Evts) :-
 
     chk_time(T, NT, TEvts),
     chk_weath(W, NW, WEvts),
+    chk_world_events(T, NT, NM, NW, AE, NAE, EventEvts),
 
-    Next = env{time: NT, day: ND, season: NS, moon: NM, mist: NMist, weather: NW},
+    Next = env{time: NT, day: ND, season: NS, moon: NM, mist: NMist, weather: NW, active_event: NAE},
     world:put_env(Next),
 
-    append(D_Evts, TEvts, Tmp), append(Tmp, WEvts, Evts).
+    append(D_Evts, TEvts, Tmp1), append(Tmp1, WEvts, Tmp2), append(Tmp2, EventEvts, Evts).
+
+chk_world_events(OldT, NewT, Moon, _Weather, none, blood_moon, [env_msg(Msg)]) :-
+    phase(OldT, P1), phase(NewT, night), P1 \== night, Moon == full_moon,
+    random_between(1, 100, R), R =< 25, !, % 25% chance of invasion during Full Moon night
+    Msg = "🩸 The sky turns crimson! A BLOOD MOON rises, and the gates of the Abyss swing open!".
+
+chk_world_events(OldT, NewT, _Moon, _Weather, blood_moon, none, [env_msg(Msg)]) :-
+    phase(OldT, P1), phase(NewT, morning), P1 \== morning, !,
+    Msg = "🌅 The Blood Moon sets. The demonic invasion recedes with the dawn. The sanctuaries are safe once more.".
+
+chk_world_events(_, _, _, _, AE, AE, []).
 
 update_daily(D, S, M, NS, NM, Evts) :-
     ( D mod 10 =:= 0 ->
@@ -116,8 +129,10 @@ env_desc(Cur, Desc) :-
     ( get_dict(moon, Cur, RawM) -> to_atom(RawM, M) ; M = full_moon ),
     ( get_dict(mist, Cur, Mist) -> true ; Mist = 0 ),
     ( get_dict(weather, Cur, RawW) -> to_atom(RawW, W) ; W = clear ),
+    ( get_dict(active_event, Cur, RawE) -> to_atom(RawE, AE) ; AE = none ),
+    ( AE == blood_moon -> EventStr = " | 🩸 BLOOD MOON ACTIVE" ; EventStr = "" ),
     phase(T, P), time_fmt(T, TStr),
-    format(string(Desc), "Day ~w. It is ~w (~w). Season: ~w. Moon: ~w. Global Weather: ~w (Mist: ~w%).", [D, P, TStr, S, M, W, Mist]).
+    format(string(Desc), "Day ~w. It is ~w (~w). Season: ~w. Moon: ~w. Global Weather: ~w (Mist: ~w%)~w.", [D, P, TStr, S, M, W, Mist, EventStr]).
 
 local_env_desc(Room, Env, Desc) :-
     ( get_dict(env, Room, REnv) ->
@@ -155,7 +170,10 @@ local_env_desc(Room, Env, Desc) :-
     ; Temp > 0, Weather == precipitating -> LocalW = "Raining"
     ; display_weather(Weather, LocalW) ),
 
-    format(string(Desc), "~w | ~w | Weather: ~w | Temp: ~w°C | Ambient Magic: ~w | Corruption: ~w", [SeasonStr, TimeStr, LocalW, Temp, M, C]).
+    ( get_dict(active_event, Env, RawE) -> to_atom(RawE, AE) ; AE = none ),
+    ( AE == blood_moon -> EventStr = " | <span style='color:var(--danger);font-weight:bold;'>BLOOD MOON</span>" ; EventStr = "" ),
+
+    format(string(Desc), "~w | ~w | Weather: ~w | Temp: ~w°C | Ambient Magic: ~w | Corruption: ~w~w", [SeasonStr, TimeStr, LocalW, Temp, M, C, EventStr]).
 
 time_fmt(T, Str) :-
     H is T div 60, M is T mod 60,

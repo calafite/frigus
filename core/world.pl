@@ -37,7 +37,9 @@ is_safe_room(RawRoomId) :-
     get_dict(props, Room, Props),
     is_list(Props),
     member(P, Props),
-    to_atom(P, safe), !.
+    to_atom(P, safe),
+    % Ignore safe zone flags if the Blood Moon is active! Nowhere is safe.
+    ( env_state(Env), get_dict(active_event, Env, blood_moon) -> fail ; true ), !.
 
 clean_entity(Ent, CleanEnt) :-
     is_dict(Ent), !,
@@ -151,7 +153,7 @@ pop_party_events(RawPartyId, Events) :-
     retractall(db_party_event(PartyId, _)).
 
 env_state(Env) :- db_env(Env), !.
-env_state(env{time: 480, day: 1, season: spring, moon: full_moon, mist: 0, weather: clear}).
+env_state(env{time: 480, day: 1, season: spring, moon: full_moon, mist: 0, weather: clear, active_event: none}).
 
 put_env(Env) :-
     retractall(db_env(_)),
@@ -222,9 +224,10 @@ load_db(Filename) :-
           ( get_dict(moon, Env, M) -> true ; M = full_moon ),
           ( get_dict(mist, Env, Mist) -> true ; Mist = 0 ),
           ( get_dict(weather, Env, W) -> true ; W = clear ),
-          put_env(env{time: T, day: D, season: S, moon: M, mist: Mist, weather: W})
+          ( get_dict(active_event, Env, AE) -> true ; AE = none ),
+          put_env(env{time: T, day: D, season: S, moon: M, mist: Mist, weather: W, active_event: AE})
     ;
-      put_env(env{time: 480, day: 1, season: spring, moon: full_moon, mist: 0, weather: clear})
+      put_env(env{time: 480, day: 1, season: spring, moon: full_moon, mist: 0, weather: clear, active_event: none})
     ).
 
 take(0, _, []) :- !.

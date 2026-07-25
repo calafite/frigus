@@ -17,7 +17,28 @@ do_ai_tick(Evts) :-
     process_mobs(Mobs, MEvts),
     replenish_settlements,
     structures:tick_respawns(REvts),
-    append(MEvts, REvts, Evts).
+    handle_world_events(WEvts),
+    append(MEvts, REvts, Tmp1),
+    append(Tmp1, WEvts, Evts).
+
+handle_world_events(Evts) :-
+    world:env_state(Env),
+    ( get_dict(active_event, Env, blood_moon) ->
+        random_between(1, 100, Roll),
+        ( Roll =< 3 ->
+            Towns = [square, crossroads, port_square, outpost_square, sylvandell_square, sunfang_square, frosthold_square],
+            random_member(Town, Towns),
+            random_member(DemonTag, [imp, hellhound, demon_brute]),
+            spawn:gen_mob(volcano, 25, normal, Town, Demon),
+            world:put_entity(Demon),
+            combat:get_display_name(Demon, DName),
+            ( world:get_room(Town, Room) -> get_dict(name, Room, RName) ; RName = Town ),
+            format(string(Msg), "🩸 A portal tears open in ~w! A ~w emerges from the Abyss!", [RName, DName]),
+            % Broadcast globally so players feel the panic
+            forall(world:get_room(AllRId, _), world:push_room_event(AllRId, env_msg(Msg))),
+            Evts = []
+        ; Evts = [] )
+    ; Evts = [] ).
 
 process_mobs([], []).
 process_mobs([Mob|T], Evts) :-
