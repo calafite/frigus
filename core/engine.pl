@@ -19,6 +19,7 @@
 :- use_module('../systems/info').
 :- use_module('../systems/admin').
 :- use_module('../systems/shop').
+:- use_module('../systems/chat').
 
 % ROUTER
 step(Id, validate_key(Key), Evts)                     :- auth:handle_validate_key(Id, Key, Evts), !.
@@ -43,6 +44,8 @@ step(Id, unequip(Slot), Evts) :- item:do_unequip(Id, Slot, Evts), !.
 step(Id, use(Tag), Evts)      :- item:do_use(Id, Tag, Evts), !.
 
 step(Id, allocate(Stat), Evts):- prog:do_allocate(Id, Stat, Evts), !.
+
+step(Id, say(Text), Evts)     :- chat:do_say(Id, Text, Evts), !.
 
 step(Id, look, Evts)          :- info:do_look(Id, Evts), !.
 step(Id, status, Evts)        :- info:do_status(Id, Evts), !.

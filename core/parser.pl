@@ -62,6 +62,16 @@ parse_act(D, sell(Npc, Item)) :-
     ( get_dict(npc, D, RawN), RawN \== "" -> ensure_atom(RawN, Npc) ; Npc = none ),
     ( get_dict(item, D, RawI), RawI \== "" -> ensure_atom(RawI, Item) ; Item = none ).
 
+parse_act(D, say(Text)) :-
+    get_dict(type, D, "say"),
+    ( get_dict(text, D, RawT) ->
+        ( string(RawT) -> normalize_space(string(Text), RawT)
+        ; atom(RawT) -> atom_string(RawT, S), normalize_space(string(Text), S)
+        ; Text = "" )
+    ; Text = "" ).
+
+
+
 parse_act(D, loot(IId))     :- ( get_dict(type, D, "loot") ; get_dict(type, D, "get") ; get_dict(type, D, "take") ; get_dict(type, D, "g") ), extract_target(D, IId).
 parse_act(D, equip(I))      :- get_dict(type, D, "equip"), extract_target(D, I).
 parse_act(D, unequip(S))    :- get_dict(type, D, "unequip"), extract_target(D, S).
