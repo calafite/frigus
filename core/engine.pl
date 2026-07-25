@@ -47,6 +47,7 @@ step(Id, use(Tag), Evts)      :- item:do_use(Id, Tag, Evts), !.
 step(Id, allocate(Stat), Evts):- prog:do_allocate(Id, Stat, Evts), !.
 
 step(Id, say(Text), Evts)     :- chat:do_say(Id, Text, Evts), !.
+step(Id, party_say(Text), Evts) :- chat:do_party_say(Id, Text, Evts), !.
 step(Id, party(Action, Target), Evts) :- party:do_party(Id, Action, Target, Evts), !.
 
 step(Id, look, Evts)          :- info:do_look(Id, Evts), !.

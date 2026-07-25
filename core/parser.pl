@@ -70,6 +70,14 @@ parse_act(D, say(Text)) :-
         ; Text = "" )
     ; Text = "" ).
 
+parse_act(D, party_say(Text)) :-
+    get_dict(type, D, "party_say"),
+    ( get_dict(text, D, RawT) ->
+        ( string(RawT) -> normalize_space(string(Text), RawT)
+        ; atom(RawT) -> atom_string(RawT, S), normalize_space(string(Text), S)
+        ; Text = "" )
+    ; Text = "" ).
+
 parse_act(D, party(Action, Target)) :-
     get_dict(type, D, "party"),
     ( get_dict(action, D, RawA) -> ensure_atom(RawA, Action) ; Action = none ),

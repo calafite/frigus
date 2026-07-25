@@ -71,7 +71,7 @@ do_unequip(Id, SlotStr, Evts) :-
     get_dict(Slot, Eq, Tag), Tag \== none, !,
     NEq = Eq.put(Slot, none),
     entity:add_item(Actor, Tag, 1, TmpAct),
-    NActor = Actor.put(equip, NEq),
+    NActor = TmpAct.put(equip, NEq),
     world:put_entity(NActor),
     Evts = [unequipped(Id, Tag, Slot)].
 

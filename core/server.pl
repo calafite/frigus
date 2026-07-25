@@ -1,4 +1,4 @@
-:- module(server, [start_server/1, flush_and_send_room_events/1]).
+:- module(server, [start_server/1, flush_and_send_room_events/1, flush_and_send_party_events/1]).
 
 :- use_module(library(http/thread_httpd)).
 :- use_module(library(http/http_dispatch)).
@@ -64,7 +64,8 @@ run_world_tick :-
                      ; true )
                ; true )
                                        )),
-    broadcast_room_events.
+    broadcast_room_events,
+    broadcast_party_events.
 
 push_env_events(Evts) :-
     forall(world:get_room(RId, _), world:push_room_events(RId, Evts)).
@@ -82,6 +83,20 @@ flush_and_send_room_events(RId) :-
     forall((active_client(WS, ActorId), world:get_entity(ActorId, A), get_dict(room, A, RId)),
            catch(ws_send(WS, json(Payload)), _, retractall(active_client(WS, _)))).
 flush_and_send_room_events(_).
+
+broadcast_party_events :-
+    findall(PId, world:db_party_event(PId, _), RawParties),
+    list_to_set(RawParties, Parties),
+    forall(member(PId, Parties), flush_and_send_party_events(PId)).
+
+flush_and_send_party_events(PId) :-
+    world:pop_party_events(PId, Evts),
+    Evts \== [], !,
+    engine:terms_to_json(Evts, JsonEvts),
+    Payload = json{status: "ok", type: "stream", channel: "party", party_id: PId, events: JsonEvts},
+    forall((active_client(WS, ActorId), world:get_entity(ActorId, A), get_dict(party, A, PId)),
+           catch(ws_send(WS, json(Payload)), _, retractall(active_client(WS, _)))).
+flush_and_send_party_events(_).
 
 handle_ws(Request) :-
     http_upgrade_to_websocket(ws_loop, [], Request).
@@ -113,8 +128,9 @@ process_ws_message(WebSocket, Req) :-
     ),
     ws_send(WebSocket, json(Res)),
 
-    ( ActorId \== unknown, world:get_entity(ActorId, Actor), get_dict(room, Actor, RoomId) ->
-          flush_and_send_room_events(RoomId)
+    ( ActorId \== unknown, world:get_entity(ActorId, Actor) ->
+          ( get_dict(room, Actor, RoomId) -> flush_and_send_room_events(RoomId) ; true ),
+          ( get_dict(party, Actor, PartyId) -> flush_and_send_party_events(PartyId) ; true )
     ;
       true
     ).
