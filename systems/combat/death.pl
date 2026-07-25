@@ -1,6 +1,6 @@
 :- module(combat_death, [
               handle_death/3, resolve_death/3
-          ]).
+                        ]).
 
 :- use_module('../../core/world').
 :- use_module('../../core/entity').
@@ -62,9 +62,9 @@ resolve_death(SrcEnt, DeadMob, Evts) :-
                 prog:add_xp(SrcId, Xp, XpEvts),
                 combat_factions:get_proxy_ent(SrcEnt, ProxySrc),
                 ( is_dict(ProxySrc, plyr) ->
-                    get_dict(id, ProxySrc, PId),
-                    % Guarded quest objective tick, ignores failures if quests are malformed
-                    ( catch(quest:record_kill(PId, Tag), _, true) -> true ; true )
+                      get_dict(id, ProxySrc, PId),
+                      % Guarded quest objective tick, ignores failures if quests are malformed
+                      ( catch(quest:record_kill(PId, Tag), _, true) -> true ; true )
                 ; true )
           ; XpEvts = [] ),
           loot:gen_drops(DeadMob, DropEvts),

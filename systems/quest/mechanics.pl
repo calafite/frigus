@@ -1,11 +1,11 @@
 :- module(quest_mechanics, [
-    check_quest_board/1,
-    verify_objectives/3,
-    get_item_qty/3,
-    consume_collect_items/3,
-    grant_rewards/3,
-    record_kill/2
-]).
+              check_quest_board/1,
+              verify_objectives/3,
+              get_item_qty/3,
+              consume_collect_items/3,
+              grant_rewards/3,
+              record_kill/2
+                           ]).
 
 :- use_module('../../core/world').
 :- use_module('../../core/entity').
@@ -51,7 +51,7 @@ consume_collect_items(Actor, [], Actor).
 consume_collect_items(Actor, [collect(Tag, Qty)|Rest], FinalActor) :-
     entity:rem_item(Actor, Tag, Qty, TmpActor),
     consume_collect_items(TmpActor, Rest, FinalActor).
-consume_collect_items(Actor, [kill(_,_)|Rest], FinalActor) :-
+consume_collect_items(Actor, [kill(_, _)|Rest], FinalActor) :-
     consume_collect_items(Actor, Rest, FinalActor).
 
 grant_rewards(_, [], []).
@@ -72,12 +72,12 @@ grant_rewards(Id, [item(Tag, Qty)|Rest], [looted(Id, Tag, Qty)|Evts]) :-
 record_kill(PlayerId, MobTag) :-
     world:get_entity(PlayerId, Player),
     ( get_dict(quests, Player, Quests) ->
-        dict_pairs(Quests, DictTag, Pairs),
-        update_kill_pairs(Pairs, MobTag, NPairs, Changed),
-        ( Changed == true ->
-            dict_pairs(NQuests, DictTag, NPairs),
-            world:put_entity(Player.put(quests, NQuests))
-        ; true )
+          dict_pairs(Quests, DictTag, Pairs),
+          update_kill_pairs(Pairs, MobTag, NPairs, Changed),
+          ( Changed == true ->
+                dict_pairs(NQuests, DictTag, NPairs),
+                world:put_entity(Player.put(quests, NQuests))
+          ; true )
     ; true ).
 
 % Robust recursion that guarantees overlapping quests are ALL updated
@@ -87,16 +87,16 @@ update_kill_pairs([QId-QData|T], MobTag, [QId-NQData|NT], ChangedOut) :-
       quest_config:quest_data(QId, _, _, _, Objectives, _),
       member(kill(MobTag, _ReqCount), Objectives)
     ->
-        ( get_dict(progress, QData, Prog) -> true ; Prog = dict{} ),
-        atom_concat('kill_', MobTag, ProgKey),
-        ( get_dict(ProgKey, Prog, CurCount) -> true ; CurCount = 0 ),
-        NCount is CurCount + 1,
-        NProg = Prog.put(ProgKey, NCount),
-        NQData = QData.put(progress, NProg),
-        ThisChanged = true
+          ( get_dict(progress, QData, Prog) -> true ; Prog = dict{} ),
+          atom_concat('kill_', MobTag, ProgKey),
+          ( get_dict(ProgKey, Prog, CurCount) -> true ; CurCount = 0 ),
+          NCount is CurCount + 1,
+          NProg = Prog.put(ProgKey, NCount),
+          NQData = QData.put(progress, NProg),
+          ThisChanged = true
     ;
-        NQData = QData,
-        ThisChanged = false
+      NQData = QData,
+      ThisChanged = false
     ),
     update_kill_pairs(T, MobTag, NT, RestChanged),
     ( (ThisChanged == true ; RestChanged == true) -> ChangedOut = true ; ChangedOut = false ).

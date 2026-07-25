@@ -4,7 +4,7 @@
               chk_melee_crit/4, chk_spell_crit/5, calc_melee_raw/5, chk_flurry/2,
               apply_affliction_list/3, extract_aff_tags/2, aff_event/3,
               has_active_summon/1
-          ]).
+                       ]).
 
 :- use_module('../../core/world').
 :- use_module('../../core/entity').

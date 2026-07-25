@@ -1,10 +1,10 @@
 :- module(move, [
-    do_move/3,
-    resolve_dir/2,
-    do_start_walk/3,
-    do_cancel_walk/2,
-    do_tick_walk/2
-]).
+              do_move/3,
+              resolve_dir/2,
+              do_start_walk/3,
+              do_cancel_walk/2,
+              do_tick_walk/2
+                ]).
 
 :- use_module('../core/world').
 :- use_module('../core/entity').
@@ -63,12 +63,12 @@ do_move(Id, DirQuery, [error(no_exit(Id, DirQuery, available_exits(AvailableExit
 move_summons(OwnerId, OldRoomId, NextRoomId, Dir, SummonEvts) :-
     world:room_entities(OldRoomId, Ents),
     findall(M, (
-        member(M, Ents),
-        is_dict(M, mob),
-        get_dict(owner, M, OwnerId),
-        entity:is_alive(M),
-        \+ status:is_rooted(M, _)
-    ), Summons),
+                member(M, Ents),
+                is_dict(M, mob),
+                get_dict(owner, M, OwnerId),
+                entity:is_alive(M),
+                \+ status:is_rooted(M, _)
+               ), Summons),
     process_summon_moves(Summons, NextRoomId, Dir, SummonEvts).
 
 process_summon_moves([], _, _, []).
@@ -132,7 +132,7 @@ do_tick_walk(Id, Evts) :-
                 ( member(error(_), MoveEvts) ->
                       del_dict(walk_target, Act, _, NAct),
                       world:put_entity(NAct),
-                      Evts = [walk_cancelled(Id) | MoveEvts]
+                      Evts = [walk_cancelled(Id)  |MoveEvts]
                 ;
                   world:get_entity(Id, TmpAct),
                   get_dict(room, TmpAct, NewRoomId),

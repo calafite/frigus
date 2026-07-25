@@ -66,12 +66,12 @@ do_browse(Id, _NpcQuery, [error(actor_not_found(Id))]) :- \+ world:get_entity(Id
 do_browse(Id, NpcQuery, Evts) :-
     world:get_entity(Id, Actor),
     ( resolve_merchant(Actor, NpcQuery, Npc) ->
-        combat:get_display_name(Npc, NpcName),
-        ( get_dict(inv, Npc, Inv) -> true ; Inv = [] ),
-        format_inv(Actor, Inv, Formatted),
-        Evts = [browse_report(Id, NpcName, Formatted)]
+          combat:get_display_name(Npc, NpcName),
+          ( get_dict(inv, Npc, Inv) -> true ; Inv = [] ),
+          format_inv(Actor, Inv, Formatted),
+          Evts = [browse_report(Id, NpcName, Formatted)]
     ;
-        Evts = [error(merchant_not_found(NpcQuery))]
+      Evts = [error(merchant_not_found(NpcQuery))]
     ).
 
 format_inv(_, [], []).
@@ -95,25 +95,25 @@ do_buy(Id, _NpcQuery, _ItemQuery, [error(actor_not_found(Id))]) :- \+ world:get_
 do_buy(Id, NpcQuery, ItemQuery, Evts) :-
     world:get_entity(Id, Actor),
     ( resolve_merchant(Actor, NpcQuery, Npc) ->
-        ( entity:has_item(Npc, ItemQuery) ->
-            to_atom(ItemQuery, Tag),
-            item_prices(Actor, Tag, BuyPrice, _),
-            ( entity:rem_item(Actor, gold, BuyPrice, A1) ->
-                entity:rem_item(Npc, Tag, 1, N1),
-                entity:add_item(N1, gold, BuyPrice, N2),
-                entity:add_item(A1, Tag, 1, A2),
-                world:put_entity(N2),
-                world:put_entity(A2),
-                combat:get_display_name(Npc, NpcName),
-                Evts = [bought(Id, NpcName, Tag, BuyPrice)]
-            ;
-                Evts = [error(insufficient_gold(Id, BuyPrice))]
-            )
-        ;
+          ( entity:has_item(Npc, ItemQuery) ->
+                to_atom(ItemQuery, Tag),
+                item_prices(Actor, Tag, BuyPrice, _),
+                ( entity:rem_item(Actor, gold, BuyPrice, A1) ->
+                      entity:rem_item(Npc, Tag, 1, N1),
+                      entity:add_item(N1, gold, BuyPrice, N2),
+                      entity:add_item(A1, Tag, 1, A2),
+                      world:put_entity(N2),
+                      world:put_entity(A2),
+                      combat:get_display_name(Npc, NpcName),
+                      Evts = [bought(Id, NpcName, Tag, BuyPrice)]
+                ;
+                  Evts = [error(insufficient_gold(Id, BuyPrice))]
+                )
+          ;
             Evts = [error(merchant_out_of_stock(NpcQuery, ItemQuery))]
-        )
+          )
     ;
-        Evts = [error(merchant_not_found(NpcQuery))]
+      Evts = [error(merchant_not_found(NpcQuery))]
     ).
 
 % --- Sell Command ---
@@ -122,23 +122,23 @@ do_sell(Id, _NpcQuery, _ItemQuery, [error(actor_not_found(Id))]) :- \+ world:get
 do_sell(Id, NpcQuery, ItemQuery, Evts) :-
     world:get_entity(Id, Actor),
     ( resolve_merchant(Actor, NpcQuery, Npc) ->
-        ( entity:has_item(Actor, ItemQuery) ->
-            to_atom(ItemQuery, Tag),
-            item_prices(Actor, Tag, _, SellPrice),
-            ( entity:rem_item(Npc, gold, SellPrice, N1) ->
-                entity:rem_item(Actor, Tag, 1, A1),
-                entity:add_item(N1, Tag, 1, N2),
-                entity:add_item(A1, gold, SellPrice, A2),
-                world:put_entity(N2),
-                world:put_entity(A2),
-                combat:get_display_name(Npc, NpcName),
-                Evts = [sold(Id, NpcName, Tag, SellPrice)]
-            ;
-                Evts = [error(merchant_out_of_gold(NpcQuery, SellPrice))]
-            )
-        ;
+          ( entity:has_item(Actor, ItemQuery) ->
+                to_atom(ItemQuery, Tag),
+                item_prices(Actor, Tag, _, SellPrice),
+                ( entity:rem_item(Npc, gold, SellPrice, N1) ->
+                      entity:rem_item(Actor, Tag, 1, A1),
+                      entity:add_item(N1, Tag, 1, N2),
+                      entity:add_item(A1, gold, SellPrice, A2),
+                      world:put_entity(N2),
+                      world:put_entity(A2),
+                      combat:get_display_name(Npc, NpcName),
+                      Evts = [sold(Id, NpcName, Tag, SellPrice)]
+                ;
+                  Evts = [error(merchant_out_of_gold(NpcQuery, SellPrice))]
+                )
+          ;
             Evts = [error(item_not_found(Id, ItemQuery))]
-        )
+          )
     ;
-        Evts = [error(merchant_not_found(NpcQuery))]
+      Evts = [error(merchant_not_found(NpcQuery))]
     ).

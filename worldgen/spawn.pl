@@ -76,9 +76,9 @@ gen_summon(Tag, OwnerId, Lvl, RId, Summon) :-
     atomic_list_concat([summoned, Tag], '_', RawName),
 
     Summon = mob{
-        id: Id, tag: Tag, name: RawName, lvl: Lvl,
-        hp: FinalH, max_hp: FinalH, str: FinalS, dex: FinalD, int: FinalI,
-        room: RId, owner: OwnerId, lifespan: 30, props: [summon, no_wander]
+                 id: Id, tag: Tag, name: RawName, lvl: Lvl,
+                 hp: FinalH, max_hp: FinalH, str: FinalS, dex: FinalD, int: FinalI,
+                 room: RId, owner: OwnerId, lifespan: 30, props: [summon, no_wander]
     }.
 
 gen_grp(Theme, Lvl, RId, Mobs) :-
@@ -108,13 +108,13 @@ gen_merchant_npc(RoomId, Npc) :-
     atomic_list_concat([RawName, ' the Merchant'], Name),
 
     findall(stack{tag: T, qty: Q}, (
-        spawn_config:merchant_stock(T, Chance, Min, Max),
-        random(F), F =< Chance,
-        random_between(Min, Max, Q)
-    ), Stock),
+                spawn_config:merchant_stock(T, Chance, Min, Max),
+                random(F), F =< Chance,
+                random_between(Min, Max, Q)
+                                   ), Stock),
 
     random_between(500, 2500, GoldAmt),
-    Inv = [stack{tag: gold, qty: GoldAmt} | Stock],
+    Inv = [stack{tag: gold, qty: GoldAmt}  |Stock],
 
     Npc = mob{id: NpcId, tag: merchant, name: Name, lvl: 5, hp: 60, max_hp: 60, str: 10, dex: 12, int: 14, room: RoomId, fac: merchant, props: [merchant, no_wander], equip: dict{wpn: dagger, shield: none, body: tunic}, inv: Inv}.
 
@@ -125,5 +125,5 @@ gen_town_npc(RoomId, Npc) :-
     ; Roll =< 75 ->
           gen_citizen_npc(RoomId, Npc)
     ;
-          gen_merchant_npc(RoomId, Npc)
+      gen_merchant_npc(RoomId, Npc)
     ).

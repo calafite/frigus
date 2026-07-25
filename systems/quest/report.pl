@@ -1,9 +1,9 @@
 :- module(quest_report, [
-    build_quest_list_html/2,
-    build_quest_read_html/7,
-    build_all_progress_html/2,
-    build_single_progress_html/6
-]).
+              build_quest_list_html/2,
+              build_quest_read_html/7,
+              build_all_progress_html/2,
+              build_single_progress_html/6
+                        ]).
 
 :- use_module('../../config/quest').
 :- use_module('../combat/core').

@@ -28,7 +28,7 @@ check_hostile(Actor, M, MTag, IsHostile) :-
 % An entity is visible if it is NOT stealthed, or if it IS stealthed but shares a party with the observer.
 is_visible_to(Observer, Target) :-
     ( entity:has_aff(Target, stealthed) ->
-        in_same_party(Observer, Target)
+          in_same_party(Observer, Target)
     ; true ).
 
 do_look(Id, Evts) :-

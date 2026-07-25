@@ -3,7 +3,7 @@
               get_proxy_ent/2, in_same_party/2, is_enemy/2, is_friendly/2,
               resolve_target/3, get_room_targets/3, filter_targets/4,
               do_pay_bounty/2, clear_local_threats/2
-          ]).
+                           ]).
 
 :- use_module('../../core/world').
 :- use_module('../../core/entity').
@@ -35,9 +35,9 @@ is_enemy(Actor, Tgt) :-
     get_dict(id, PActor, PAId), get_dict(id, PTgt, PTId), PAId \== PTId,
     \+ in_same_party(PActor, PTgt), % Party members are never enemies
     ( is_dict(PActor, plyr) ->
-        ( is_dict(PTgt, mob), \+ is_innocent(PTgt)
-        ; is_dict(PTgt, plyr)
-        ; is_town_npc(PTgt) )
+          ( is_dict(PTgt, mob), \+ is_innocent(PTgt)
+          ; is_dict(PTgt, plyr)
+          ; is_town_npc(PTgt) )
     ; is_dict(PTgt, plyr) ; is_town_npc(PTgt) ).
 
 is_friendly(Actor, Tgt) :-

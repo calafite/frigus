@@ -1,7 +1,7 @@
 :- module(combat_melee, [
               do_kill/3, apply_damage/5, flurry_strike/4,
               mob_retaliate/3, town_brawl_retaliate/3, brawl_attack_all/3
-          ]).
+                        ]).
 
 :- use_module('../../core/world').
 :- use_module('../../core/entity').
@@ -25,7 +25,7 @@ do_kill(Id, TgtQuery, Evts) :-
     ;
       combat_factions:resolve_target(Actor, TgtQuery, Tgt),
       ( Tgt == none ->
-          Evts = [error(target_not_found(Id, TgtQuery, room(RoomId)))]
+            Evts = [error(target_not_found(Id, TgtQuery, room(RoomId)))]
       ; get_dict(id, Tgt, TgtId),
         ( TgtId \== Id ->
               combat_core:get_weapon_tag(Actor, WTag),
@@ -52,9 +52,9 @@ apply_damage(SrcId, SrcEnt, Tgt, WTag, Evts) :-
 
           % Still break stealth on dodge
           ( entity:has_aff(NAttacker, stealthed) ->
-              entity:remove_aff(NAttacker, stealthed, NAttacker2),
-              world:put_entity(NAttacker2),
-              StealthBreakEvt = [aff_faded(SrcName, stealthed)]
+                entity:remove_aff(NAttacker, stealthed, NAttacker2),
+                world:put_entity(NAttacker2),
+                StealthBreakEvt = [aff_faded(SrcName, stealthed)]
           ; StealthBreakEvt = [] ),
 
           append([dodged(TgtName, SrcName)], CrimeEvts, TmpE),
@@ -66,8 +66,8 @@ apply_damage(SrcId, SrcEnt, Tgt, WTag, Evts) :-
 
       % Break stealth after the attack is fully calculated
       ( entity:has_aff(NAttacker, stealthed) ->
-          entity:remove_aff(NAttacker, stealthed, NAttacker2),
-          StealthBreakEvt = [aff_faded(SrcName, stealthed)]
+            entity:remove_aff(NAttacker, stealthed, NAttacker2),
+            StealthBreakEvt = [aff_faded(SrcName, stealthed)]
       ; NAttacker2 = NAttacker, StealthBreakEvt = [] ),
 
       entity:mod_hp(CbtTgt, -FinalDmg, NTgt), get_dict(hp, NTgt, CurHp), ( get_dict(max_hp, NTgt, MaxHp) -> true ; MaxHp = CurHp ),

@@ -149,12 +149,12 @@ tick_lifespan(Act, NAct, Evts) :-
     get_dict(lifespan, Act, L), !,
     NL is L - 1,
     ( NL =< 0 ->
-        NAct = Act.put(hp, 0),
-        combat:get_display_name(Act, Name),
-        Evts = [summon_expired(Name)]
+          NAct = Act.put(hp, 0),
+          combat:get_display_name(Act, Name),
+          Evts = [summon_expired(Name)]
     ;
-        NAct = Act.put(lifespan, NL),
-        Evts = []
+      NAct = Act.put(lifespan, NL),
+      Evts = []
     ).
 tick_lifespan(Act, Act, []).
 

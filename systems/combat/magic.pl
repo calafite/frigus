@@ -1,7 +1,7 @@
 :- module(combat_magic, [
               check_affinity/2, do_cast/4, resolve_spell_targets/4,
               execute_spell_on_targets/6, process_targets/6, process_single_target/7
-          ]).
+                        ]).
 
 :- use_module('../../core/world').
 :- use_module('../../core/entity').
@@ -35,41 +35,41 @@ resolve_spell_targets(Actor, Type, TgtQuery, Targets) :-
 do_cast(Id, Sp, TgtQuery, Evts) :-
     world:get_entity(Id, Actor),
     ( combat_config:spell_type(Sp, Type) ->
-        get_dict(room, Actor, RoomId),
-        combat_core:get_display_name(Actor, ActName),
+          get_dict(room, Actor, RoomId),
+          combat_core:get_display_name(Actor, ActName),
 
-        ( member(Type, [damage, area, group_harm, cc]), world:is_safe_room(RoomId) ->
-              Evts = [error(safe_zone(Id))]
-        ; status:is_cced(Actor, CC) -> Evts = [error(cc_prevented(Id, CC))]
-        ; status:is_silenced(Actor, CC) -> Evts = [error(cc_prevented(Id, CC))]
-        ; (member(Type, [damage, cc, area, group_harm]), status:is_panicked(Actor, CC)) -> Evts = [error(cc_prevented(Id, CC))]
-        ; \+ check_affinity(Actor, Sp) -> Evts = [error(spell_affinity_denied(Id, Sp))]
-        ; Type == summon, combat_core:has_active_summon(Id) -> Evts = [error(already_have_summon(Id))]
-        ; ( combat_config:spell_cost(Sp, Cost) -> true ; Cost = 0 ),
-          get_dict(mp, Actor, Mp),
-          ( Mp < Cost -> Evts = [error(insufficient_mp(Id, Sp, mp_available(Mp), mp_required(Cost)))]
-          ;
-            world:env_state(Env),
-            ( get_dict(mist, Env, Mist) -> true ; Mist = 0 ),
-            MissChance is floor(Mist / 2),
-            combat_core:roll_dice(1, 100, Roll),
-            ( Roll =< MissChance ->
-                  % Break stealth even on a spell fizzle/miss
-                  ( entity:has_aff(Actor, stealthed) ->
-                      entity:remove_aff(Actor, stealthed, NAct2),
-                      world:put_entity(NAct2),
-                      StealthBreakEvt = [aff_faded(ActName, stealthed)]
-                  ; StealthBreakEvt = [] ),
-                  append([spell_missed(ActName, Sp)], StealthBreakEvt, Evts)
+          ( member(Type, [damage, area, group_harm, cc]), world:is_safe_room(RoomId) ->
+                Evts = [error(safe_zone(Id))]
+          ; status:is_cced(Actor, CC) -> Evts = [error(cc_prevented(Id, CC))]
+          ; status:is_silenced(Actor, CC) -> Evts = [error(cc_prevented(Id, CC))]
+          ; (member(Type, [damage, cc, area, group_harm]), status:is_panicked(Actor, CC)) -> Evts = [error(cc_prevented(Id, CC))]
+          ; \+ check_affinity(Actor, Sp) -> Evts = [error(spell_affinity_denied(Id, Sp))]
+          ; Type == summon, combat_core:has_active_summon(Id) -> Evts = [error(already_have_summon(Id))]
+          ; ( combat_config:spell_cost(Sp, Cost) -> true ; Cost = 0 ),
+            get_dict(mp, Actor, Mp),
+            ( Mp < Cost -> Evts = [error(insufficient_mp(Id, Sp, mp_available(Mp), mp_required(Cost)))]
             ;
-              resolve_spell_targets(Actor, Type, TgtQuery, Targets),
-              ( Targets == [] -> Evts = [error(no_valid_targets(Id, Sp))]
-              ; NMp is Mp - Cost, NActor = Actor.put(mp, NMp), world:put_entity(NActor),
-                execute_spell_on_targets(Type, Sp, Id, NActor, Targets, Evts)
+              world:env_state(Env),
+              ( get_dict(mist, Env, Mist) -> true ; Mist = 0 ),
+              MissChance is floor(Mist / 2),
+              combat_core:roll_dice(1, 100, Roll),
+              ( Roll =< MissChance ->
+                    % Break stealth even on a spell fizzle/miss
+                    ( entity:has_aff(Actor, stealthed) ->
+                          entity:remove_aff(Actor, stealthed, NAct2),
+                          world:put_entity(NAct2),
+                          StealthBreakEvt = [aff_faded(ActName, stealthed)]
+                    ; StealthBreakEvt = [] ),
+                    append([spell_missed(ActName, Sp)], StealthBreakEvt, Evts)
+              ;
+                resolve_spell_targets(Actor, Type, TgtQuery, Targets),
+                ( Targets == [] -> Evts = [error(no_valid_targets(Id, Sp))]
+                ; NMp is Mp - Cost, NActor = Actor.put(mp, NMp), world:put_entity(NActor),
+                  execute_spell_on_targets(Type, Sp, Id, NActor, Targets, Evts)
+                )
               )
             )
           )
-        )
     ; Evts = [error(unknown_spell(Id, Sp))] ).
 
 execute_spell_on_targets(Type, Sp, Id, Actor, Targets, Evts) :-
@@ -94,7 +94,7 @@ execute_spell_on_targets(Type, Sp, Id, Actor, Targets, Evts) :-
                 combat_core:get_display_name(Summon, SumName),
                 BaseEvt = [summoned(ActName, Sp, SumName, Desc)]
           ;
-                BaseEvt = [summon_failed(ActName, Sp, Desc)]
+            BaseEvt = [summon_failed(ActName, Sp, Desc)]
           )
     ; Targets = [SingleTgt|_], combat_core:get_display_name(SingleTgt, SingleTgtName), BaseEvt = [cast(ActName, Sp, SingleTgtName, Desc)]
     ; BaseEvt = [] ),
@@ -104,20 +104,20 @@ execute_spell_on_targets(Type, Sp, Id, Actor, Targets, Evts) :-
     Potency is MagicMult * CorrMult * MoonMult,
 
     ( Type \== summon ->
-        process_targets(Type, Sp, Id, Potency, Targets, TgtEvts),
+          process_targets(Type, Sp, Id, Potency, Targets, TgtEvts),
 
-        % Break stealth at the very end of spell execution
-        ( entity:has_aff(Actor, stealthed) ->
-            world:get_entity(Id, TmpActor),
-            entity:remove_aff(TmpActor, stealthed, FinalActor),
-            world:put_entity(FinalActor),
-            StealthBreakEvt = [aff_faded(ActName, stealthed)]
-        ; StealthBreakEvt = [] ),
+          % Break stealth at the very end of spell execution
+          ( entity:has_aff(Actor, stealthed) ->
+                world:get_entity(Id, TmpActor),
+                entity:remove_aff(TmpActor, stealthed, FinalActor),
+                world:put_entity(FinalActor),
+                StealthBreakEvt = [aff_faded(ActName, stealthed)]
+          ; StealthBreakEvt = [] ),
 
-        append(BaseEvt, TgtEvts, Tmp1),
-        append(Tmp1, StealthBreakEvt, Evts)
+          append(BaseEvt, TgtEvts, Tmp1),
+          append(Tmp1, StealthBreakEvt, Evts)
     ;
-        Evts = BaseEvt
+      Evts = BaseEvt
     ).
 
 process_targets(_, _, _, _, [], []).
