@@ -91,6 +91,13 @@ parse_act(D, party(Action, Target)) :-
         ( Text \== "" -> atom_string(Target, Text) ; Target = none )
     ; Target = none ).
 
+% --- Quest System ---
+parse_act(D, quest(Action, Target)) :-
+    get_dict(type, D, "quest"),
+    ( get_dict(action, D, RawA) -> ensure_atom(RawA, Action) ; Action = none ),
+    ( get_dict(target, D, RawT), RawT \== "" -> ensure_atom(RawT, Target) ; Target = none ).
+% --------------------
+
 parse_act(D, loot(IId))     :- ( get_dict(type, D, "loot") ; get_dict(type, D, "get") ; get_dict(type, D, "take") ; get_dict(type, D, "g") ), extract_target(D, IId).
 parse_act(D, equip(I))      :- get_dict(type, D, "equip"), extract_target(D, I).
 parse_act(D, unequip(S))    :- get_dict(type, D, "unequip"), extract_target(D, S).

@@ -30,7 +30,7 @@ seed_hub :-
                     type: outdoor,
                     desc: "The central town square. A cool mountain river rushes past a stone fountain here.",
                     exits: dict{north: tavern, south: temple, east: barracks, west: mine_entrance, forest: forest_trail, farm: farm_field, mountain: mountain_trail, wild: 'cell_0_0_0'},
-                    props: [safe, landmark, square, river],
+                    props: [safe, landmark, square, river, quest_board],
                     region: shire
             },
                 dict{

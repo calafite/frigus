@@ -8,6 +8,7 @@
 :- use_module('../prog').
 :- use_module('../loot').
 :- use_module('../ai').
+:- use_module('../quest').
 :- use_module('factions').
 :- use_module(library(lists)).
 
@@ -56,7 +57,16 @@ resolve_death(SrcEnt, DeadMob, Evts) :-
     world:del_entity(MobId),
     ( is_dict(DeadMob, mob) ->
           get_dict(tag, DeadMob, RawTag), combat_core:to_atom(RawTag, Tag), spawn_config:mob_xp(Tag, Xp),
-          ( SrcEnt \== environment -> get_dict(id, SrcEnt, RawSrcId), combat_core:to_atom(RawSrcId, SrcId), prog:add_xp(SrcId, Xp, XpEvts) ; XpEvts = [] ),
+          ( SrcEnt \== environment ->
+                get_dict(id, SrcEnt, RawSrcId), combat_core:to_atom(RawSrcId, SrcId),
+                prog:add_xp(SrcId, Xp, XpEvts),
+                combat_factions:get_proxy_ent(SrcEnt, ProxySrc),
+                ( is_dict(ProxySrc, plyr) ->
+                    get_dict(id, ProxySrc, PId),
+                    % Guarded quest objective tick, ignores failures if quests are malformed
+                    ( catch(quest:record_kill(PId, Tag), _, true) -> true ; true )
+                ; true )
+          ; XpEvts = [] ),
           loot:gen_drops(DeadMob, DropEvts),
           ( catch(ai:check_and_spawn_settlement_npc(RoomId), _, fail) -> true ; true ),
           append(XpEvts, DropEvts, Evts)

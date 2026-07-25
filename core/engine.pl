@@ -14,6 +14,7 @@
 :- use_module('../systems/item').
 :- use_module('../systems/status').
 :- use_module('../systems/party').
+:- use_module('../systems/quest').
 :- use_module('../systems/ai').
 :- use_module('../systems/prog').
 :- use_module('../systems/env').
@@ -22,7 +23,6 @@
 :- use_module('../systems/shop').
 :- use_module('../systems/chat').
 :- use_module('../systems/stealth').
-
 
 % ROUTER
 step(Id, validate_key(Key), Evts)                     :- auth:handle_validate_key(Id, Key, Evts), !.
@@ -52,6 +52,7 @@ step(Id, allocate(Stat), Evts):- prog:do_allocate(Id, Stat, Evts), !.
 step(Id, say(Text), Evts)     :- chat:do_say(Id, Text, Evts), !.
 step(Id, party_say(Text), Evts) :- chat:do_party_say(Id, Text, Evts), !.
 step(Id, party(Action, Target), Evts) :- party:do_party(Id, Action, Target, Evts), !.
+step(Id, quest(Action, Target), Evts) :- quest:do_quest(Id, Action, Target, Evts), !.
 
 step(Id, look, Evts)          :- info:do_look(Id, Evts), !.
 step(Id, status, Evts)        :- info:do_status(Id, Evts), !.
@@ -79,6 +80,7 @@ is_interrupting_action(unequip(_)).
 is_interrupting_action(use(_)).
 is_interrupting_action(allocate(_)).
 is_interrupting_action(pay_bounty).
+is_interrupting_action(quest(_, _)).
 
 api_step(Req, Res) :-
     ( catch(api_step_internal(Req, Res), Err, format_exception_res(Err, Req, Res)) -> true
