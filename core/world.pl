@@ -1,6 +1,8 @@
 :- module(world, [
               get_entity/2, put_entity/1, del_entity/1,
               get_room/2, put_room/1, del_room/1,
+              get_party/2, put_party/1, del_party/1,
+              add_party_invite/2, get_party_invite/2, rem_party_invite/2,
               env_state/1, put_env/1,
               room_entities/2, gen_id/2, all_mobs/1,
               push_room_event/2, push_room_events/2, pop_room_events/2,
@@ -14,6 +16,8 @@
 
 :- dynamic db_entity/2.
 :- dynamic db_room/2.
+:- dynamic db_party/2.
+:- dynamic db_party_invite/2.
 :- dynamic db_room_event/2.
 :- dynamic db_bounty_index/2.
 :- dynamic db_env/1.
@@ -24,7 +28,6 @@ to_atom(String, Atom) :- string(String), !, atom_string(Atom, String).
 to_atom(Number, Atom) :- number(Number), !, atom_number(Atom, Number).
 to_atom(_, unknown).
 
-% Centralized Type-Safe Safe Zone Check
 is_safe_room(RawRoomId) :-
     to_atom(RawRoomId, RoomId),
     db_room(RoomId, Room),
@@ -107,6 +110,29 @@ del_room(RawId) :-
     to_atom(RawId, Id),
     retractall(db_room(Id, _)).
 
+get_party(RawId, Party) :-
+    to_atom(RawId, Id),
+    db_party(Id, Party), !.
+
+put_party(Party) :-
+    get_dict(id, Party, Id),
+    retractall(db_party(Id, _)),
+    assertz(db_party(Id, Party)).
+
+del_party(RawId) :-
+    to_atom(RawId, Id),
+    retractall(db_party(Id, _)).
+
+add_party_invite(TargetId, PartyId) :-
+    retractall(db_party_invite(TargetId, _)),
+    assertz(db_party_invite(TargetId, PartyId)).
+
+get_party_invite(TargetId, PartyId) :-
+    db_party_invite(TargetId, PartyId), !.
+
+rem_party_invite(TargetId, PartyId) :-
+    retractall(db_party_invite(TargetId, PartyId)).
+
 env_state(Env) :- db_env(Env), !.
 env_state(env{time: 480, day: 1, season: spring, moon: full_moon, mist: 0, weather: clear}).
 
@@ -138,6 +164,8 @@ pop_room_events(RawRoomId, Events) :-
 clear_db :-
     retractall(db_entity(_, _)),
     retractall(db_room(_, _)),
+    retractall(db_party(_, _)),
+    retractall(db_party_invite(_, _)),
     retractall(db_room_event(_, _)),
     retractall(db_bounty_index(_, _)),
     retractall(db_env(_)).
@@ -145,8 +173,9 @@ clear_db :-
 save_db(Filename) :-
     findall(E, db_entity(_, E), Ents),
     findall(R, db_room(_, R), Rooms),
+    findall(P, db_party(_, P), Parties),
     env_state(Env),
-    State = json{entities: Ents, rooms: Rooms, env: Env},
+    State = json{entities: Ents, rooms: Rooms, parties: Parties, env: Env},
     setup_call_cleanup(
         open(Filename, write, Stream),
         json_write_dict(Stream, State, [width(0)]),
@@ -167,6 +196,7 @@ load_db(Filename) :-
     clear_db,
     ( get_dict(entities, State, Ents) -> forall(member(E, Ents), put_entity(E)) ; true ),
     ( get_dict(rooms, State, Rooms) -> forall(member(R, Rooms), put_room(R)) ; true ),
+    ( get_dict(parties, State, Parties) -> forall(member(P, Parties), put_party(P)) ; true ),
     ( get_dict(env, State, Env) ->
           ( get_dict(time, Env, T) -> true ; T = 480 ),
           ( get_dict(day, Env, D) -> true ; D = 1 ),

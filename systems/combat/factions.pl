@@ -1,6 +1,6 @@
 :- module(combat_factions, [
               is_valid_combat_target/1, is_town_npc/1, is_innocent/1, is_crime/1,
-              get_proxy_ent/2, is_enemy/2, is_friendly/2,
+              get_proxy_ent/2, in_same_party/2, is_enemy/2, is_friendly/2,
               resolve_target/3, get_room_targets/3, filter_targets/4,
               do_pay_bounty/2, clear_local_threats/2
           ]).
@@ -23,17 +23,29 @@ get_proxy_ent(Ent, Proxy) :-
     is_dict(Ent), get_dict(owner, Ent, OwnerId), world:get_entity(OwnerId, Proxy), !.
 get_proxy_ent(Ent, Ent).
 
+% Check if two entities are in the same party
+in_same_party(A, B) :-
+    is_dict(A), is_dict(B),
+    get_dict(party, A, PIdA),
+    get_dict(party, B, PIdB),
+    PIdA == PIdB.
+
 is_enemy(Actor, Tgt) :-
     get_proxy_ent(Actor, PActor), get_proxy_ent(Tgt, PTgt),
     get_dict(id, PActor, PAId), get_dict(id, PTgt, PTId), PAId \== PTId,
-    ( is_dict(PActor, plyr) -> is_dict(PTgt, mob), \+ is_innocent(PTgt)
+    \+ in_same_party(PActor, PTgt), % Party members are never enemies
+    ( is_dict(PActor, plyr) ->
+        ( is_dict(PTgt, mob), \+ is_innocent(PTgt)
+        ; is_dict(PTgt, plyr)
+        ; is_town_npc(PTgt) )
     ; is_dict(PTgt, plyr) ; is_town_npc(PTgt) ).
 
 is_friendly(Actor, Tgt) :-
     get_proxy_ent(Actor, PActor), get_proxy_ent(Tgt, PTgt),
     get_dict(id, PActor, PAId), get_dict(id, PTgt, PTId),
-    ( PAId == PTId ; is_dict(PActor, plyr), is_dict(PTgt, plyr)
-    ; is_dict(PActor, plyr), is_innocent(PTgt)
+    ( PAId == PTId
+    ; in_same_party(PActor, PTgt) % Party members are always friendly
+    ; is_dict(PActor, plyr), is_innocent(PTgt), \+ is_dict(PTgt, plyr)
     ; is_dict(PActor, mob), is_dict(PTgt, mob), \+ is_enemy(PActor, PTgt) ).
 
 % Resolved deterministically. Will return 'none' if target query is unfulfillable.

@@ -70,7 +70,15 @@ parse_act(D, say(Text)) :-
         ; Text = "" )
     ; Text = "" ).
 
-
+parse_act(D, party(Action, Target)) :-
+    get_dict(type, D, "party"),
+    ( get_dict(action, D, RawA) -> ensure_atom(RawA, Action) ; Action = none ),
+    ( get_dict(target, D, RawT), RawT \== "" ->
+        ( string(RawT) -> normalize_space(string(Text), RawT)
+        ; atom(RawT) -> atom_string(RawT, S), normalize_space(string(Text), S)
+        ; Text = "" ),
+        ( Text \== "" -> atom_string(Target, Text) ; Target = none )
+    ; Target = none ).
 
 parse_act(D, loot(IId))     :- ( get_dict(type, D, "loot") ; get_dict(type, D, "get") ; get_dict(type, D, "take") ; get_dict(type, D, "g") ), extract_target(D, IId).
 parse_act(D, equip(I))      :- get_dict(type, D, "equip"), extract_target(D, I).
