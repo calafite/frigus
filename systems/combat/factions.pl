@@ -2,7 +2,8 @@
               is_valid_combat_target/1, is_town_npc/1, is_innocent/1, is_crime/1,
               get_proxy_ent/2, in_same_party/2, is_enemy/2, is_friendly/2,
               resolve_target/3, get_room_targets/3, filter_targets/4,
-              do_pay_bounty/2, clear_local_threats/2
+              do_pay_bounty/2, clear_local_threats/2,
+              is_safe_zone_violation/2, is_guard/1
                            ]).
 
 :- use_module('../../core/world').
@@ -48,6 +49,17 @@ is_friendly(Actor, Tgt) :-
     ; is_dict(PActor, plyr), is_innocent(PTgt), \+ is_dict(PTgt, plyr)
     ; is_dict(PActor, mob), is_dict(PTgt, mob), \+ is_enemy(PActor, PTgt) ).
 
+is_guard(Ent) :- get_dict(tag, Ent, RawTag), combat_core:to_atom(RawTag, Tag), member(Tag, [guard, protector]), !.
+is_guard(Ent) :- get_dict(fac, Ent, RawFac), combat_core:to_atom(RawFac, Fac), Fac == guard, !.
+is_guard(Ent) :- get_dict(props, Ent, Props), is_list(Props), member(protector, Props), !.
+
+% Safe zone protection logic: Identifies purely malicious/PvP combat
+is_safe_zone_violation(Actor, Tgt) :-
+    get_proxy_ent(Actor, Proxy),
+    is_dict(Proxy, plyr),
+    get_proxy_ent(Tgt, ProxyTgt),
+    ( is_dict(ProxyTgt, plyr) ; (is_innocent(Tgt), \+ is_guard(Tgt)) ).
+
 % Resolved deterministically. Will return 'none' if target query is unfulfillable.
 resolve_target(Actor, none, Target) :-
     get_dict(room, Actor, Room), world:room_entities(Room, Ents),
@@ -89,7 +101,7 @@ do_pay_bounty(Id, Evts) :-
                 ( entity:rem_item(Actor, gold, B, A1) ->
                       entity:clear_bounty(A1, FinalA), world:save_db('world_state.json'),
                       clear_local_threats(Id, FinalA), Evts = [bounty_paid(Id, B)]
-                ; Evts = [error(insufficient_gold_for_bounty(Id, B))] )
+                ; Evts = [insufficient_gold(Id, B)] )
           ; Evts = [error(no_bounty_to_pay(Id))] )
     ; Evts = [error(actor_not_found(Id))] ), !.
 

@@ -107,7 +107,7 @@ do_buy(Id, NpcQuery, ItemQuery, Evts) :-
                       combat:get_display_name(Npc, NpcName),
                       Evts = [bought(Id, NpcName, Tag, BuyPrice)]
                 ;
-                  Evts = [error(insufficient_gold(Id, BuyPrice))]
+                  Evts = [insufficient_gold(Id, BuyPrice)]
                 )
           ;
             Evts = [error(merchant_out_of_stock(NpcQuery, ItemQuery))]

@@ -16,9 +16,7 @@ do_kill(Id, _TgtQuery, [error(actor_not_found(Id))]) :- \+ world:get_entity(Id, 
 do_kill(Id, TgtQuery, Evts) :-
     world:get_entity(Id, Actor),
     get_dict(room, Actor, RoomId),
-    ( world:is_safe_room(RoomId) ->
-          Evts = [error(safe_zone(Id))]
-    ; status:is_cced(Actor, CC) ->
+    ( status:is_cced(Actor, CC) ->
           Evts = [error(cc_prevented(Id, CC))]
     ; status:is_panicked(Actor, CC) ->
           Evts = [error(cc_prevented(Id, CC))]
@@ -27,10 +25,14 @@ do_kill(Id, TgtQuery, Evts) :-
       ( Tgt == none ->
             Evts = [error(target_not_found(Id, TgtQuery, room(RoomId)))]
       ; get_dict(id, Tgt, TgtId),
-        ( TgtId \== Id ->
+        ( TgtId == Id ->
+              Evts = [error(cannot_attack_self(Id))]
+        ; world:is_safe_room(RoomId), combat_factions:is_safe_zone_violation(Actor, Tgt) ->
+              Evts = [error(safe_zone(Id))]
+        ;
               combat_core:get_weapon_tag(Actor, WTag),
               apply_damage(Id, Actor, Tgt, WTag, Evts)
-        ; Evts = [error(cannot_attack_self(Id))] )
+        )
       )
     ).
 
@@ -108,8 +110,7 @@ flurry_strike(_SrcId, SrcEnt, Tgt, [flurry(SrcName, TgtName), HitEvt]) :-
 
 mob_retaliate(Mob, Player, RetalEvts) :-
     get_dict(room, Mob, RoomId),
-    ( world:is_safe_room(RoomId) -> RetalEvts = []
-    ; \+ entity:is_alive(Player) -> RetalEvts = []
+    ( \+ entity:is_alive(Player) -> RetalEvts = []
     ; status:is_cced(Mob, _) -> RetalEvts = []
     ;
       get_dict(id, Player, PId), combat_core:get_weapon_tag(Mob, WTag), world:env_state(Env),
@@ -133,12 +134,9 @@ mob_retaliate(Mob, Player, RetalEvts) :-
 
 town_brawl_retaliate(_PrimaryMob, Player, BrawlEvts) :-
     get_dict(room, Player, Room),
-    ( world:is_safe_room(Room) -> BrawlEvts = []
-    ;
-      world:room_entities(Room, Ents),
-      findall(Mob, ( member(Mob, Ents), is_dict(Mob, mob), entity:is_alive(Mob), combat_factions:is_town_npc(Mob) ), TownNpcs),
-      brawl_attack_all(TownNpcs, Player, BrawlEvts)
-    ).
+    world:room_entities(Room, Ents),
+    findall(Mob, ( member(Mob, Ents), is_dict(Mob, mob), entity:is_alive(Mob), combat_factions:is_town_npc(Mob) ), TownNpcs),
+    brawl_attack_all(TownNpcs, Player, BrawlEvts).
 
 brawl_attack_all([], _, []).
 brawl_attack_all([Mob|Rest], Player, Evts) :-

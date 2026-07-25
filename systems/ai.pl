@@ -115,7 +115,6 @@ highest_bounty(Ents, TopId) :-
 act_mob(Mob, Evts) :-
     is_guard(Mob),
     get_dict(room, Mob, Room),
-    \+ world:is_safe_room(Room),
     world:room_entities(Room, Ents),
     highest_bounty(Ents, TgtId), !,
     get_dict(id, Mob, MId),
@@ -128,7 +127,6 @@ act_mob(Mob, Evts) :-
 act_mob(Mob, Evts) :-
     get_dict(owner, Mob, _OwnerId),
     get_dict(room, Mob, Room),
-    \+ world:is_safe_room(Room),
     world:room_entities(Room, Ents),
     member(Tgt, Ents),
     entity:is_alive(Tgt),
@@ -143,7 +141,6 @@ act_mob(Mob, Evts) :-
 % Mobs respond to threats
 act_mob(Mob, Evts) :-
     get_dict(room, Mob, Room),
-    \+ world:is_safe_room(Room),
     get_dict(threats, Mob, Threats),
     dict_keys(Threats, Keys), Keys \== [],
     world:room_entities(Room, Ents),
@@ -162,7 +159,6 @@ act_mob(Mob, Evts) :-
 act_mob(Mob, Evts) :-
     is_guard(Mob),
     get_dict(room, Mob, Room),
-    \+ world:is_safe_room(Room),
     world:room_entities(Room, Ents),
     member(Monster, Ents),
     is_dict(Monster, mob),
@@ -181,7 +177,6 @@ act_mob(Mob, Evts) :-
 % Hostile mob attacks player
 act_mob(Mob, Evts) :-
     get_dict(room, Mob, Room),
-    \+ world:is_safe_room(Room),
     \+ get_dict(owner, Mob, _),
     is_hostile_mob(Mob),
     world:room_entities(Room, Ents),

@@ -38,9 +38,7 @@ do_cast(Id, Sp, TgtQuery, Evts) :-
           get_dict(room, Actor, RoomId),
           combat_core:get_display_name(Actor, ActName),
 
-          ( member(Type, [damage, area, group_harm, cc]), world:is_safe_room(RoomId) ->
-                Evts = [error(safe_zone(Id))]
-          ; status:is_cced(Actor, CC) -> Evts = [error(cc_prevented(Id, CC))]
+          ( status:is_cced(Actor, CC) -> Evts = [error(cc_prevented(Id, CC))]
           ; status:is_silenced(Actor, CC) -> Evts = [error(cc_prevented(Id, CC))]
           ; (member(Type, [damage, cc, area, group_harm]), status:is_panicked(Actor, CC)) -> Evts = [error(cc_prevented(Id, CC))]
           ; \+ check_affinity(Actor, Sp) -> Evts = [error(spell_affinity_denied(Id, Sp))]
@@ -63,9 +61,17 @@ do_cast(Id, Sp, TgtQuery, Evts) :-
                     append([spell_missed(ActName, Sp)], StealthBreakEvt, Evts)
               ;
                 resolve_spell_targets(Actor, Type, TgtQuery, Targets),
-                ( Targets == [] -> Evts = [error(no_valid_targets(Id, Sp))]
+
+                % Enforce Safe Zone Logic: Strip out PvP/Innocent targets from the resolve list
+                ( world:is_safe_room(RoomId), member(Type, [damage, cc, area, group_harm]) ->
+                      exclude(combat_factions:is_safe_zone_violation(Actor), Targets, ValidTargets)
+                ; ValidTargets = Targets ),
+
+                ( ValidTargets == [] ->
+                      ( Targets \== [] -> Evts = [error(safe_zone(Id))]
+                      ; Evts = [error(no_valid_targets(Id, Sp))] )
                 ; NMp is Mp - Cost, NActor = Actor.put(mp, NMp), world:put_entity(NActor),
-                  execute_spell_on_targets(Type, Sp, Id, NActor, Targets, Evts)
+                  execute_spell_on_targets(Type, Sp, Id, NActor, ValidTargets, Evts)
                 )
               )
             )
