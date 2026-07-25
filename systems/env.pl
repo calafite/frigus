@@ -37,15 +37,15 @@ tick_env(Evts) :-
 
 update_daily(D, S, M, NS, NM, Evts) :-
     ( D mod 10 =:= 0 ->
-        next_season(S, NS),
-        msg_season(NS, SeasonMsg),
-        SEvt = [env_msg(SeasonMsg)]
+          next_season(S, NS),
+          msg_season(NS, SeasonMsg),
+          SEvt = [env_msg(SeasonMsg)]
     ; NS = S, SEvt = [] ),
 
     ( D mod 2 =:= 0 ->
-        next_moon(M, NM),
-        msg_moon(NM, MoonMsg),
-        MEvt = [env_msg(MoonMsg)]
+          next_moon(M, NM),
+          msg_moon(NM, MoonMsg),
+          MEvt = [env_msg(MoonMsg)]
     ; NM = M, MEvt = [] ),
 
     append(SEvt, MEvt, Evts).
@@ -88,26 +88,26 @@ pick_weath(NW) :- random_member(NW, [clear, overcast, precipitating, storming]).
 
 % --- Configurable Atmospheric Messages ---
 
-msg_time(morning,   "🌅 As the sun peeks over the horizon, warm morning light washes across the realm.").
+msg_time(morning, "🌅 As the sun peeks over the horizon, warm morning light washes across the realm.").
 msg_time(afternoon, "☀️ The sun reaches its zenith, bathing the land in brilliant daylight.").
-msg_time(evening,   "🌆 Shadows lengthen as the sun sinks in fiery hues of crimson and gold.").
-msg_time(night,     "🌙 Darkness envelopes the land as night falls and stars flicker to life.").
+msg_time(evening, "🌆 Shadows lengthen as the sun sinks in fiery hues of crimson and gold.").
+msg_time(night, "🌙 Darkness envelopes the land as night falls and stars flicker to life.").
 
 msg_season(spring, "🌸 A gentle breeze warms the air as flowers bloom—Spring has arrived.").
 msg_season(summer, "☀️ Golden light bathes the realm as Summer brings intense warmth.").
 msg_season(autumn, "🍂 Leaves turn amber and crisp winds sweep through the realm—Autumn is here.").
 msg_season(winter, "❄️ A piercing chill grips the world as Winter lays its icy blanket.").
 
-msg_moon(new_moon,   "🌑 The moon fades into total shadow, leaving the night sky pitch black.").
-msg_moon(crescent,   "🌒 A faint sliver of silver moon illuminates the night sky.").
-msg_moon(half,       "🌓 Half of the pale moon shines brightly overhead.").
-msg_moon(gibbous,    "🌔 The waxing moon swells, filling the night with soft radiance.").
-msg_moon(full_moon,  "🌕 The Full Moon hangs radiant! Monsters grow restless and surge with power!").
+msg_moon(new_moon, "🌑 The moon fades into total shadow, leaving the night sky pitch black.").
+msg_moon(crescent, "🌒 A faint sliver of silver moon illuminates the night sky.").
+msg_moon(half, "🌓 Half of the pale moon shines brightly overhead.").
+msg_moon(gibbous, "🌔 The waxing moon swells, filling the night with soft radiance.").
+msg_moon(full_moon, "🌕 The Full Moon hangs radiant! Monsters grow restless and surge with power!").
 
-msg_weath(clear,         "🌤️ The clouds part, opening up clear skies above.").
-msg_weath(overcast,      "☁️ A heavy grey mantle of clouds gathers over the land.").
+msg_weath(clear, "🌤️ The clouds part, opening up clear skies above.").
+msg_weath(overcast, "☁️ A heavy grey mantle of clouds gathers over the land.").
 msg_weath(precipitating, "🌧️ Cloud cover thickens as precipitation begins to fall.").
-msg_weath(storming,      "⚡ Lightning flashes and thunder rumbles violently across the heavens!").
+msg_weath(storming, "⚡ Lightning flashes and thunder rumbles violently across the heavens!").
 
 env_desc(Cur, Desc) :-
     ( get_dict(time, Cur, T) -> true ; T = 480 ),
@@ -121,11 +121,11 @@ env_desc(Cur, Desc) :-
 
 local_env_desc(Room, Env, Desc) :-
     ( get_dict(env, Room, REnv) ->
-        ( get_dict(temp, REnv, TBase) -> true ; TBase = 15 ),
-        ( get_dict(magic, REnv, M) -> true ; M = 10 ),
-        ( get_dict(corr, REnv, C) -> true ; C = 0 )
+          ( get_dict(temp, REnv, TBase) -> true ; TBase = 15 ),
+          ( get_dict(magic, REnv, M) -> true ; M = 10 ),
+          ( get_dict(corr, REnv, C) -> true ; C = 0 )
     ;
-        TBase = 15, M = 10, C = 0
+      TBase = 15, M = 10, C = 0
     ),
     ( get_dict(season, Env, RawSeason) -> to_atom(RawSeason, Season) ; Season = spring ),
     ( get_dict(weather, Env, RawWeather) -> to_atom(RawWeather, Weather) ; Weather = clear ),
@@ -138,10 +138,10 @@ local_env_desc(Room, Env, Desc) :-
     display_phase(Phase, PhaseStr),
 
     ( Phase == night ->
-        display_moon(Moon, MoonStr),
-        format(string(TimeStr), "~w ~w (~w)", [PhaseStr, TStr, MoonStr])
+          display_moon(Moon, MoonStr),
+          format(string(TimeStr), "~w ~w (~w)", [PhaseStr, TStr, MoonStr])
     ;
-        format(string(TimeStr), "~w ~w", [PhaseStr, TStr])
+      format(string(TimeStr), "~w ~w", [PhaseStr, TStr])
     ),
 
     ( Season == spring -> Mod = 0

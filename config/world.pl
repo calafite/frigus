@@ -1,9 +1,9 @@
 :- module(world_config, [
-    theme_weight/2, theme_data/2, rm_adj/2, rm_noun/2,
-    base_wpn/1, base_arm/1, base_acc/1, pref/4, suff/4, tier_mult/2,
-    mob_base/2, elite_mod/3, safe_zone_chance/2, theme_env_base/4,
-    structure_env_base/4
-]).
+              theme_weight/2, theme_data/2, rm_adj/2, rm_noun/2,
+              base_wpn/1, base_arm/1, base_acc/1, pref/4, suff/4, tier_mult/2,
+              mob_base/2, elite_mod/3, safe_zone_chance/2, theme_env_base/4,
+              structure_env_base/4
+                        ]).
 
 theme_weight(grove, 100).
 theme_weight(forest, 100).

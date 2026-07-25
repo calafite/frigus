@@ -55,7 +55,7 @@ step(Id, ActTerm, [error(unhandled_action(Id, ActTerm))]).
 
 is_interrupting_action(move(_)).
 is_interrupting_action(kill(_)).
-is_interrupting_action(cast(_,_)).
+is_interrupting_action(cast(_, _)).
 is_interrupting_action(loot(_)).
 is_interrupting_action(equip(_)).
 is_interrupting_action(unequip(_)).
@@ -71,18 +71,18 @@ api_step_internal(Req, Res) :-
     ( get_dict(actor, Req, RawActor) -> parser:ensure_atom(RawActor, ActorId) ; ActorId = unknown ),
     ( get_dict(action, Req, ActionDict) -> true ; ActionDict = dict{} ),
     ( parser:parse_act(ActionDict, ActTerm) ->
-        ( world:get_entity(ActorId, Actor), is_interrupting_action(ActTerm), get_dict(walk_target, Actor, _) ->
-            move:do_cancel_walk(ActorId, CancelEvts)
-        ; CancelEvts = [] ),
-        ( step(ActorId, ActTerm, DirectEvts) ->
-            append(CancelEvts, DirectEvts, AllDirectEvts),
-            events:split_events(AllDirectEvts, PubEvts, PrivEvts),
-            ( world:get_entity(ActorId, FinalActor), get_dict(room, FinalActor, RoomId) ->
-                world:push_room_events(RoomId, PubEvts)
-            ; true ),
-            json_io:terms_to_json(PrivEvts, JsonPrivs),
-            Res = json{status: "ok", events: JsonPrivs}
-        ; Res = json{status: "error", error: "Action handler failed during execution", action: ActionDict} )
+          ( world:get_entity(ActorId, Actor), is_interrupting_action(ActTerm), get_dict(walk_target, Actor, _) ->
+                move:do_cancel_walk(ActorId, CancelEvts)
+          ; CancelEvts = [] ),
+          ( step(ActorId, ActTerm, DirectEvts) ->
+                append(CancelEvts, DirectEvts, AllDirectEvts),
+                events:split_events(AllDirectEvts, PubEvts, PrivEvts),
+                ( world:get_entity(ActorId, FinalActor), get_dict(room, FinalActor, RoomId) ->
+                      world:push_room_events(RoomId, PubEvts)
+                ; true ),
+                json_io:terms_to_json(PrivEvts, JsonPrivs),
+                Res = json{status: "ok", events: JsonPrivs}
+          ; Res = json{status: "error", error: "Action handler failed during execution", action: ActionDict} )
     ; Res = json{status: "error", error: "Malformed or unknown action payload format", action: ActionDict} ).
 
 format_exception_res(Err, Req, json{status: "exception", error: ErrorMsg, req: Req}) :-

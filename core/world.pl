@@ -1,13 +1,13 @@
 :- module(world, [
-    get_entity/2, put_entity/1, del_entity/1,
-    get_room/2, put_room/1, del_room/1,
-    env_state/1, put_env/1,
-    room_entities/2, gen_id/2, all_mobs/1,
-    push_room_event/2, push_room_events/2, pop_room_events/2,
-    clear_db/0, save_db/1, load_db/1,
-    get_bounty_leaderboard/2,
-    is_safe_room/1
-]).
+              get_entity/2, put_entity/1, del_entity/1,
+              get_room/2, put_room/1, del_room/1,
+              env_state/1, put_env/1,
+              room_entities/2, gen_id/2, all_mobs/1,
+              push_room_event/2, push_room_events/2, pop_room_events/2,
+              clear_db/0, save_db/1, load_db/1,
+              get_bounty_leaderboard/2,
+              is_safe_room/1
+                 ]).
 
 :- use_module(library(json)).
 :- use_module(library(random)).
@@ -55,12 +55,12 @@ clean_room(Room, CleanRoom) :-
     is_dict(Room), !,
     get_dict(id, Room, RawId), to_atom(RawId, Id),
     ( get_dict(exits, Room, ExitsDict), is_dict(ExitsDict) ->
-        dict_pairs(ExitsDict, Tag, Pairs),
-        clean_exit_pairs(Pairs, CleanPairs),
-        dict_pairs(CleanExits, Tag, CleanPairs)
+          dict_pairs(ExitsDict, Tag, Pairs),
+          clean_exit_pairs(Pairs, CleanPairs),
+          dict_pairs(CleanExits, Tag, CleanPairs)
     ; CleanExits = dict{} ),
     ( get_dict(props, Room, RawProps), is_list(RawProps) ->
-        maplist(to_atom, RawProps, CleanProps)
+          maplist(to_atom, RawProps, CleanProps)
     ; CleanProps = [] ),
     CleanRoom = Room.put(id, Id).put(exits, CleanExits).put(props, CleanProps).
 clean_room(Room, Room).
@@ -85,7 +85,7 @@ put_entity(Ent) :-
     assertz(db_entity(Id, CleanEnt)),
     retractall(db_bounty_index(Id, _)),
     ( get_dict(bounty, CleanEnt, B), B > 0 ->
-        assertz(db_bounty_index(Id, B))
+          assertz(db_bounty_index(Id, B))
     ; true ).
 
 del_entity(RawId) :-
@@ -168,15 +168,15 @@ load_db(Filename) :-
     ( get_dict(entities, State, Ents) -> forall(member(E, Ents), put_entity(E)) ; true ),
     ( get_dict(rooms, State, Rooms) -> forall(member(R, Rooms), put_room(R)) ; true ),
     ( get_dict(env, State, Env) ->
-        ( get_dict(time, Env, T) -> true ; T = 480 ),
-        ( get_dict(day, Env, D) -> true ; D = 1 ),
-        ( get_dict(season, Env, S) -> true ; S = spring ),
-        ( get_dict(moon, Env, M) -> true ; M = full_moon ),
-        ( get_dict(mist, Env, Mist) -> true ; Mist = 0 ),
-        ( get_dict(weather, Env, W) -> true ; W = clear ),
-        put_env(env{time: T, day: D, season: S, moon: M, mist: Mist, weather: W})
+          ( get_dict(time, Env, T) -> true ; T = 480 ),
+          ( get_dict(day, Env, D) -> true ; D = 1 ),
+          ( get_dict(season, Env, S) -> true ; S = spring ),
+          ( get_dict(moon, Env, M) -> true ; M = full_moon ),
+          ( get_dict(mist, Env, Mist) -> true ; Mist = 0 ),
+          ( get_dict(weather, Env, W) -> true ; W = clear ),
+          put_env(env{time: T, day: D, season: S, moon: M, mist: Mist, weather: W})
     ;
-        put_env(env{time: 480, day: 1, season: spring, moon: full_moon, mist: 0, weather: clear})
+      put_env(env{time: 480, day: 1, season: spring, moon: full_moon, mist: 0, weather: clear})
     ).
 
 take(0, _, []) :- !.

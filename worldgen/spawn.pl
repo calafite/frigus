@@ -1,6 +1,6 @@
 :- module(spawn, [
-    gen_mob/5, gen_grp/4, gen_town_npc/2, gen_guard_npc/2, gen_citizen_npc/2
-]).
+              gen_mob/5, gen_grp/4, gen_town_npc/2, gen_guard_npc/2, gen_citizen_npc/2
+                 ]).
 
 :- use_module('../core/world').
 :- use_module('../config/world').
@@ -45,20 +45,20 @@ gen_mob(Theme, Lvl, Tier, RId, Mob) :-
     Int1 is max(1, floor(BInt * LevelMod)),
 
     ( Tier == boss ->
-        H2 is Hp1 * 4, S2 is Str1 * 2, D2 is Dex1 * 2, I2 is Int1 * 2,
-        random_elite_mod(EMod, StatBoost),
-        apply_elite_stat(StatBoost, 2.0, H2, S2, D2, I2, FinalH, FinalS, FinalD, FinalI),
-        atomic_list_concat([EMod, BaseTag, boss], '_', RawName),
-        Props = [dict{prop: boss, val: 1.0}, dict{prop: elite_mod, val: EMod}]
+          H2 is Hp1 * 4, S2 is Str1 * 2, D2 is Dex1 * 2, I2 is Int1 * 2,
+          random_elite_mod(EMod, StatBoost),
+          apply_elite_stat(StatBoost, 2.0, H2, S2, D2, I2, FinalH, FinalS, FinalD, FinalI),
+          atomic_list_concat([EMod, BaseTag, boss], '_', RawName),
+          Props = [dict{prop: boss, val: 1.0}, dict{prop: elite_mod, val: EMod}]
     ; Tier == elite ->
-        H2 is floor(Hp1 * 1.5), S2 is floor(Str1 * 1.5), D2 is floor(Dex1 * 1.5), I2 is floor(Int1 * 1.5),
-        random_elite_mod(EMod, StatBoost),
-        apply_elite_stat(StatBoost, 1.5, H2, S2, D2, I2, FinalH, FinalS, FinalD, FinalI),
-        atomic_list_concat([EMod, BaseTag], '_', RawName),
-        Props = [dict{prop: elite, val: 1.0}, dict{prop: elite_mod, val: EMod}]
+          H2 is floor(Hp1 * 1.5), S2 is floor(Str1 * 1.5), D2 is floor(Dex1 * 1.5), I2 is floor(Int1 * 1.5),
+          random_elite_mod(EMod, StatBoost),
+          apply_elite_stat(StatBoost, 1.5, H2, S2, D2, I2, FinalH, FinalS, FinalD, FinalI),
+          atomic_list_concat([EMod, BaseTag], '_', RawName),
+          Props = [dict{prop: elite, val: 1.0}, dict{prop: elite_mod, val: EMod}]
     ;
-        FinalH = Hp1, FinalS = Str1, FinalD = Dex1, FinalI = Int1,
-        RawName = BaseTag, Props = []
+      FinalH = Hp1, FinalS = Str1, FinalD = Dex1, FinalI = Int1,
+      RawName = BaseTag, Props = []
     ),
 
     Mob = mob{id: Id, tag: BaseTag, name: RawName, lvl: Lvl, hp: FinalH, max_hp: FinalH, str: FinalS, dex: FinalD, int: FinalI, room: RId, props: Props}.
@@ -85,7 +85,7 @@ gen_citizen_npc(RoomId, Npc) :-
 gen_town_npc(RoomId, Npc) :-
     random_between(1, 100, Roll),
     ( Roll =< 60 ->
-        gen_guard_npc(RoomId, Npc)
+          gen_guard_npc(RoomId, Npc)
     ;
-        gen_citizen_npc(RoomId, Npc)
+      gen_citizen_npc(RoomId, Npc)
     ).

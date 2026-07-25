@@ -1,11 +1,11 @@
 :- module(structures, [
-    check_special_structure/9,
-    spawn_structure_mobs/7,
-    spawn_structure_features/3,
-    register_respawn/1,
-    tick_respawns/1,
-    find_or_gen_anomaly/1
-]).
+              check_special_structure/9,
+              spawn_structure_mobs/7,
+              spawn_structure_features/3,
+              register_respawn/1,
+              tick_respawns/1,
+              find_or_gen_anomaly/1
+                      ]).
 
 :- use_module('../core/world').
 :- use_module('../config/spawn').
@@ -17,13 +17,13 @@
 :- dynamic db_structure_respawn/7.
 
 % Guaranteed structure anomaly locations strictly within 40 units of origin (0, 0, 0)
-guaranteed_structure(10, 0, 0, dragons_lair).       % Dist = 10
-guaranteed_structure(-12, 12, 0, witchs_hut).      % Dist = 17
-guaranteed_structure(0, -18, 0, ancient_ruins).    % Dist = 18
-guaranteed_structure(-22, -8, 0, living_tree).     % Dist = 23
-guaranteed_structure(25, -15, 0, vampires_manor).  % Dist = 29
-guaranteed_structure(-30, 20, 0, astral_rift).     % Dist = 36
-guaranteed_structure(32, 10, 0, necro_crypt).      % Dist = 33
+guaranteed_structure(10, 0, 0, dragons_lair). % Dist = 10
+guaranteed_structure(-12, 12, 0, witchs_hut). % Dist = 17
+guaranteed_structure(0, -18, 0, ancient_ruins). % Dist = 18
+guaranteed_structure(-22, -8, 0, living_tree). % Dist = 23
+guaranteed_structure(25, -15, 0, vampires_manor). % Dist = 29
+guaranteed_structure(-30, 20, 0, astral_rift). % Dist = 36
+guaranteed_structure(32, 10, 0, necro_crypt). % Dist = 33
 
 % 1. Check for Guaranteed Inner Anomalies (Radius <= 40)
 check_special_structure(_Hash, X, Y, Z, StructId, Theme, Name, Desc, Props) :-
@@ -74,34 +74,34 @@ spawn_structure_mobs(StructId, _Hash, X, Y, Z, Theme, RId) :-
     Lvl is max(10, floor(Dist * 1.5)),
 
     ( boss_tag(StructId, BossTag, CustomTitle) ->
-        world:gen_id(mob, Id),
-        spawn_config:mob_stats(BossTag, BHp, BStr, BDex, BInt),
-        LevelMod is 1.0 + (Lvl * 0.2),
-        FinalH is floor(BHp * LevelMod * 2.5),
-        FinalS is max(1, floor(BStr * LevelMod * 1.5)),
-        FinalD is max(1, floor(BDex * LevelMod * 1.5)),
-        FinalI is max(10, floor(BInt * LevelMod * 2.8)),
+          world:gen_id(mob, Id),
+          spawn_config:mob_stats(BossTag, BHp, BStr, BDex, BInt),
+          LevelMod is 1.0 + (Lvl * 0.2),
+          FinalH is floor(BHp * LevelMod * 2.5),
+          FinalS is max(1, floor(BStr * LevelMod * 1.5)),
+          FinalD is max(1, floor(BDex * LevelMod * 1.5)),
+          FinalI is max(10, floor(BInt * LevelMod * 2.8)),
 
-        Mob = mob{
-            id: Id,
-            tag: BossTag,
-            name: CustomTitle,
-            lvl: Lvl,
-            hp: FinalH,
-            max_hp: FinalH,
-            str: FinalS,
-            dex: FinalD,
-            int: FinalI,
-            room: RId,
-            struct_id: StructId,
-            coord_x: X,
-            coord_y: Y,
-            coord_z: Z,
-            theme: Theme,
-            props: [boss, no_wander]
-        }
+          Mob = mob{
+                    id: Id,
+                    tag: BossTag,
+                    name: CustomTitle,
+                    lvl: Lvl,
+                    hp: FinalH,
+                    max_hp: FinalH,
+                    str: FinalS,
+                    dex: FinalD,
+                    int: FinalI,
+                    room: RId,
+                    struct_id: StructId,
+                    coord_x: X,
+                    coord_y: Y,
+                    coord_z: Z,
+                    theme: Theme,
+                    props: [boss, no_wander]
+          }
     ;
-        spawn:gen_mob(Theme, Lvl, boss, RId, Mob)
+      spawn:gen_mob(Theme, Lvl, boss, RId, Mob)
     ),
     world:put_entity(Mob).
 
@@ -140,21 +140,21 @@ spawn_structure_features(_, _, _).
 
 find_or_gen_anomaly(LocText) :-
     findall(loc(X, Y, Name), (
-        between(6, 40, R),
-        search_radius(R, X, Y),
-        Z = 0,
-        Hash is (X * 73856093) xor (Y * 19349663) xor (Z * 83492791) xor 1337,
-        check_special_structure(Hash, X, Y, Z, _StructId, _Theme, Name, _Desc, _Props)
-    ), Anomalies),
+                between(6, 40, R),
+                search_radius(R, X, Y),
+                Z = 0,
+                Hash is (X * 73856093) xor (Y * 19349663) xor (Z * 83492791) xor 1337,
+                check_special_structure(Hash, X, Y, Z, _StructId, _Theme, Name, _Desc, _Props)
+                             ), Anomalies),
     ( Anomalies \== [] ->
-        random_member(loc(X, Y, Name), Anomalies),
-        atomic_list_concat(['cell', X, Y, 0], '_', CellId),
+          random_member(loc(X, Y, Name), Anomalies),
+          atomic_list_concat(['cell', X, Y, 0], '_', CellId),
 
-        catch(call(chunks:ensure_chunk(CellId)), _, true),
+          catch(call(chunks:ensure_chunk(CellId)), _, true),
 
-        format(string(LocText), "🔮 The Diviner's Orb pulses with celestial radiance, revealing a boss anomaly at Wilderness [~w, ~w, 0]: ~w!", [X, Y, Name])
+          format(string(LocText), "🔮 The Diviner's Orb pulses with celestial radiance, revealing a boss anomaly at Wilderness [~w, ~w, 0]: ~w!", [X, Y, Name])
     ;
-        LocText = "🔮 The Diviner's Orb glimmers faintly, but senses no nearby anomalies in this realm."
+      LocText = "🔮 The Diviner's Orb glimmers faintly, but senses no nearby anomalies in this realm."
     ).
 
 search_radius(R, X, Y) :-
@@ -190,13 +190,13 @@ process_respawns([], []).
 process_respawns([r(S, R, T, X, Y, Z, Th)|Rest], Evts) :-
     NT is T - 1,
     ( NT =< 0 ->
-        spawn_structure_mobs(S, 0, X, Y, Z, Th, R),
-        boss_tag(S, _, Title),
-        format(string(Msg), "🔥 An ancient power re-awakens! ~w has returned to its sanctuary!", [Title]),
-        Evt = [env_msg(Msg)]
+          spawn_structure_mobs(S, 0, X, Y, Z, Th, R),
+          boss_tag(S, _, Title),
+          format(string(Msg), "🔥 An ancient power re-awakens! ~w has returned to its sanctuary!", [Title]),
+          Evt = [env_msg(Msg)]
     ;
-        assertz(db_structure_respawn(S, R, NT, X, Y, Z, Th)),
-        Evt = []
+      assertz(db_structure_respawn(S, R, NT, X, Y, Z, Th)),
+      Evt = []
     ),
     process_respawns(Rest, RestEvts),
     append(Evt, RestEvts, Evts).

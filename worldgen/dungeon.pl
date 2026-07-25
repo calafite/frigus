@@ -21,7 +21,7 @@ init_room(Id, Theme, Lvl, R) :-
     room_name(Theme, Name),
     world_config:safe_zone_chance(Theme, Chance),
     ( Chance > 0, random_between(1, 100, Roll), Roll =< Chance ->
-        Props = [safe]
+          Props = [safe]
     ; Props = [] ),
 
     world_config:theme_env_base(Theme, BTemp, BMag, BCor),
@@ -42,7 +42,7 @@ gen_dun(Theme, Lvl, Size, EntryId, Dun) :-
     init_room(RootId, Theme, Lvl, Root),
     add_exit(Root, up, EntryId, FRoot),
     build_path(Theme, Lvl, Size, FRoot, up, NRooms, Mobs, Items),
-    Dun = dict{rooms: [FEntry | NRooms], mobs: Mobs, items: Items}.
+    Dun = dict{rooms: [FEntry  |NRooms], mobs: Mobs, items: Items}.
 
 build_path(_, _, 0, R, _, [R], [], []) :- !.
 build_path(Theme, Lvl, Len, Cur, PrevDir, Rooms, Mobs, Items) :-
@@ -56,9 +56,9 @@ build_path(Theme, Lvl, Len, Cur, PrevDir, Rooms, Mobs, Items) :-
 
     get_dict(props, Next, NextProps),
     ( member(safe, NextProps) ->
-        NMobs = []
+          NMobs = []
     ;
-        spawn:gen_grp(Theme, Lvl, NextId, NMobs)
+      spawn:gen_grp(Theme, Lvl, NextId, NMobs)
     ),
     proc_loot:gen_chest(Lvl, NextId, NItems),
 

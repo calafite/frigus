@@ -1,8 +1,8 @@
 :- module(auth, [
-    handle_validate_key/3,
-    handle_login/3,
-    handle_register/6
-]).
+              handle_validate_key/3,
+              handle_login/3,
+              handle_register/6
+                ]).
 
 :- use_module(library(md5)).
 :- use_module('world').
@@ -11,44 +11,48 @@
 handle_validate_key(Id, Key, [key_status(Id, Key, Status)]) :-
     ( admin_key(Key) -> Status = valid ; Status = invalid ).
 
-% Strict Login logic
 handle_login(Id, Pass, Evts) :-
     hash_pass(Pass, Hash),
     ( world:get_entity(Id, Player) ->
-        ( get_dict(pass_hash, Player, StoredHash) ->
-            ( same_hash(StoredHash, Hash) ->
-                Evts = [player_status(Id, exists)]
-            ;
-                Evts = [error(invalid_password(Id))]
-            )
-        ;
-            NPlayer = Player.put(pass_hash, Hash),
+          ( get_dict(pass_hash, Player, StoredHash) ->
+                ( same_hash(StoredHash, Hash) ->
+                      ( \+ get_dict(name, Player, _) ->
+                            NPlayer = Player.put(name, Id),
+                            world:put_entity(NPlayer),
+                            world:save_db('world_state.json')
+                      ; true ),
+                      Evts = [player_status(Id, exists)]
+                ;
+                  Evts = [error(invalid_password(Id))]
+                )
+          ;
+            NPlayer = Player.put(pass_hash, Hash).put(name, Id),
             world:put_entity(NPlayer),
             world:save_db('world_state.json'),
             Evts = [player_status(Id, exists)]
-        )
+          )
     ;
-        Evts = [error(account_does_not_exist(Id))]
+      Evts = [error(account_does_not_exist(Id))]
     ).
 
 % Strict Registration logic
 handle_register(Id, Pass, Key, Race, Stats, Evts) :-
     ( world:get_entity(Id, _) ->
-        Evts = [error(account_already_exists(Id))]
+          Evts = [error(account_already_exists(Id))]
     ;
-        ( (is_restricted(Race), \+ admin_key(Key)) ->
+      ( (is_restricted(Race), \+ admin_key(Key)) ->
             Evts = [error(restricted_race_denied(Id, Race))]
+      ;
+        ( admin_key(Key) -> IsAdmin = true ; IsAdmin = false ),
+        ( chk_alloc(Stats, IsAdmin, CleanStats) ->
+              default_player(Id, Pass, Race, IsAdmin, CleanStats, NewPlayer),
+              world:put_entity(NewPlayer),
+              world:save_db('world_state.json'),
+              Evts = [player_status(Id, created)]
         ;
-            ( admin_key(Key) -> IsAdmin = true ; IsAdmin = false ),
-            ( chk_alloc(Stats, IsAdmin, CleanStats) ->
-                default_player(Id, Pass, Race, IsAdmin, CleanStats, NewPlayer),
-                world:put_entity(NewPlayer),
-                world:save_db('world_state.json'),
-                Evts = [player_status(Id, created)]
-            ;
-                Evts = [error(stat_allocation_invalid(Id))]
-            )
+          Evts = [error(stat_allocation_invalid(Id))]
         )
+      )
     ).
 
 same_hash(H1, H2) :-
@@ -103,10 +107,10 @@ default_player(Id, Pass, Race, IsAdmin, Stats, P) :-
     ; StartingEquip = equip{wpn: fists, shield: none, body: tunic} ),
 
     P = plyr{
-        id: Id, tag: player, class: fighter, race: Race, lvl: 1, xp: 0,
-        stat_points: 0, bounty: 0, pass_hash: Hash, admin: IsAdmin,
-        hp: MaxHp, max_hp: MaxHp, mp: MaxMp, max_mp: MaxMp, affs: dict{},
-        str: S, dex: D, con: C, int: I, wis: W, cha: Ch, luk: L,
-        room: square, equip: StartingEquip,
-        inv: [stack{tag: gold, qty: 100}], cds: cds{}
+            id: Id, name: Id, tag: player, class: fighter, race: Race, lvl: 1, xp: 0,
+            stat_points: 0, bounty: 0, pass_hash: Hash, admin: IsAdmin,
+            hp: MaxHp, max_hp: MaxHp, mp: MaxMp, max_mp: MaxMp, affs: dict{},
+            str: S, dex: D, con: C, int: I, wis: W, cha: Ch, luk: L,
+            room: square, equip: StartingEquip,
+            inv: [stack{tag: gold, qty: 100}], cds: cds{}
     }.
