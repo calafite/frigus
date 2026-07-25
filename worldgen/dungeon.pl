@@ -9,8 +9,10 @@
 
 dirs([north-south, south-north, east-west, west-east, up-down, down-up]).
 
-rand_dir(Avoid, D, R) :- dirs(Ds), random_member(D-R, Ds), D \== Avoid, !.
-rand_dir(_, D, R) :- dirs(Ds), random_member(D-R, Ds).
+rand_dir(Avoid, D, R) :-
+    dirs(Ds),
+    findall(X-Y, (member(X-Y, Ds), X \== Avoid), ValidDs),
+    random_member(D-R, ValidDs).
 
 room_name(Theme, Name) :-
     world_config:rm_adj(Theme, Adjs), random_member(Adj, Adjs),

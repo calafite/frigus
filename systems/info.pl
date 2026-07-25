@@ -4,6 +4,7 @@
 :- use_module('../core/entity').
 :- use_module('../config/spawn').
 :- use_module('combat').
+:- use_module('combat/core').
 :- use_module('combat/factions', [in_same_party/2]).
 :- use_module('env').
 
@@ -65,7 +66,7 @@ do_look(Id, Evts) :-
           ; Evts = [error(room_not_found(RoomId))] )
     ; Evts = [error(actor_not_found(Id))] ).
 
-do_status(Id, [status_info(Id, Lvl, Xp, ReqXp, StatPoints, Stats, Health, Bty)]) :-
+do_status(Id, [status_info(Id, Lvl, Xp, ReqXp, StatPoints, Stats, Health, Bty, Race, Class)]) :-
     world:get_entity(Id, A), !,
     get_dict(hp, A, Hp), get_dict(max_hp, A, MaxHp),
     get_dict(mp, A, Mp), get_dict(max_mp, A, MaxMp),
@@ -74,6 +75,8 @@ do_status(Id, [status_info(Id, Lvl, Xp, ReqXp, StatPoints, Stats, Health, Bty)])
     ReqXp is Lvl * Lvl * 100,
     ( get_dict(stat_points, A, StatPoints) -> true ; StatPoints = 0 ),
     ( get_dict(bounty, A, Bty) -> true ; Bty = 0 ),
+    ( get_dict(race, A, RawRace) -> combat_core:to_atom(RawRace, Race) ; Race = human ),
+    ( get_dict(class, A, RawClass) -> combat_core:to_atom(RawClass, Class) ; Class = fighter ),
     entity:get_stat(A, str, Str), entity:get_stat(A, dex, Dex),
     entity:get_stat(A, con, Con), entity:get_stat(A, int, Int),
     entity:get_stat(A, wis, Wis), entity:get_stat(A, cha, Cha),
