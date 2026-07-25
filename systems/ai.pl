@@ -35,9 +35,12 @@ is_settlement_room(Room) :-
       get_dict(props, Room, Props), (member(safe, Props) ; member(landmark, Props)) ;
       get_dict(region, Room, shire) ), !.
 
+% Prevent merchants and protected/anchored mobs from wandering
+is_no_wander(Mob) :-
+    get_dict(tag, Mob, merchant), !.
 is_no_wander(Mob) :-
     ( get_dict(wander, Mob, false)
-    ; get_dict(props, Mob, Props), (member(no_wander, Props) ; member(protector, Props))
+    ; get_dict(props, Mob, Props), (member(no_wander, Props) ; member(protector, Props) ; member(merchant, Props))
     ), !.
 
 valid_npc_move(Mob, NextRoomId) :-
@@ -166,6 +169,7 @@ replenish_settlements :-
     ( TotalTownMobs < 6 ->
           random_between(1, 100, Roll),
           ( Roll =< 5 ->
+                % Generate NPC and default to square if there is no other location context
                 spawn:gen_town_npc(square, NewNpc),
                 world:put_entity(NewNpc),
                 get_dict(name, NewNpc, Name),

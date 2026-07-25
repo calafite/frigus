@@ -1,5 +1,6 @@
 :- module(spawn_config, [
-              mob_xp/2, loot_table/5, race_bonus/3, race_trait/2, is_aggressive/1, mob_stats/5
+              mob_xp/2, loot_table/5, race_bonus/3, race_trait/2, is_aggressive/1, mob_stats/5,
+              merchant_stock/4
                         ]).
 
 % Experience Points yield based on base tag
@@ -130,6 +131,22 @@ loot_table(void_walker, void_robe, 0.5, 1, 1).
 
 loot_table(arch_necromancer, gold, 1.0, 700, 2000).
 loot_table(arch_necromancer, necromancer_staff, 0.6, 1, 1).
+
+% Merchant Spawn Stock Pool (Tag, Probability, MinQty, MaxQty)
+merchant_stock(health_potion, 0.8, 3, 10).
+merchant_stock(mana_potion, 0.7, 3, 8).
+merchant_stock(apple, 0.9, 5, 20).
+merchant_stock(bread, 0.9, 5, 20).
+merchant_stock(iron_sword, 0.4, 1, 2).
+merchant_stock(dagger, 0.5, 1, 4).
+merchant_stock(staff, 0.4, 1, 3).
+merchant_stock(chainmail, 0.3, 1, 2).
+merchant_stock(tunic, 0.7, 1, 4).
+merchant_stock(wooden_shield, 0.6, 1, 3).
+merchant_stock(iron_shield, 0.4, 1, 2).
+merchant_stock(whetstone, 0.8, 2, 6).
+merchant_stock(flint_and_steel, 0.8, 2, 6).
+merchant_stock(diviners_orb, 0.1, 1, 1).
 
 % Balanced Lineage Bonuses
 race_bonus(human, str, 2).

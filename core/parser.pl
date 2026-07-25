@@ -50,6 +50,17 @@ parse_act(D, cast(S, T)):-
     ( get_dict(spell, D, RawS), RawS \== "" -> ensure_atom(RawS, S) ; get_dict(args, D, [RawS|_]), RawS \== "" -> ensure_atom(RawS, S) ; S = fireball ),
     ( get_dict(target, D, RawT), RawT \== "" -> ensure_atom(RawT, T) ; get_dict(args, D, [_, RawT|_]), RawT \== "" -> ensure_atom(RawT, T) ; T = none ).
 
+% --- Shopping / Commerce ---
+parse_act(D, browse(Npc))   :- get_dict(type, D, "browse"), extract_target(D, Npc).
+parse_act(D, buy(Npc, Item)) :-
+    get_dict(type, D, "buy"),
+    ( get_dict(npc, D, RawN), RawN \== "" -> ensure_atom(RawN, Npc) ; Npc = none ),
+    ( get_dict(item, D, RawI), RawI \== "" -> ensure_atom(RawI, Item) ; Item = none ).
+parse_act(D, sell(Npc, Item)) :-
+    get_dict(type, D, "sell"),
+    ( get_dict(npc, D, RawN), RawN \== "" -> ensure_atom(RawN, Npc) ; Npc = none ),
+    ( get_dict(item, D, RawI), RawI \== "" -> ensure_atom(RawI, Item) ; Item = none ).
+
 parse_act(D, loot(IId))     :- ( get_dict(type, D, "loot") ; get_dict(type, D, "get") ; get_dict(type, D, "take") ; get_dict(type, D, "g") ), extract_target(D, IId).
 parse_act(D, equip(I))      :- get_dict(type, D, "equip"), extract_target(D, I).
 parse_act(D, unequip(S))    :- get_dict(type, D, "unequip"), extract_target(D, S).
