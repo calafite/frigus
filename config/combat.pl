@@ -38,7 +38,6 @@ wpn_dmg(necromancer_staff, [dmg(magic, 16)]).
 % Innate mob attacks
 wpn_dmg(rat, [dmg(pierce, 2)]).
 wpn_dmg(wolf, [dmg(slash, 4)]).
-wpn_dmg(spectral_wolf, [dmg(magic, 6)]).
 wpn_dmg(goblin, [dmg(slash, 5)]).
 wpn_dmg(orc, [dmg(blunt, 8)]).
 wpn_dmg(dragon, [dmg(fire, 25)]).
@@ -61,7 +60,21 @@ wpn_dmg(gargoyle, [dmg(slash, 8)]).
 wpn_dmg(iron_golem, [dmg(blunt, 14)]).
 wpn_dmg(arcane_anomaly, [dmg(magic, 9)]).
 wpn_dmg(treant, [dmg(blunt, 11)]).
-wpn_dmg(celestial_guardian, [dmg(magic, 15), dmg(slash, 10)]).
+
+% Dedicated Summoned Entity Attacks
+wpn_dmg(mercenary_soldier, [dmg(slash, 9)]).
+wpn_dmg(hunting_falcon, [dmg(pierce, 6)]).
+wpn_dmg(spectral_wolf, [dmg(magic, 8)]).
+wpn_dmg(dread_skeleton, [dmg(slash, 7)]).
+wpn_dmg(fel_imp, [dmg(fire, 7)]).
+wpn_dmg(holy_avatar, [dmg(magic, 10)]).
+wpn_dmg(arcane_elemental, [dmg(magic, 12)]).
+wpn_dmg(radiant_avenger, [dmg(slash, 16), dmg(magic, 10)]).
+wpn_dmg(rune_golem, [dmg(blunt, 18)]).
+wpn_dmg(ancient_treant_spirit, [dmg(blunt, 16)]).
+wpn_dmg(abyssal_brute, [dmg(blunt, 20)]).
+wpn_dmg(celestial_guardian, [dmg(magic, 18), dmg(slash, 12)]).
+wpn_dmg(bound_lich, [dmg(magic, 24)]).
 
 % Structure Anomaly Boss Attacks
 wpn_dmg(elder_dragon, [dmg(fire, 35)]).
@@ -345,71 +358,110 @@ spell_apply_tgt(entangle, [paralysed(2, 0)]).
 spell_desc(entangle, "Thorny vines whip out from the undergrowth, binding the target securely.").
 
 % ==========================================
-% SUMMONING SPELLS (CLASS-RESTRICTED)
+% SUMMONING SPELLS (CLASS-RESTRICTED ROSTER)
 % ==========================================
+% Fighter
+spell_type(call_mercenary, summon).
+spell_cost(call_mercenary, 20).
+spell_cooldown(call_mercenary, 20).
+spell_difficulty(call_mercenary, 20).
+spell_desc(call_mercenary, "Blows a war horn, summoning a loyal Mercenary Soldier to fight.").
+spell_affinity(call_mercenary, [fighter]).
+spell_summon_tag(call_mercenary, mercenary_soldier).
+
+% Ranger
+spell_type(summon_falcon, summon).
+spell_cost(summon_falcon, 20).
+spell_cooldown(summon_falcon, 15).
+spell_difficulty(summon_falcon, 25).
+spell_desc(summon_falcon, "Whistles for a razor-sharp Hunting Falcon.").
+spell_affinity(summon_falcon, [ranger]).
+spell_summon_tag(summon_falcon, hunting_falcon).
+
 spell_type(summon_wolf, summon).
-spell_cost(summon_wolf, 30).
-spell_cooldown(summon_wolf, 15).
-spell_difficulty(summon_wolf, 40).
+spell_cost(summon_wolf, 35).
+spell_cooldown(summon_wolf, 20).
+spell_difficulty(summon_wolf, 45).
 spell_desc(summon_wolf, "Summons a loyal spectral wolf to fight enemies.").
-spell_affinity(summon_wolf, [druid, ranger]).
+spell_affinity(summon_wolf, [druid, ranger, wood_elf, wolfkin]).
 spell_summon_tag(summon_wolf, spectral_wolf).
 
+% Druid
 spell_type(summon_treant, summon).
 spell_cost(summon_treant, 80).
 spell_cooldown(summon_treant, 45).
 spell_difficulty(summon_treant, 120).
-spell_desc(summon_treant, "Awakens an ancient treant to crush your foes.").
+spell_desc(summon_treant, "Awakens an ancient treant spirit to crush your foes.").
 spell_affinity(summon_treant, [druid]).
-spell_summon_tag(summon_treant, treant).
+spell_summon_tag(summon_treant, ancient_treant_spirit).
 
+% Necromancer
 spell_type(raise_skeleton, summon).
 spell_cost(raise_skeleton, 25).
 spell_cooldown(raise_skeleton, 12).
-spell_difficulty(raise_skeleton, 35).
-spell_desc(raise_skeleton, "Raises a fragile skeleton from the earth.").
-spell_affinity(raise_skeleton, [necromancer, warlock]).
-spell_summon_tag(raise_skeleton, skeleton).
+spell_difficulty(raise_skeleton, 30).
+spell_desc(raise_skeleton, "Raises a fragile Dread Skeleton from the earth.").
+spell_affinity(raise_skeleton, [necromancer, warlock, dark_elf]).
+spell_summon_tag(raise_skeleton, dread_skeleton).
 
 spell_type(raise_lich, summon).
 spell_cost(raise_lich, 100).
 spell_cooldown(raise_lich, 60).
 spell_difficulty(raise_lich, 160).
-spell_desc(raise_lich, "Tears a powerful Lich from the underworld.").
+spell_desc(raise_lich, "Tears a powerful Bound Lich from the underworld.").
 spell_affinity(raise_lich, [necromancer]).
-spell_summon_tag(raise_lich, lich).
+spell_summon_tag(raise_lich, bound_lich).
 
+% Warlock
 spell_type(summon_imp, summon).
-spell_cost(summon_imp, 20).
-spell_cooldown(summon_imp, 10).
-spell_difficulty(summon_imp, 30).
-spell_desc(summon_imp, "Summons a mischievous imp.").
-spell_affinity(summon_imp, [warlock]).
-spell_summon_tag(summon_imp, imp).
+spell_cost(summon_imp, 25).
+spell_cooldown(summon_imp, 12).
+spell_difficulty(summon_imp, 35).
+spell_desc(summon_imp, "Summons a mischievous Fel Imp.").
+spell_affinity(summon_imp, [warlock, demon]).
+spell_summon_tag(summon_imp, fel_imp).
 
 spell_type(summon_demon, summon).
 spell_cost(summon_demon, 90).
 spell_cooldown(summon_demon, 50).
 spell_difficulty(summon_demon, 140).
-spell_desc(summon_demon, "Summons a devastating demon brute.").
-spell_affinity(summon_demon, [warlock]).
-spell_summon_tag(summon_demon, demon_brute).
+spell_desc(summon_demon, "Summons a devastating Abyssal Brute.").
+spell_affinity(summon_demon, [warlock, demon]).
+spell_summon_tag(summon_demon, abyssal_brute).
 
-spell_type(summon_anomaly, summon).
-spell_cost(summon_anomaly, 35).
-spell_cooldown(summon_anomaly, 20).
-spell_difficulty(summon_anomaly, 50).
-spell_desc(summon_anomaly, "Conjures an arcane anomaly.").
-spell_affinity(summon_anomaly, [mage]).
-spell_summon_tag(summon_anomaly, arcane_anomaly).
+% Mage
+spell_type(summon_elemental, summon).
+spell_cost(summon_elemental, 35).
+spell_cooldown(summon_elemental, 20).
+spell_difficulty(summon_elemental, 50).
+spell_desc(summon_elemental, "Conjures an unstable Arcane Elemental.").
+spell_affinity(summon_elemental, [mage, high_elf]).
+spell_summon_tag(summon_elemental, arcane_elemental).
 
 spell_type(summon_golem, summon).
 spell_cost(summon_golem, 85).
 spell_cooldown(summon_golem, 55).
 spell_difficulty(summon_golem, 130).
-spell_desc(summon_golem, "Animates a heavy iron golem.").
-spell_affinity(summon_golem, [mage]).
-spell_summon_tag(summon_golem, iron_golem).
+spell_desc(summon_golem, "Animates a heavy Rune Golem.").
+spell_affinity(summon_golem, [mage, gnome]).
+spell_summon_tag(summon_golem, rune_golem).
+
+% Cleric & Paladin
+spell_type(summon_cherub, summon).
+spell_cost(summon_cherub, 40).
+spell_cooldown(summon_cherub, 25).
+spell_difficulty(summon_cherub, 60).
+spell_desc(summon_cherub, "Manifests a luminous Holy Avatar.").
+spell_affinity(summon_cherub, [cleric]).
+spell_summon_tag(summon_cherub, holy_avatar).
+
+spell_type(summon_avenger, summon).
+spell_cost(summon_avenger, 70).
+spell_cooldown(summon_avenger, 45).
+spell_difficulty(summon_avenger, 110).
+spell_desc(summon_avenger, "Brings forth a Radiant Avenger from the sacred halls.").
+spell_affinity(summon_avenger, [paladin]).
+spell_summon_tag(summon_avenger, radiant_avenger).
 
 spell_type(summon_guardian, summon).
 spell_cost(summon_guardian, 95).

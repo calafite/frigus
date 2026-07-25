@@ -94,7 +94,6 @@ calc_spell_mitigation(Tgt, RawDmg, FinalDmg) :-
 % --- Offense & Output ---
 chk_melee_crit(Src, WTag, IsCrit, FinalMult) :-
     entity:get_stat(Src, str, SStr), entity:get_stat(Src, luk, SLuk),
-    % Support checking multiple traits
     ( combat_config:wpn_trait(WTag, precision) -> Prec = 15 ; Prec = 0 ),
     ( entity:has_trait(Src, feral) -> Feral = 15 ; Feral = 0 ),
     Rate is max(5, min(85, floor(SStr * 0.4 + SLuk * 0.5 + Prec + Feral))),
@@ -167,8 +166,10 @@ is_friendly(Actor, Tgt) :-
 resolve_target(Actor, self, Target) :- !, Target = Actor.
 resolve_target(Actor, none, Target) :-
     get_dict(room, Actor, Room), world:room_entities(Room, Ents), member(Target, Ents),
-    is_valid_combat_target(Target), get_dict(id, Target, TId), get_dict(id, Actor, AId), TId \== AId, entity:is_alive(Target), !.
+    is_valid_combat_target(Target), get_dict(id, Target, TId), get_dict(id, Actor, AId), TId \== AId, entity:is_alive(Target),
+    is_enemy(Actor, Target), !.
 resolve_target(Actor, TgtQuery, Target) :-
+    TgtQuery \== none, % Prevent fallback override
     get_dict(room, Actor, Room), world:room_entities(Room, Ents), member(Target, Ents),
     ( get_dict(id, Target, TgtQuery) ; get_dict(tag, Target, TgtQuery) ), entity:is_alive(Target), !.
 

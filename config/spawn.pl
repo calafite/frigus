@@ -28,7 +28,21 @@ mob_xp(gargoyle, 90).
 mob_xp(iron_golem, 120).
 mob_xp(arcane_anomaly, 55).
 mob_xp(treant, 110).
+mob_xp(celestial_guardian, 100).
 mob_xp(dragon, 2000).
+
+% Dedicated Summons Yield 0 XP
+mob_xp(mercenary_soldier, 0).
+mob_xp(hunting_falcon, 0).
+mob_xp(dread_skeleton, 0).
+mob_xp(fel_imp, 0).
+mob_xp(holy_avatar, 0).
+mob_xp(arcane_elemental, 0).
+mob_xp(radiant_avenger, 0).
+mob_xp(rune_golem, 0).
+mob_xp(ancient_treant_spirit, 0).
+mob_xp(abyssal_brute, 0).
+mob_xp(bound_lich, 0).
 
 % Structure Anomaly Boss XP Yields
 mob_xp(elder_dragon, 3000).
@@ -43,7 +57,6 @@ mob_xp(_, 20).
 % mob_stats(Tag, BaseHp, BaseStr, BaseDex, BaseInt)
 mob_stats(rat, 10, 5, 10, 2).
 mob_stats(wolf, 25, 12, 14, 4).
-mob_stats(spectral_wolf, 30, 14, 15, 4).
 mob_stats(bear, 50, 18, 8, 4).
 mob_stats(viper, 15, 8, 18, 2).
 mob_stats(giant_spider, 35, 14, 16, 5).
@@ -66,6 +79,21 @@ mob_stats(iron_golem, 90, 20, 5, 2).
 mob_stats(arcane_anomaly, 25, 4, 15, 20).
 mob_stats(treant, 70, 18, 6, 12).
 mob_stats(dragon, 500, 30, 20, 25).
+
+% Class Summon Base Stats
+mob_stats(hunting_falcon, 20, 8, 20, 5).
+mob_stats(fel_imp, 25, 8, 16, 16).
+mob_stats(dread_skeleton, 30, 12, 12, 4).
+mob_stats(spectral_wolf, 35, 14, 16, 8).
+mob_stats(arcane_elemental, 35, 6, 15, 22).
+mob_stats(holy_avatar, 40, 10, 14, 18).
+mob_stats(mercenary_soldier, 45, 15, 12, 6).
+mob_stats(bound_lich, 100, 10, 14, 32).
+mob_stats(radiant_avenger, 110, 22, 14, 15).
+mob_stats(ancient_treant_spirit, 120, 20, 8, 14).
+mob_stats(rune_golem, 130, 24, 6, 8).
+mob_stats(abyssal_brute, 140, 26, 12, 10).
+mob_stats(celestial_guardian, 150, 25, 15, 20).
 
 % Structure Anomaly Boss Baseline Stats
 mob_stats(elder_dragon, 600, 35, 20, 30).
@@ -283,7 +311,6 @@ is_aggressive(bear).
 is_aggressive(viper).
 is_aggressive(giant_spider).
 is_aggressive(dire_wolf).
-is_aggressive(spectral_wolf).
 is_aggressive(goblin).
 is_aggressive(orc).
 is_aggressive(hobgoblin).

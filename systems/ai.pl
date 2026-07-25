@@ -131,6 +131,7 @@ act_mob(Mob, Evts) :-
     world:room_entities(Room, Ents),
     member(Monster, Ents),
     is_dict(Monster, mob),
+    \+ get_dict(owner, Monster, _), % Guards don't blindly attack player summons
     get_dict(id, Monster, MonId),
     get_dict(id, Mob, GuardId),
     MonId \== GuardId,
@@ -145,6 +146,7 @@ act_mob(Mob, Evts) :-
 act_mob(Mob, Evts) :-
     get_dict(room, Mob, Room),
     \+ world:is_safe_room(Room),
+    \+ get_dict(owner, Mob, _), % Summons do not use generic aggro fallback
     is_hostile_mob(Mob),
     world:room_entities(Room, Ents),
     member(P, Ents), is_dict(P, plyr),

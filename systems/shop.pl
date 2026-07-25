@@ -45,11 +45,21 @@ resolve_merchant(Actor, TgtQuery, Merchant) :-
     is_merchant(Merchant),
     match_target(Merchant, TgtQuery), !.
 
-% Calculates fixed buy/sell rates for the realm based on item value
-item_prices(Tag, BuyPrice, SellPrice) :-
+% Calculates dynamic buy/sell rates based on the Actor's Charisma (CHA)
+item_prices(Actor, Tag, BuyPrice, SellPrice) :-
     ( item_config:val(Tag, Val) -> true ; Val = 10 ),
-    BuyPrice is max(1, floor(Val * 1.5)),
-    SellPrice is max(1, floor(Val * 0.5)).
+    entity:get_stat(Actor, cha, Cha),
+
+    % 1.5% discount per CHA above 10, capped at 1.1x multiplier
+    BuyDiscount is (Cha - 10) * 0.015,
+    BuyMult is max(1.1, 1.5 - BuyDiscount),
+
+    % 1.0% bonus per CHA above 10, capped at 0.9x multiplier
+    SellBonus is (Cha - 10) * 0.01,
+    SellMult is min(0.9, 0.5 + SellBonus),
+
+    BuyPrice is max(1, floor(Val * BuyMult)),
+    SellPrice is max(1, floor(Val * SellMult)).
 
 % --- Browse Command ---
 do_browse(Id, _NpcQuery, [error(actor_not_found(Id))]) :- \+ world:get_entity(Id, _), !.
@@ -58,26 +68,26 @@ do_browse(Id, NpcQuery, Evts) :-
     ( resolve_merchant(Actor, NpcQuery, Npc) ->
         combat:get_display_name(Npc, NpcName),
         ( get_dict(inv, Npc, Inv) -> true ; Inv = [] ),
-        format_inv(Inv, Formatted),
+        format_inv(Actor, Inv, Formatted),
         Evts = [browse_report(Id, NpcName, Formatted)]
     ;
         Evts = [error(merchant_not_found(NpcQuery))]
     ).
 
-format_inv([], []).
-format_inv([Item|T], Rest) :-
+format_inv(_, [], []).
+format_inv(Actor, [Item|T], Rest) :-
     is_dict(Item),
     get_dict(tag, Item, RawTag), to_atom(RawTag, Tag),
     Tag == gold, !,
-    format_inv(T, Rest).
-format_inv([Item|T], [dict{tag: Tag, qty: Qty, price: BuyPrice}|Rest]) :-
+    format_inv(Actor, T, Rest).
+format_inv(Actor, [Item|T], [dict{tag: Tag, qty: Qty, price: BuyPrice}|Rest]) :-
     is_dict(Item),
     get_dict(tag, Item, RawTag), to_atom(RawTag, Tag),
     get_dict(qty, Item, Qty),
-    item_prices(Tag, BuyPrice, _), !,
-    format_inv(T, Rest).
-format_inv([_|T], Rest) :-
-    format_inv(T, Rest).
+    item_prices(Actor, Tag, BuyPrice, _), !,
+    format_inv(Actor, T, Rest).
+format_inv(Actor, [_|T], Rest) :-
+    format_inv(Actor, T, Rest).
 
 % --- Buy Command ---
 do_buy(_, _, gold, [error(cannot_trade_currency)]) :- !.
@@ -87,7 +97,7 @@ do_buy(Id, NpcQuery, ItemQuery, Evts) :-
     ( resolve_merchant(Actor, NpcQuery, Npc) ->
         ( entity:has_item(Npc, ItemQuery) ->
             to_atom(ItemQuery, Tag),
-            item_prices(Tag, BuyPrice, _),
+            item_prices(Actor, Tag, BuyPrice, _),
             ( entity:rem_item(Actor, gold, BuyPrice, A1) ->
                 entity:rem_item(Npc, Tag, 1, N1),
                 entity:add_item(N1, gold, BuyPrice, N2),
@@ -114,7 +124,7 @@ do_sell(Id, NpcQuery, ItemQuery, Evts) :-
     ( resolve_merchant(Actor, NpcQuery, Npc) ->
         ( entity:has_item(Actor, ItemQuery) ->
             to_atom(ItemQuery, Tag),
-            item_prices(Tag, _, SellPrice),
+            item_prices(Actor, Tag, _, SellPrice),
             ( entity:rem_item(Npc, gold, SellPrice, N1) ->
                 entity:rem_item(Actor, Tag, 1, A1),
                 entity:add_item(N1, Tag, 1, N2),
