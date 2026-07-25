@@ -1,8 +1,17 @@
-:- module(move, [do_move/3, resolve_dir/2]).
+:- module(move, [
+    do_move/3,
+    resolve_dir/2,
+    do_start_walk/3,
+    do_cancel_walk/2,
+    do_tick_walk/2
+]).
 
 :- use_module('../core/world').
+:- use_module('../core/entity').
 :- use_module('../worldgen/chunks').
 :- use_module('status').
+:- use_module('combat/core').
+:- use_module(library(lists)).
 
 resolve_dir(n, north) :- !.
 resolve_dir(s, south) :- !.
@@ -25,6 +34,7 @@ do_move(Id, DirQuery, Evts) :-
       get_dict(exits, CurRoom, Exits),
       get_dict(Dir, Exits, NextRoomId), !,
       chunks:ensure_chunk(NextRoomId),
+      OldRoomId = Actor.room,
       NActor = Actor.put(room, NextRoomId),
       world:put_entity(NActor),
 
@@ -33,7 +43,10 @@ do_move(Id, DirQuery, Evts) :-
       ; get_dict(tag, Actor, DisplayName) -> true
       ; DisplayName = Id ),
 
-      Evts = [moved(Id, Dir, NextRoomId, DisplayName)]
+      move_summons(Id, OldRoomId, NextRoomId, Dir, SummonEvts),
+
+      BaseEvt = moved(Id, Dir, NextRoomId, DisplayName),
+      append([BaseEvt], SummonEvts, Evts)
     ).
 
 do_move(Id, DirQuery, [error(no_exit(Id, DirQuery, available_exits(AvailableExits)))]) :-
@@ -42,6 +55,33 @@ do_move(Id, DirQuery, [error(no_exit(Id, DirQuery, available_exits(AvailableExit
     world:get_room(Actor.room, CurRoom),
     get_dict(exits, CurRoom, Exits),
     dict_keys(Exits, AvailableExits).
+
+% ---------------------------------------------------------
+% Summon Following Mechanics
+% ---------------------------------------------------------
+
+move_summons(OwnerId, OldRoomId, NextRoomId, Dir, SummonEvts) :-
+    world:room_entities(OldRoomId, Ents),
+    findall(M, (
+        member(M, Ents),
+        is_dict(M, mob),
+        get_dict(owner, M, OwnerId),
+        entity:is_alive(M),
+        \+ status:is_rooted(M, _)
+    ), Summons),
+    process_summon_moves(Summons, NextRoomId, Dir, SummonEvts).
+
+process_summon_moves([], _, _, []).
+process_summon_moves([Summon|Rest], NextRoomId, Dir, [moved(SummonId, Dir, NextRoomId, DisplayName)|RestEvts]) :-
+    get_dict(id, Summon, SummonId),
+    combat_core:get_display_name(Summon, DisplayName),
+    NSummon = Summon.put(room, NextRoomId),
+    world:put_entity(NSummon),
+    process_summon_moves(Rest, NextRoomId, Dir, RestEvts).
+
+% ---------------------------------------------------------
+% Auto-walk Systems
+% ---------------------------------------------------------
 
 do_start_walk(Id, _DestQuery, [error(actor_not_found(Id))]) :- \+ world:get_entity(Id, _), !.
 do_start_walk(Id, DestQuery, Evts) :-
@@ -92,7 +132,7 @@ do_tick_walk(Id, Evts) :-
                 ( member(error(_), MoveEvts) ->
                       del_dict(walk_target, Act, _, NAct),
                       world:put_entity(NAct),
-                      Evts = [walk_cancelled(Id)  |MoveEvts]
+                      Evts = [walk_cancelled(Id) | MoveEvts]
                 ;
                   world:get_entity(Id, TmpAct),
                   get_dict(room, TmpAct, NewRoomId),
