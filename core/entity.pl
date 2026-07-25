@@ -1,23 +1,23 @@
 :- module(entity, [
-              is_alive/1,
-              get_stat/3,
-              mod_hp/3,
-              has_item/2,
-              add_item/4,
-              rem_item/4,
-              add_threat/4,
-              rem_threat/3,
-              add_bounty/3,
-              clear_bounty/2,
-              mark_combat/2,
-              has_trait/2,
-              check_pass/2,
-              check_admin/1,
-              has_aff/2,
-              get_aff/3,
-              apply_aff/5,
-              remove_aff/3
-                  ]).
+    is_alive/1,
+    get_stat/3,
+    mod_hp/3,
+    has_item/2,
+    add_item/4,
+    rem_item/4,
+    add_threat/4,
+    rem_threat/3,
+    add_bounty/3,
+    clear_bounty/2,
+    mark_combat/2,
+    has_trait/2,
+    check_pass/2,
+    check_admin/1,
+    has_aff/2,
+    get_aff/3,
+    apply_aff/5,
+    remove_aff/3
+]).
 
 :- use_module(library(lists)).
 :- use_module('../config/spawn').
@@ -37,11 +37,11 @@ get_stat(Ent, Stat, Total) :-
     is_dict(Ent), !,
     ( get_dict(Stat, Ent, Base) -> true ; Base = 10 ),
     ( get_dict(race, Ent, RawRace) ->
-          to_atom(RawRace, Race),
-          findall(B, spawn_config:race_bonus(Race, Stat, B), BList),
-          sum_list(BList, Bonus)
+        to_atom(RawRace, Race),
+        findall(B, spawn_config:race_bonus(Race, Stat, B), BList),
+        sum_list(BList, Bonus)
     ;
-      Bonus = 0
+        Bonus = 0
     ),
     Total is Base + Bonus.
 get_stat(_, _, 10).
@@ -66,16 +66,18 @@ mod_hp(Ent, Delta, NEnt) :-
     NHp is max(0, min(Max, Hp + Delta)),
     NEnt = Ent.put(hp, NHp).
 
-has_item(Ent, Tag) :-
+has_item(Ent, RawTag) :-
+    to_atom(RawTag, Tag),
     is_dict(Ent),
     get_dict(inv, Ent, Inv),
     member(Stack, Inv),
     is_dict(Stack),
-    get_dict(tag, Stack, Tag),
+    get_dict(tag, Stack, STag), to_atom(STag, Tag),
     get_dict(qty, Stack, Qty),
     Qty >= 1, !.
 
-add_item(Ent, Tag, Qty, NEnt) :-
+add_item(Ent, RawTag, Qty, NEnt) :-
+    to_atom(RawTag, Tag),
     ( is_dict(Ent), get_dict(inv, Ent, Inv) -> true ; Inv = [] ),
     add_to_inv(Inv, Tag, Qty, NInv),
     NEnt = Ent.put(inv, NInv).
@@ -83,14 +85,15 @@ add_item(Ent, Tag, Qty, NEnt) :-
 add_to_inv([], Tag, Qty, [stack{tag: Tag, qty: Qty}]).
 add_to_inv([Stack|Rest], Tag, Qty, [NStack|Rest]) :-
     is_dict(Stack),
-    get_dict(tag, Stack, Tag), !,
+    get_dict(tag, Stack, STag), to_atom(STag, Tag), !,
     get_dict(qty, Stack, Cur),
     NewQ is Cur + Qty,
     NStack = Stack.put(qty, NewQ).
 add_to_inv([Item|Rest], Tag, Qty, [Item|NRest]) :-
     add_to_inv(Rest, Tag, Qty, NRest).
 
-rem_item(Ent, Tag, Qty, NEnt) :-
+rem_item(Ent, RawTag, Qty, NEnt) :-
+    to_atom(RawTag, Tag),
     ( is_dict(Ent), get_dict(inv, Ent, Inv) -> true ; Inv = [] ),
     rem_from_inv(Inv, Tag, Qty, NInv),
     NEnt = Ent.put(inv, NInv).
@@ -98,7 +101,7 @@ rem_item(Ent, Tag, Qty, NEnt) :-
 rem_from_inv([], _, _, []) :- !.
 rem_from_inv([Stack|Rest], Tag, Qty, NInv) :-
     is_dict(Stack),
-    get_dict(tag, Stack, Tag),
+    get_dict(tag, Stack, STag), to_atom(STag, Tag),
     get_dict(qty, Stack, Cur),
     Cur >= Qty, !,
     NewQ is Cur - Qty,
@@ -117,7 +120,7 @@ add_threat(Ent, _, _, Ent).
 rem_threat(Ent, TgtId, NEnt) :-
     is_dict(Ent),
     ( get_dict(threats, Ent, Th) ->
-          ( del_dict(TgtId, Th, _, NTh) -> NEnt = Ent.put(threats, NTh) ; NEnt = Ent )
+        ( del_dict(TgtId, Th, _, NTh) -> NEnt = Ent.put(threats, NTh) ; NEnt = Ent )
     ; NEnt = Ent ).
 
 add_bounty(Ent, Val, NEnt) :-
@@ -140,13 +143,11 @@ mark_combat(Ent, NEnt) :-
 % STATUS EFFECTS (AFFLICTIONS & BUFFS) API
 % ==========================================
 
-% Check if entity currently has a specific affliction
 has_aff(Ent, AffTag) :-
     is_dict(Ent),
     get_dict(affs, Ent, Affs),
     get_dict(AffTag, Affs, _).
 
-% Retrieve affliction details (Duration and Magnitude)
 get_aff(Ent, AffTag, dict{dur: Dur, mag: Mag}) :-
     is_dict(Ent),
     get_dict(affs, Ent, Affs),
@@ -154,23 +155,21 @@ get_aff(Ent, AffTag, dict{dur: Dur, mag: Mag}) :-
     get_dict(dur, AffNode, Dur),
     get_dict(mag, AffNode, Mag).
 
-% Apply or refresh an affliction on an entity
 apply_aff(Ent, AffTag, Dur, Mag, NEnt) :-
     is_dict(Ent),
     ( get_dict(affs, Ent, Affs) -> true ; Affs = dict{} ),
     ( get_dict(AffTag, Affs, CurAff) ->
-          get_dict(dur, CurAff, CurDur),
-          NDur is max(CurDur, Dur),
-          NAffNode = dict{dur: NDur, mag: Mag}
+        get_dict(dur, CurAff, CurDur),
+        NDur is max(CurDur, Dur),
+        NAffNode = dict{dur: NDur, mag: Mag}
     ;
-      NAffNode = dict{dur: Dur, mag: Mag}
+        NAffNode = dict{dur: Dur, mag: Mag}
     ),
     NAffs = Affs.put(AffTag, NAffNode),
     NEnt = Ent.put(affs, NAffs).
 
-% Forcefully remove an affliction
 remove_aff(Ent, AffTag, NEnt) :-
     is_dict(Ent),
     ( get_dict(affs, Ent, Affs) ->
-          ( del_dict(AffTag, Affs, _, NAffs) -> NEnt = Ent.put(affs, NAffs) ; NEnt = Ent )
+        ( del_dict(AffTag, Affs, _, NAffs) -> NEnt = Ent.put(affs, NAffs) ; NEnt = Ent )
     ; NEnt = Ent ).

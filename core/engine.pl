@@ -26,6 +26,8 @@ step(Id, register(Pass, Key, Race, S), Evts)       :- auth:handle_register(Id, P
 step(Id, respawn, Evts)                            :- status:do_respawn(Id, Evts), !.
 
 step(Id, move(Dir), Evts)     :- move:do_move(Id, Dir, Evts), !.
+step(Id, walk(Dest), Evts)    :- move:do_start_walk(Id, Dest, Evts), !.
+step(Id, cancel_walk, Evts)   :- move:do_cancel_walk(Id, Evts), !.
 step(Id, kill(Tgt), Evts)     :- combat:do_kill(Id, Tgt, Evts), !.
 step(Id, cast(Sp, Tgt), Evts) :- combat:do_cast(Id, Sp, Tgt, Evts), !.
 step(Id, pay_bounty, Evts)    :- combat:do_pay_bounty(Id, Evts), !.
@@ -51,6 +53,16 @@ step(Id, tick, Evts)          :- status:do_tick(Id, Evts), !.
 
 step(Id, ActTerm, [error(unhandled_action(Id, ActTerm))]).
 
+is_interrupting_action(move(_)).
+is_interrupting_action(kill(_)).
+is_interrupting_action(cast(_,_)).
+is_interrupting_action(loot(_)).
+is_interrupting_action(equip(_)).
+is_interrupting_action(unequip(_)).
+is_interrupting_action(use(_)).
+is_interrupting_action(allocate(_)).
+is_interrupting_action(pay_bounty).
+
 api_step(Req, Res) :-
     ( catch(api_step_internal(Req, Res), Err, format_exception_res(Err, Req, Res)) -> true
     ; Res = json{status: "error", error: "Goal evaluation failed catastrophically."} ).
@@ -59,9 +71,13 @@ api_step_internal(Req, Res) :-
     ( get_dict(actor, Req, RawActor) -> parser:ensure_atom(RawActor, ActorId) ; ActorId = unknown ),
     ( get_dict(action, Req, ActionDict) -> true ; ActionDict = dict{} ),
     ( parser:parse_act(ActionDict, ActTerm) ->
+        ( world:get_entity(ActorId, Actor), is_interrupting_action(ActTerm), get_dict(walk_target, Actor, _) ->
+            move:do_cancel_walk(ActorId, CancelEvts)
+        ; CancelEvts = [] ),
         ( step(ActorId, ActTerm, DirectEvts) ->
-            events:split_events(DirectEvts, PubEvts, PrivEvts),
-            ( world:get_entity(ActorId, Actor), get_dict(room, Actor, RoomId) ->
+            append(CancelEvts, DirectEvts, AllDirectEvts),
+            events:split_events(AllDirectEvts, PubEvts, PrivEvts),
+            ( world:get_entity(ActorId, FinalActor), get_dict(room, FinalActor, RoomId) ->
                 world:push_room_events(RoomId, PubEvts)
             ; true ),
             json_io:terms_to_json(PrivEvts, JsonPrivs),

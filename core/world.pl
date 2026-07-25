@@ -5,7 +5,8 @@
     room_entities/2, gen_id/2, all_mobs/1,
     push_room_event/2, push_room_events/2, pop_room_events/2,
     clear_db/0, save_db/1, load_db/1,
-    get_bounty_leaderboard/2
+    get_bounty_leaderboard/2,
+    is_safe_room/1
 ]).
 
 :- use_module(library(json)).
@@ -22,6 +23,15 @@ to_atom(Atom, Atom) :- atom(Atom), !.
 to_atom(String, Atom) :- string(String), !, atom_string(Atom, String).
 to_atom(Number, Atom) :- number(Number), !, atom_number(Atom, Number).
 to_atom(_, unknown).
+
+% Centralized Type-Safe Safe Zone Check
+is_safe_room(RawRoomId) :-
+    to_atom(RawRoomId, RoomId),
+    db_room(RoomId, Room),
+    get_dict(props, Room, Props),
+    is_list(Props),
+    member(P, Props),
+    to_atom(P, safe), !.
 
 clean_entity(Ent, CleanEnt) :-
     is_dict(Ent), !,
@@ -49,7 +59,10 @@ clean_room(Room, CleanRoom) :-
         clean_exit_pairs(Pairs, CleanPairs),
         dict_pairs(CleanExits, Tag, CleanPairs)
     ; CleanExits = dict{} ),
-    CleanRoom = Room.put(id, Id).put(exits, CleanExits).
+    ( get_dict(props, Room, RawProps), is_list(RawProps) ->
+        maplist(to_atom, RawProps, CleanProps)
+    ; CleanProps = [] ),
+    CleanRoom = Room.put(id, Id).put(exits, CleanExits).put(props, CleanProps).
 clean_room(Room, Room).
 
 clean_exit_pairs([], []).
@@ -154,7 +167,17 @@ load_db(Filename) :-
     clear_db,
     ( get_dict(entities, State, Ents) -> forall(member(E, Ents), put_entity(E)) ; true ),
     ( get_dict(rooms, State, Rooms) -> forall(member(R, Rooms), put_room(R)) ; true ),
-    ( get_dict(env, State, Env) -> put_env(Env) ; put_env(env{time: 480, day: 1, season: spring, moon: full_moon, mist: 0, weather: clear}) ).
+    ( get_dict(env, State, Env) ->
+        ( get_dict(time, Env, T) -> true ; T = 480 ),
+        ( get_dict(day, Env, D) -> true ; D = 1 ),
+        ( get_dict(season, Env, S) -> true ; S = spring ),
+        ( get_dict(moon, Env, M) -> true ; M = full_moon ),
+        ( get_dict(mist, Env, Mist) -> true ; Mist = 0 ),
+        ( get_dict(weather, Env, W) -> true ; W = clear ),
+        put_env(env{time: T, day: D, season: S, moon: M, mist: Mist, weather: W})
+    ;
+        put_env(env{time: 480, day: 1, season: spring, moon: full_moon, mist: 0, weather: clear})
+    ).
 
 take(0, _, []) :- !.
 take(_, [], []) :- !.

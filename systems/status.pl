@@ -114,8 +114,13 @@ process_aff_pairs([AffTag-AffNode|Rest], Act, FinalAct, Evts) :-
     NDur is Dur - 1,
 
     ( is_dot(AffTag) ->
-        entity:mod_hp(Act, -Mag, Act1), combat:get_display_name(Act1, AName),
-        TickEvt = [aff_tick(AName, AffTag, Mag)]
+        get_dict(room, Act, RoomId),
+        ( world:is_safe_room(RoomId) ->
+            Act1 = Act, TickEvt = [] % DoT damage suppressed inside sacred sanctuaries
+        ;
+            entity:mod_hp(Act, -Mag, Act1), combat:get_display_name(Act1, AName),
+            TickEvt = [aff_tick(AName, AffTag, Mag)]
+        )
     ; AffTag == regeneration ->
         entity:mod_hp(Act, Mag, Act1), combat:get_display_name(Act1, AName),
         get_dict(hp, Act1, CurHp), ( get_dict(max_hp, Act1, MaxHp) -> true ; MaxHp = CurHp ),

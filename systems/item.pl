@@ -5,11 +5,19 @@
 :- use_module('../config/item').
 :- use_module('../worldgen/structures').
 
+to_atom(Var, unknown) :- var(Var), !.
+to_atom(Atom, Atom) :- atom(Atom), !.
+to_atom(String, Atom) :- string(String), !, atom_string(Atom, String).
+to_atom(Number, Atom) :- number(Number), !, atom_number(Atom, Number).
+to_atom(_, unknown).
+
 resolve_room_item(RoomId, Query, Item) :-
+    to_atom(Query, AtomQuery),
     world:room_entities(RoomId, Ents),
     member(Item, Ents),
     is_dict(Item, item),
-    ( get_dict(id, Item, Query) ; get_dict(tag, Item, Query) ), !.
+    ( (get_dict(id, Item, IId), to_atom(IId, AtomQuery))
+    ; (get_dict(tag, Item, ITag), to_atom(ITag, AtomQuery)) ), !.
 
 do_loot(Id, _TgtQuery, [error(actor_not_found(Id))]) :-
     \+ world:get_entity(Id, _), !.
@@ -32,7 +40,8 @@ do_loot(Id, TgtQuery, [error(item_not_found(Id, TgtQuery))]) :-
 do_equip(Id, _Tag, [error(actor_not_found(Id))]) :-
     \+ world:get_entity(Id, _), !.
 
-do_equip(Id, Tag, Evts) :-
+do_equip(Id, RawTag, Evts) :-
+    to_atom(RawTag, Tag),
     world:get_entity(Id, Actor),
     entity:has_item(Actor, Tag),
     item_config:slot(Tag, Slot), Slot \== none, !,
@@ -57,7 +66,7 @@ do_unequip(Id, _SlotStr, [error(actor_not_found(Id))]) :-
 
 do_unequip(Id, SlotStr, Evts) :-
     world:get_entity(Id, Actor),
-    atom_string(Slot, SlotStr),
+    to_atom(SlotStr, Slot),
     get_dict(equip, Actor, Eq),
     get_dict(Slot, Eq, Tag), Tag \== none, !,
     NEq = Eq.put(Slot, none),
@@ -72,12 +81,13 @@ do_unequip(Id, SlotStr, [error(slot_empty(Id, SlotStr))]) :-
 do_use(Id, _Tag, [error(actor_not_found(Id))]) :-
     \+ world:get_entity(Id, _), !.
 
-do_use(Id, Tag, Evts) :-
+do_use(Id, RawTag, Evts) :-
+    to_atom(RawTag, Tag),
     world:get_entity(Id, Actor),
     entity:has_item(Actor, Tag),
     item_config:consumable(Tag, Effect), !,
     entity:rem_item(Actor, Tag, 1, TmpAct),
-    apply_effect(Effect, TmpAct, NActor, ExtraEvts),
+    ( apply_effect(Effect, TmpAct, NActor, ExtraEvts) -> true ; NActor = TmpAct, ExtraEvts = [] ),
     world:put_entity(NActor),
     append([used(Id, Tag, Effect)], ExtraEvts, Evts).
 
@@ -89,5 +99,5 @@ apply_effect(restore_mp(Amt), A, NA, []) :-
     get_dict(mp, A, Mp), get_dict(max_mp, A, Max),
     NMp is min(Max, Mp + Amt),
     NA = A.put(mp, NMp).
-apply_effect(locate_anomaly, A, A, [env_msg(LocText)]) :-
+apply_effect(locate_anomaly, A, A, [anomaly_located(LocText)]) :-
     structures:find_or_gen_anomaly(LocText).

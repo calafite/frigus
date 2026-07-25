@@ -25,7 +25,6 @@ to_atom(_, unknown).
 
 roll_dice(Min, Max, Val) :- random_between(Min, Max, Val).
 
-% Helper to derive display names for entities/IDs
 get_display_name(Ent, Name) :-
     is_dict(Ent),
     ( get_dict(name, Ent, RawName), RawName \== "" -> Name = RawName
@@ -193,7 +192,7 @@ do_pay_bounty(Id, Evts) :-
     ( world:get_entity(Id, Actor) ->
         ( (get_dict(bounty, Actor, B), B > 0) ->
             ( entity:rem_item(Actor, gold, B, A1) ->
-                entity:clear_bounty(A1, FinalA), world:put_entity(FinalA), world:save_db('world_state.json'),
+                entity:clear_bounty(A1, FinalA), world:save_db('world_state.json'),
                 clear_local_threats(Id, FinalA), Evts = [bounty_paid(Id, B)]
             ; Evts = [error(insufficient_gold_for_bounty(Id, B))] )
         ; Evts = [error(no_bounty_to_pay(Id))] )
@@ -208,8 +207,7 @@ do_kill(Id, _TgtQuery, [error(actor_not_found(Id))]) :- \+ world:get_entity(Id, 
 do_kill(Id, TgtQuery, Evts) :-
     world:get_entity(Id, Actor),
     get_dict(room, Actor, RoomId),
-    world:get_room(RoomId, RoomNode),
-    ( get_dict(props, RoomNode, Props), member(safe, Props) ->
+    ( world:is_safe_room(RoomId) ->
         Evts = [error(safe_zone(Id))]
     ; status:is_cced(Actor, CC) ->
         Evts = [error(cc_prevented(Id, CC))]
@@ -274,8 +272,12 @@ flurry_strike(_SrcId, SrcEnt, Tgt, [flurry(SrcName, TgtName), HitEvt]) :-
     world:put_entity(NTgt), HitEvt = hit(SrcName, TgtName, FinalDmg, CurHp, MaxHp).
 
 mob_retaliate(Mob, Player, RetalEvts) :-
-    ( \+ entity:is_alive(Player) -> RetalEvts = [] ; status:is_cced(Mob, _) -> RetalEvts = [] ;
-        get_dict(id, Player, PId), get_weapon_tag(Mob, WTag), get_dict(room, Mob, RoomId), world:env_state(Env),
+    get_dict(room, Mob, RoomId),
+    ( world:is_safe_room(RoomId) -> RetalEvts = []
+    ; \+ entity:is_alive(Player) -> RetalEvts = []
+    ; status:is_cced(Mob, _) -> RetalEvts = []
+    ;
+        get_dict(id, Player, PId), get_weapon_tag(Mob, WTag), world:env_state(Env),
         get_display_name(Mob, MName), get_display_name(Player, PName),
 
         entity:mark_combat(Mob, CbtMob), entity:mark_combat(Player, CbtPlayer),
@@ -295,9 +297,13 @@ mob_retaliate(Mob, Player, RetalEvts) :-
     ).
 
 town_brawl_retaliate(_PrimaryMob, Player, BrawlEvts) :-
-    get_dict(room, Player, Room), world:room_entities(Room, Ents),
-    findall(Mob, ( member(Mob, Ents), is_dict(Mob, mob), entity:is_alive(Mob), is_town_npc(Mob) ), TownNpcs),
-    brawl_attack_all(TownNpcs, Player, BrawlEvts).
+    get_dict(room, Player, Room),
+    ( world:is_safe_room(Room) -> BrawlEvts = []
+    ;
+        world:room_entities(Room, Ents),
+        findall(Mob, ( member(Mob, Ents), is_dict(Mob, mob), entity:is_alive(Mob), is_town_npc(Mob) ), TownNpcs),
+        brawl_attack_all(TownNpcs, Player, BrawlEvts)
+    ).
 
 brawl_attack_all([], _, []).
 brawl_attack_all([Mob|Rest], Player, Evts) :-
@@ -318,11 +324,10 @@ check_affinity(Ent, Sp) :-
 do_cast(Id, Sp, TgtQuery, Evts) :-
     world:get_entity(Id, Actor),
     get_dict(room, Actor, RoomId),
-    world:get_room(RoomId, RoomNode),
     combat_config:spell_type(Sp, Type),
     get_display_name(Actor, ActName),
 
-    ( member(Type, [damage, area, group_harm, cc]), get_dict(props, RoomNode, Props), member(safe, Props) ->
+    ( member(Type, [damage, area, group_harm, cc]), world:is_safe_room(RoomId) ->
         Evts = [error(safe_zone(Id))]
     ; status:is_cced(Actor, CC) -> Evts = [error(cc_prevented(Id, CC))]
     ; status:is_silenced(Actor, CC) -> Evts = [error(cc_prevented(Id, CC))]
@@ -461,7 +466,6 @@ resolve_death(_SrcEnt, DeadTgt, DropEvts) :-
         DropItem = item{id: DropId, tag: seraphs_blade, qty: 1, room: RoomId},
         world:put_entity(DropItem),
 
-        % Strip Seraph's Blade from player equipment and inventory upon death
         ( get_dict(equip, DeadTgt, Eq1), get_dict(wpn, Eq1, seraphs_blade) ->
             NEq = Eq1.put(wpn, fists),
             TmpP = DeadTgt.put(equip, NEq)

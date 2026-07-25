@@ -11,7 +11,8 @@
 :- use_module('../config/spawn').
 :- use_module('spawn').
 :- use_module('loot').
-:- use_module('chunks').
+:- use_module(library(random)).
+:- use_module(library(lists)).
 
 :- dynamic db_structure_respawn/7.
 
@@ -138,24 +139,32 @@ spawn_structure_features(_, _, _).
 % --- Structure Anomaly Finder (Generates Chunk in Advance) ---
 
 find_or_gen_anomaly(LocText) :-
-    between(6, 40, R),
-    search_radius(R, X, Y),
-    Z = 0,
-    Hash is (X * 73856093) xor (Y * 19349663) xor (Z * 83492791) xor 1337,
-    check_special_structure(Hash, X, Y, Z, _StructId, _Theme, Name, _Desc, _Props), !,
+    findall(loc(X, Y, Name), (
+        between(6, 40, R),
+        search_radius(R, X, Y),
+        Z = 0,
+        Hash is (X * 73856093) xor (Y * 19349663) xor (Z * 83492791) xor 1337,
+        check_special_structure(Hash, X, Y, Z, _StructId, _Theme, Name, _Desc, _Props)
+    ), Anomalies),
+    ( Anomalies \== [] ->
+        random_member(loc(X, Y, Name), Anomalies),
+        atomic_list_concat(['cell', X, Y, 0], '_', CellId),
 
-    atomic_list_concat(['cell', X, Y, Z], '_', CellId),
-    chunks:ensure_chunk(CellId),
+        catch(call(chunks:ensure_chunk(CellId)), _, true),
 
-    format(string(LocText), "🔮 The Diviner's Orb pulses with celestial radiance, revealing a boss anomaly at Wilderness [~w, ~w, ~w]: ~w!", [X, Y, Z, Name]).
-find_or_gen_anomaly("🔮 The Diviner's Orb glimmers faintly, but senses no nearby anomalies in this realm.").
+        format(string(LocText), "🔮 The Diviner's Orb pulses with celestial radiance, revealing a boss anomaly at Wilderness [~w, ~w, 0]: ~w!", [X, Y, Name])
+    ;
+        LocText = "🔮 The Diviner's Orb glimmers faintly, but senses no nearby anomalies in this realm."
+    ).
 
 search_radius(R, X, Y) :-
-    between(-R, R, X),
-    ( Y is R ; Y is -R ).
+    NegR is -R,
+    between(NegR, R, X),
+    ( Y is R ; Y is NegR ).
 search_radius(R, X, Y) :-
-    between(-R, R, Y),
-    ( X is R ; X is -R ).
+    NegR is -R,
+    between(NegR, R, Y),
+    ( X is R ; X is NegR ).
 
 % --- Respawn System (Every 4 In-Game Hours = 240 Ticks) ---
 

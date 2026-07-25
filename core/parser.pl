@@ -42,6 +42,8 @@ parse_act(D, admin_cmd(SubCmd, Arg)) :-
     ( get_dict(target, D, RawA) -> ensure_atom(RawA, Arg) ; Arg = none ).
 
 parse_act(D, move(Dir)) :- ( get_dict(type, D, "move") ; get_dict(type, D, "go") ), extract_dir(D, Dir).
+parse_act(D, walk(T))       :- get_dict(type, D, "walk"), extract_target(D, T).
+parse_act(D, cancel_walk)   :- get_dict(type, D, "cancel_walk").
 parse_act(D, kill(Tgt)) :- ( get_dict(type, D, "kill") ; get_dict(type, D, "attack") ; get_dict(type, D, "k") ), extract_target(D, Tgt).
 parse_act(D, cast(S, T)):-
     ( get_dict(type, D, "cast") ; get_dict(type, D, "c") ),

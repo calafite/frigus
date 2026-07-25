@@ -11,6 +11,7 @@
 :- use_module('events').
 :- use_module('../worldgen/builder').
 :- use_module('../systems/ai').
+:- use_module('../systems/move').
 :- use_module('../systems/status').
 :- use_module('../systems/env').
 
@@ -46,13 +47,20 @@ run_world_tick :-
     env:tick_env(EnvEvts),
     ( EnvEvts \== [] -> push_env_events(EnvEvts) ; true ),
     ai:do_ai_tick(_),
-    forall(active_client(_, ActorId), (
+    forall(active_client(WS, ActorId), (
         status:do_tick(ActorId, TickEvts),
-        ( TickEvts \== [] ->
+        move:do_tick_walk(ActorId, WalkEvts),
+        append(TickEvts, WalkEvts, AllEvts),
+        ( AllEvts \== [] ->
+            events:split_events(AllEvts, PubTickEvts, PrivTickEvts),
             ( world:get_entity(ActorId, A) ->
                 get_dict(room, A, RoomId),
-                events:split_events(TickEvts, PubTickEvts, _),
                 world:push_room_events(RoomId, PubTickEvts)
+            ; true ),
+            ( PrivTickEvts \== [] ->
+                engine:terms_to_json(PrivTickEvts, JsonPrivs),
+                Payload = json{status: "ok", events: JsonPrivs},
+                catch(ws_send(WS, json(Payload)), _, retractall(active_client(WS, _)))
             ; true )
         ; true )
     )),

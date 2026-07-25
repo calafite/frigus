@@ -30,11 +30,6 @@ to_atom(String, Atom) :- string(String), !, atom_string(Atom, String).
 to_atom(Number, Atom) :- number(Number), !, atom_number(Atom, Number).
 to_atom(_, unknown).
 
-is_safe_room(RoomId) :-
-    world:get_room(RoomId, Room),
-    get_dict(props, Room, Props),
-    member(safe, Props), !.
-
 is_settlement_room(Room) :-
     ( get_dict(theme, Room, Theme), member(Theme, [village, keep, monastery, town]) ;
       get_dict(props, Room, Props), (member(safe, Props) ; member(landmark, Props)) ;
@@ -45,7 +40,6 @@ is_no_wander(Mob) :-
     ; get_dict(props, Mob, Props), (member(no_wander, Props) ; member(protector, Props))
     ), !.
 
-% Keep town NPCs inside safe settlement boundaries
 valid_npc_move(Mob, NextRoomId) :-
     world:get_room(NextRoomId, NextRoom),
     ( is_guard(Mob) ->
@@ -79,10 +73,11 @@ highest_bounty(Ents, TopId) :-
     keysort(Pairs, Sorted),
     reverse(Sorted, [_-TopId|_]).
 
-% Guard attacks criminals
+% Guard attacks criminals (only outside safe zones)
 act_mob(Mob, Evts) :-
     is_guard(Mob),
     get_dict(room, Mob, Room),
+    \+ world:is_safe_room(Room),
     world:room_entities(Room, Ents),
     highest_bounty(Ents, TgtId), !,
     get_dict(id, Mob, MId),
@@ -91,11 +86,12 @@ act_mob(Mob, Evts) :-
     world:push_room_events(Room, PubEvts),
     Evts = PubEvts.
 
-% Mobs respond to threats
+% Mobs respond to threats (only outside safe zones)
 act_mob(Mob, Evts) :-
+    get_dict(room, Mob, Room),
+    \+ world:is_safe_room(Room),
     get_dict(threats, Mob, Threats),
     dict_keys(Threats, Keys), Keys \== [],
-    get_dict(room, Mob, Room),
     world:room_entities(Room, Ents),
     member(Tgt, Ents),
     get_dict(id, Tgt, TgtId),
@@ -107,10 +103,11 @@ act_mob(Mob, Evts) :-
     world:push_room_events(Room, PubEvts),
     Evts = PubEvts.
 
-% Guard attacks hostile monsters in room
+% Guard attacks hostile monsters in room (only outside safe zones)
 act_mob(Mob, Evts) :-
     is_guard(Mob),
     get_dict(room, Mob, Room),
+    \+ world:is_safe_room(Room),
     world:room_entities(Room, Ents),
     member(Monster, Ents),
     is_dict(Monster, mob),
@@ -124,10 +121,10 @@ act_mob(Mob, Evts) :-
     world:push_room_events(Room, PubEvts),
     Evts = PubEvts.
 
-% Hostile mob attacks player
+% Hostile mob attacks player (only outside safe zones)
 act_mob(Mob, Evts) :-
     get_dict(room, Mob, Room),
-    \+ is_safe_room(Room),
+    \+ world:is_safe_room(Room),
     is_hostile_mob(Mob),
     world:room_entities(Room, Ents),
     member(P, Ents), is_dict(P, plyr),

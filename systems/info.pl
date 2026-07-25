@@ -71,10 +71,12 @@ do_help(Id, [help_info(Id, Text)]) :-
     Text = "<div style='border: 1px solid var(--accent); padding: 12px; border-radius: 6px; background: var(--bg-surface); margin: 6px 0;'>
       <strong style='color: var(--accent); font-size: 1.05rem;'>--- COMMAND HELP ---</strong><br>
       <div style='margin-top: 8px; line-height: 1.6;'>
-        • <strong>look / l</strong> — Inspect current location<br>
-        • <strong>n / s / e / w / u / d</strong> — Directional movement<br>
-        • <strong>go &lt;exit&gt;</strong> — Move to custom exit (e.g. <i>go wild</i>)<br>
-        • <strong>k / kill &lt;target&gt;</strong> — Attack target (e.g. <i>k goblin</i>)<br>
+      • <strong>look / l</strong> — Inspect current location<br>
+              • <strong>n / s / e / w / u / d</strong> — Directional movement<br>
+              • <strong>go &lt;exit&gt;</strong> — Move to custom exit (e.g. <i>go wild</i>)<br>
+              • <strong>walk &lt;x&gt; &lt;y&gt; [&lt;z&gt;]</strong> — Auto-walk to wild coordinates<br>
+              • <strong>cancel_walk</strong> — Stop auto-walking<br>
+              • <strong>k / kill &lt;target&gt;</strong> — Attack target (e.g. <i>k goblin</i>)<br>
         • <strong>c / cast &lt;spell&gt; [target]</strong> — Cast spell (e.g. <i>c mend</i>, <i>c fireball orc</i>)<br>
         • <strong>get / g &lt;item&gt;</strong> — Pick up item from ground<br>
         • <strong>equip / unequip</strong> — Manage weapon and armor slots<br>
