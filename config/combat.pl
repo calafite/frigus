@@ -29,13 +29,22 @@ wpn_dmg(shortbow, [dmg(pierce, 7)]).
 wpn_dmg(staff, [dmg(blunt, 5)]).
 wpn_dmg(iron_sword, [dmg(slash, 10)]).
 
-% Celestial & Legendary Weapons
+% --- New Custom & Expansion Weapons ---
+wpn_dmg(pica_de_inseto, [dmg(pierce, 4)]).
+wpn_dmg(morningstar, [dmg(blunt, 12)]).
+wpn_dmg(katana, [dmg(slash, 16)]).
+wpn_dmg(orcish_cleaver, [dmg(slash, 13)]).
+wpn_dmg(pirate_cutlass, [dmg(slash, 10)]).
+wpn_dmg(dwarven_hammer, [dmg(blunt, 16)]).
+wpn_dmg(elven_longbow, [dmg(pierce, 14)]).
+
+% --- Celestial & Legendary Weapons ---
 wpn_dmg(seraphs_blade, [dmg(fire, 22), dmg(slash, 12)]).
 wpn_dmg(ancient_runesword, [dmg(slash, 18)]).
 wpn_dmg(vampire_fanged_blade, [dmg(pierce, 20)]).
 wpn_dmg(necromancer_staff, [dmg(magic, 16)]).
 
-% Innate mob attacks
+% --- Innate mob attacks ---
 wpn_dmg(rat, [dmg(pierce, 2)]).
 wpn_dmg(wolf, [dmg(slash, 4)]).
 wpn_dmg(goblin, [dmg(slash, 5)]).
@@ -61,7 +70,12 @@ wpn_dmg(iron_golem, [dmg(blunt, 14)]).
 wpn_dmg(arcane_anomaly, [dmg(magic, 9)]).
 wpn_dmg(treant, [dmg(blunt, 11)]).
 
-% Dedicated Summoned Entity Attacks
+% --- Expansion Mob Innates ---
+wpn_dmg(pirate, [dmg(slash, 8)]).
+wpn_dmg(crab, [dmg(blunt, 6)]).
+wpn_dmg(cultist, [dmg(magic, 10)]).
+
+% --- Dedicated Summoned Entity Attacks ---
 wpn_dmg(mercenary_soldier, [dmg(slash, 9)]).
 wpn_dmg(hunting_falcon, [dmg(pierce, 6)]).
 wpn_dmg(spectral_wolf, [dmg(magic, 8)]).
@@ -76,7 +90,7 @@ wpn_dmg(abyssal_brute, [dmg(blunt, 20)]).
 wpn_dmg(celestial_guardian, [dmg(magic, 18), dmg(slash, 12)]).
 wpn_dmg(bound_lich, [dmg(magic, 24)]).
 
-% Structure Anomaly Boss Attacks
+% --- Structure Anomaly Boss Attacks ---
 wpn_dmg(elder_dragon, [dmg(fire, 35)]).
 wpn_dmg(swamp_hag, [dmg(magic, 20)]).
 wpn_dmg(ruin_golem, [dmg(blunt, 30)]).
@@ -85,6 +99,9 @@ wpn_dmg(vampire_lord, [dmg(pierce, 28)]).
 wpn_dmg(void_walker, [dmg(magic, 30)]).
 wpn_dmg(arch_necromancer, [dmg(magic, 32)]).
 
+% ==========================================
+% WEAPON TRAITS
+% ==========================================
 wpn_trait(sword, reliable).
 wpn_trait(iron_sword, reliable).
 wpn_trait(shortsword, reliable).
@@ -97,13 +114,36 @@ wpn_trait(battleaxe, massacre).
 wpn_trait(greatsword, massacre).
 wpn_trait(shortbow, precision).
 wpn_trait(staff, catalyst).
+
+% --- New Weapon Traits ---
+wpn_trait(pica_de_inseto, flurry).
+wpn_trait(morningstar, massacre).
+wpn_trait(katana, precision).
+wpn_trait(orcish_cleaver, massacre).
+wpn_trait(pirate_cutlass, flurry).
+wpn_trait(dwarven_hammer, massacre).
+wpn_trait(elven_longbow, precision).
+
 wpn_trait(_, standard).
 
+% ==========================================
+% WEAPON CRIT MULTIPLIERS
+% ==========================================
 wpn_crit_mult(battleaxe, 2.5).
 wpn_crit_mult(greatsword, 2.5).
 wpn_crit_mult(seraphs_blade, 2.5).
 wpn_crit_mult(dagger, 1.8).
 wpn_crit_mult(vampire_fanged_blade, 2.2).
+
+% --- New Weapon Crit Mults ---
+wpn_crit_mult(morningstar, 2.5).
+wpn_crit_mult(katana, 2.2).
+wpn_crit_mult(orcish_cleaver, 2.5).
+wpn_crit_mult(pica_de_inseto, 1.8).
+wpn_crit_mult(pirate_cutlass, 1.8).
+wpn_crit_mult(dwarven_hammer, 2.5).
+wpn_crit_mult(elven_longbow, 2.5).
+
 wpn_crit_mult(_, 2.0).
 
 % ==========================================

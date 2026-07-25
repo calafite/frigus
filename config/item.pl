@@ -2,6 +2,10 @@
 
 % Equipment Slots
 slot(sword, wpn).
+slot(pica_de_inseto, wpn).
+slot(morningstar, wpn).
+slot(katana, wpn).
+slot(orcish_cleaver, wpn).
 slot(iron_sword, wpn).
 slot(dagger, wpn).
 slot(staff, wpn).
@@ -13,18 +17,25 @@ slot(ancient_runesword, wpn).
 slot(vampire_fanged_blade, wpn).
 slot(necromancer_staff, wpn).
 slot(seraphs_blade, wpn).
-
-% New Weapons
 slot(pirate_cutlass, wpn).
 slot(dwarven_hammer, wpn).
 slot(elven_longbow, wpn).
 
 slot(iron_shield, shield).
 slot(wooden_shield, shield).
+slot(runic_shield, shield).
+slot(dragon_scale_shield, shield).
+slot(golden_aegis, shield).
 slot(living_bark_shield, shield).
 
 slot(chainmail, body).
 slot(tunic, body).
+slot(celestial_armor, body).
+slot(priest_vests, body).
+slot(demon_hide, body).
+slot(royal_attire, body).
+slot(mage_robe, body).
+slot(obsidian_armor, body).
 slot(rags, body).
 slot(dragon_scale_mail, body).
 slot(void_robe, body).
