@@ -78,6 +78,9 @@ parse_act(D, party_say(Text)) :-
         ; Text = "" )
     ; Text = "" ).
 
+parse_act(D, search) :-
+    ( get_dict(type, D, "search") ; get_dict(type, D, "scan") ).
+
 parse_act(D, party(Action, Target)) :-
     get_dict(type, D, "party"),
     ( get_dict(action, D, RawA) -> ensure_atom(RawA, Action) ; Action = none ),

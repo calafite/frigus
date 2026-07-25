@@ -40,6 +40,8 @@ is_public_event(party_disbanded(_)).
 
 % Stealth Events
 is_public_event(stealth_spotted(_)).
+is_public_event(stealth_revealed(_, _)).
+is_public_event(search_nothing(_)).
 
 split_events([], [], []).
 split_events([E|Es], [E|Pubs], Privs) :- is_public_event(E), !, split_events(Es, Pubs, Privs).

@@ -452,7 +452,7 @@ spell_cost(summon_cherub, 40).
 spell_cooldown(summon_cherub, 25).
 spell_difficulty(summon_cherub, 60).
 spell_desc(summon_cherub, "Manifests a luminous Holy Avatar.").
-spell_affinity(summon_cherub, [cleric]).
+spell_affinity(summon_cherub, [cleric, paladin, angel]).
 spell_summon_tag(summon_cherub, holy_avatar).
 
 spell_type(summon_avenger, summon).
@@ -460,7 +460,7 @@ spell_cost(summon_avenger, 70).
 spell_cooldown(summon_avenger, 45).
 spell_difficulty(summon_avenger, 110).
 spell_desc(summon_avenger, "Brings forth a Radiant Avenger from the sacred halls.").
-spell_affinity(summon_avenger, [paladin]).
+spell_affinity(summon_avenger, [cleric, paladin, angel]).
 spell_summon_tag(summon_avenger, radiant_avenger).
 
 spell_type(summon_guardian, summon).

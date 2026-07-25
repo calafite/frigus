@@ -84,7 +84,7 @@ chk_alloc(Stats, IsAdmin, CleanStats) :-
     ( get_dict(cha, Stats, Ch1)-> Ch is max(10, Ch1); Ch = 10 ),
     ( get_dict(luk, Stats, L1) -> L is max(10, L1) ; L = 10 ),
     Spent is (S - 10) + (D - 10) + (C - 10) + (I - 10) + (W - 10) + (Ch - 10) + (L - 10),
-    ( IsAdmin == true -> MaxPts = 10000 ; MaxPts = 15 ),
+    ( IsAdmin == true -> MaxPts = 100000 ; MaxPts = 15 ),
     Spent =< MaxPts,
     CleanStats = dict{str: S, dex: D, con: C, int: I, wis: W, cha: Ch, luk: L}.
 

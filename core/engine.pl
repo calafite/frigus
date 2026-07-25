@@ -21,6 +21,8 @@
 :- use_module('../systems/admin').
 :- use_module('../systems/shop').
 :- use_module('../systems/chat').
+:- use_module('../systems/stealth').
+
 
 % ROUTER
 step(Id, validate_key(Key), Evts)                     :- auth:handle_validate_key(Id, Key, Evts), !.
@@ -34,6 +36,7 @@ step(Id, cancel_walk, Evts)   :- move:do_cancel_walk(Id, Evts), !.
 step(Id, kill(Tgt), Evts)     :- combat:do_kill(Id, Tgt, Evts), !.
 step(Id, cast(Sp, Tgt), Evts) :- combat:do_cast(Id, Sp, Tgt, Evts), !.
 step(Id, pay_bounty, Evts)    :- combat:do_pay_bounty(Id, Evts), !.
+step(Id, search, Evts) :- stealth:do_search(Id, Evts), !.
 
 step(Id, browse(Npc), Evts)   :- shop:do_browse(Id, Npc, Evts), !.
 step(Id, buy(Npc, Item), Evts):- shop:do_buy(Id, Npc, Item, Evts), !.
