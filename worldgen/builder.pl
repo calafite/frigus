@@ -45,7 +45,8 @@ init_hub_room(R, NR) :-
     Temp is BTemp + TOff,
     Mag is max(0, BMag + MOff),
     Cor is max(0, BCor + COff),
-    NR = R.put(env, dict{temp: Temp, magic: Mag, Cor: Cor}).
+    % FIXED: 'Cor' was capitalized, causing the 'key_expected' syntax error
+    NR = R.put(env, dict{temp: Temp, magic: Mag, corr: Cor}).
 
 % ==============================================================================
 % THE WORLD MAP (STATIC ZONES)

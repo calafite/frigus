@@ -14,7 +14,7 @@
 is_valid_combat_target(Ent) :- is_dict(Ent, plyr).
 is_valid_combat_target(Ent) :- is_dict(Ent, mob).
 
-is_town_npc(Ent) :- get_dict(tag, Ent, RawTag), combat_core:to_atom(RawTag, Tag), member(Tag, [guard, peasant, merchant, priest, miner]), !.
+is_town_npc(Ent) :- get_dict(tag, Ent, RawTag), combat_core:to_atom(RawTag, Tag), member(Tag, [guard, royal_guard, peasant, merchant, priest, miner]), !.
 is_town_npc(Ent) :- get_dict(fac, Ent, RawFac), combat_core:to_atom(RawFac, Fac), member(Fac, [guard, citizen, merchant]), !.
 
 is_innocent(Ent) :- is_town_npc(Ent) ; is_dict(Ent, plyr).
@@ -49,7 +49,7 @@ is_friendly(Actor, Tgt) :-
     ; is_dict(PActor, plyr), is_innocent(PTgt), \+ is_dict(PTgt, plyr)
     ; is_dict(PActor, mob), is_dict(PTgt, mob), \+ is_enemy(PActor, PTgt) ).
 
-is_guard(Ent) :- get_dict(tag, Ent, RawTag), combat_core:to_atom(RawTag, Tag), member(Tag, [guard, protector]), !.
+is_guard(Ent) :- get_dict(tag, Ent, RawTag), combat_core:to_atom(RawTag, Tag), member(Tag, [guard, royal_guard, protector]), !.
 is_guard(Ent) :- get_dict(fac, Ent, RawFac), combat_core:to_atom(RawFac, Fac), Fac == guard, !.
 is_guard(Ent) :- get_dict(props, Ent, Props), is_list(Props), member(protector, Props), !.
 
@@ -66,12 +66,21 @@ is_safe_zone_violation(Actor, Tgt) :-
         ( is_innocent(Tgt), \+ is_guard(Tgt) )
     ).
 
-% Resolved deterministically. Will return 'none' if target query is unfulfillable.
+% Resolved deterministically. Intelligent Auto-Targeting skips protected/safe entities.
 resolve_target(Actor, none, Target) :-
     get_dict(room, Actor, Room), world:room_entities(Room, Ents),
-    (   member(T, Ents),
+    (   % Priority 1: Pick a valid hostile mob that does NOT violate safe zone rules
+        member(T, Ents),
         is_valid_combat_target(T), get_dict(id, T, TId), get_dict(id, Actor, AId), TId \== AId, entity:is_alive(T),
-        is_enemy(Actor, T)
+        is_enemy(Actor, T),
+        is_dict(T, mob), \+ is_innocent(T),
+        ( world:is_safe_room(Room) -> \+ is_safe_zone_violation(Actor, T) ; true )
+    ->  Target = T
+    ;   % Priority 2: Fallback to ANY valid enemy that does NOT violate safe zone rules
+        member(T, Ents),
+        is_valid_combat_target(T), get_dict(id, T, TId), get_dict(id, Actor, AId), TId \== AId, entity:is_alive(T),
+        is_enemy(Actor, T),
+        ( world:is_safe_room(Room) -> \+ is_safe_zone_violation(Actor, T) ; true )
     ->  Target = T
     ;   Target = none
     ), !.
