@@ -30,7 +30,6 @@ handle_world_events(Evts) :-
         ( Roll =< 3 ->
             Towns = [square, crossroads, port_square, outpost_square, sylvandell_square, sunfang_square, frosthold_square],
             random_member(Town, Towns),
-            random_member(DemonTag, [imp, hellhound, demon_brute]),
             spawn:gen_mob(volcano, 25, normal, Town, Demon),
             world:put_entity(Demon),
             combat:get_display_name(Demon, DName),
@@ -85,6 +84,8 @@ valid_npc_move(Mob, NextRoomId) :-
           is_settlement_room(NextRoom)
     ; get_dict(tag, Mob, guard) ->
           true % Patrolling guards are permitted to wander into the wild
+    ; combat:is_livestock(Mob) ->
+          member(NextRoomId, [farm_field, orchard, windmill]) % Bounded strictly to farming grounds
     ; combat:is_town_npc(Mob) ->
           is_settlement_room(NextRoom)
     ;

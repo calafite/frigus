@@ -28,6 +28,7 @@
 step(Id, validate_key(Key), Evts)                     :- auth:handle_validate_key(Id, Key, Evts), !.
 step(Id, login(Pass), Evts)                           :- auth:handle_login(Id, Pass, Evts), !.
 step(Id, register(Pass, Key, Race, Class, S), Evts)   :- auth:handle_register(Id, Pass, Key, Race, Class, S, Evts), !.
+step(Id, disconnect, Evts)                            :- auth:handle_disconnect(Id, Evts), !.
 step(Id, respawn, Evts)                               :- status:do_respawn(Id, Evts), !.
 
 step(Id, move(Dir), Evts)     :- move:do_move(Id, Dir, Evts), !.
@@ -68,6 +69,7 @@ step(Id, tick, Evts)          :- status:do_tick(Id, Evts), !.
 
 step(Id, ActTerm, [error(unhandled_action(Id, ActTerm))]).
 
+is_interrupting_action(disconnect).
 is_interrupting_action(move(_)).
 is_interrupting_action(kill(_)).
 is_interrupting_action(cast(_, _)).

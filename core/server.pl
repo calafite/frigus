@@ -28,12 +28,22 @@ start_server(Port) :-
 
 init_world :-
     ( world:load_db('world_state.json'), world:get_room(square, _) ->
-          format('Loaded existing world state from world_state.json~n', [])
+          format('Loaded existing world state from world_state.json~n', []),
+          force_all_players_offline
     ;
       format('No valid world state found. Building starter world...~n', []),
       builder:build_starter_world,
       world:save_db('world_state.json')
     ).
+
+force_all_players_offline :-
+    findall(P, (world:db_entity(_, P), is_dict(P, plyr), get_dict(room, P, R), R \== offline), Players),
+    forall(member(P, Players), (
+        get_dict(room, P, CurRoom),
+        NP = P.put(last_room, CurRoom).put(room, offline),
+        world:put_entity(NP)
+    )),
+    ( Players \== [] -> world:save_db('world_state.json') ; true ).
 
 start_ticker :-
     thread_create(ticker_loop, _, [detached(true)]).

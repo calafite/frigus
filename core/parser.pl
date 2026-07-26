@@ -37,6 +37,8 @@ parse_act(D, register(Pass, Key, Race, Class, Stats)) :-
     ( get_dict(class, D, RawC) -> ensure_atom(RawC, Class) ; Class = fighter ),
     ( get_dict(stats, D, SDict), is_dict(SDict) -> Stats = SDict ; Stats = dict{} ).
 
+parse_act(D, disconnect) :- get_dict(type, D, "disconnect").
+
 parse_act(D, admin_cmd(SubCmd, Arg)) :-
     get_dict(type, D, "admin"),
     ( get_dict(sub, D, RawS) -> ensure_atom(RawS, SubCmd) ; SubCmd = none ),

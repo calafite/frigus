@@ -107,7 +107,7 @@ gen_livestock_npc(RoomId, Tag, Npc) :-
     ; Tag == pig -> Name = "Wild Pig"
     ; Tag == sheep -> Name = "Woolly Sheep"
     ; Tag == cow -> Name = "Grazing Cow" ),
-    Npc = mob{id: NpcId, tag: Tag, name: Name, lvl: 1, hp: BHp, max_hp: BHp, str: BStr, dex: BDex, int: BInt, room: RoomId, props: [], wander: true}.
+    Npc = mob{id: NpcId, tag: Tag, name: Name, lvl: 1, hp: BHp, max_hp: BHp, str: BStr, dex: BDex, int: BInt, room: RoomId, props: [no_wander], wander: false}.
 
 gen_citizen_npc(RoomId, Npc) :-
     world:gen_id(peasant, NpcId),

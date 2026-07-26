@@ -18,11 +18,10 @@ is_valid_combat_target(Ent) :- is_dict(Ent, mob).
 is_livestock(Ent) :- get_dict(tag, Ent, RawTag), combat_core:to_atom(RawTag, Tag), member(Tag, [chicken, pig, sheep, cow]), !.
 
 is_town_npc(Ent) :- get_dict(tag, Ent, RawTag), combat_core:to_atom(RawTag, Tag), member(Tag, [guard, royal_guard, peasant, merchant, priest, miner]), !.
-is_town_npc(Ent) :- is_livestock(Ent), !.
 is_town_npc(Ent) :- get_dict(fac, Ent, RawFac), combat_core:to_atom(RawFac, Fac), member(Fac, [guard, citizen, merchant]), !.
 
-is_innocent(Ent) :- is_town_npc(Ent) ; is_dict(Ent, plyr).
-is_crime(Tgt) :- is_innocent(Tgt), ( get_dict(bounty, Tgt, B) -> B =< 0 ; true ).
+is_innocent(Ent) :- is_town_npc(Ent) ; is_dict(Ent, plyr) ; is_livestock(Ent).
+is_crime(Tgt) :- is_innocent(Tgt), \+ is_livestock(Tgt), ( get_dict(bounty, Tgt, B) -> B =< 0 ; true ).
 
 get_proxy_ent(Ent, Proxy) :-
     is_dict(Ent), get_dict(owner, Ent, OwnerId), world:get_entity(OwnerId, Proxy), !.
@@ -42,8 +41,9 @@ is_enemy(Actor, Tgt) :-
     ( is_dict(PActor, plyr) ->
           ( is_dict(PTgt, mob), \+ is_innocent(PTgt)
           ; is_dict(PTgt, plyr)
-          ; is_town_npc(PTgt) )
-    ; is_dict(PTgt, plyr) ; is_town_npc(PTgt) ).
+          ; is_town_npc(PTgt)
+          ; is_livestock(PTgt) )
+    ; is_dict(PTgt, plyr) ; is_town_npc(PTgt) ; is_livestock(PTgt) ).
 
 is_friendly(Actor, Tgt) :-
     get_proxy_ent(Actor, PActor), get_proxy_ent(Tgt, PTgt),
@@ -123,7 +123,9 @@ do_pay_bounty(Id, Evts) :-
     ( world:get_entity(Id, Actor) ->
           ( (get_dict(bounty, Actor, B), B > 0) ->
                 ( entity:rem_item(Actor, gold, B, A1) ->
-                      entity:clear_bounty(A1, FinalA), world:save_db('world_state.json'),
+                      entity:clear_bounty(A1, FinalA),
+                      world:put_entity(FinalA),
+                      world:save_db('world_state.json'),
                       clear_local_threats(Id, FinalA), Evts = [bounty_paid(Id, B)]
                 ; Evts = [insufficient_gold(Id, B)] )
           ; Evts = [error(no_bounty_to_pay(Id))] )

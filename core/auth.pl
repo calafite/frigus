@@ -1,7 +1,8 @@
 :- module(auth, [
               handle_validate_key/3,
               handle_login/3,
-              handle_register/7
+              handle_register/7,
+              handle_disconnect/2
                 ]).
 
 :- use_module(library(md5)).
@@ -11,24 +12,55 @@
 handle_validate_key(Id, Key, [key_status(Id, Key, Status)]) :-
     ( admin_key(Key) -> Status = valid ; Status = invalid ).
 
+handle_disconnect(Id, Evts) :-
+    ( world:get_entity(Id, Actor) ->
+        get_dict(room, Actor, RoomId),
+        ( RoomId \== offline ->
+            NActor = Actor.put(last_room, RoomId).put(room, offline),
+            world:put_entity(NActor),
+            world:save_db('world_state.json'),
+            ( get_dict(name, Actor, Name) -> true ; get_dict(id, Actor, Name) ),
+            format(string(Msg), "💨 ~w fades into the mist, disconnecting from the realm.", [Name]),
+            world:push_room_event(RoomId, ambient_msg(Msg))
+        ; true )
+    ; true ),
+    Evts = [].
+
+restore_player_room(Player, NPlayer) :-
+    get_dict(room, Player, RoomId),
+    ( RoomId == offline ->
+        ( get_dict(last_room, Player, LR) -> true ; LR = square ),
+        NPlayer = Player.put(room, LR)
+    ; NPlayer = Player ).
+
+announce_login(Player) :-
+    ( get_dict(name, Player, Name) -> true ; get_dict(id, Player, Name) ),
+    get_dict(room, Player, RoomId),
+    format(string(Msg), "✨ ~w manifests from the mist, entering the realm.", [Name]),
+    world:push_room_event(RoomId, ambient_msg(Msg)).
+
 handle_login(Id, Pass, Evts) :-
     hash_pass(Pass, Hash),
     ( world:get_entity(Id, Player) ->
           ( get_dict(pass_hash, Player, StoredHash) ->
                 ( same_hash(StoredHash, Hash) ->
                       ( \+ get_dict(name, Player, _) ->
-                            NPlayer = Player.put(name, Id),
-                            world:put_entity(NPlayer),
-                            world:save_db('world_state.json')
-                      ; true ),
+                            NPlayer = Player.put(name, Id)
+                      ; NPlayer = Player ),
+                      restore_player_room(NPlayer, NPlayer2),
+                      world:put_entity(NPlayer2),
+                      world:save_db('world_state.json'),
+                      announce_login(NPlayer2),
                       Evts = [player_status(Id, exists)]
                 ;
                   Evts = [error(invalid_password(Id))]
                 )
           ;
             NPlayer = Player.put(pass_hash, Hash).put(name, Id),
-            world:put_entity(NPlayer),
+            restore_player_room(NPlayer, NPlayer2),
+            world:put_entity(NPlayer2),
             world:save_db('world_state.json'),
+            announce_login(NPlayer2),
             Evts = [player_status(Id, exists)]
           )
     ;
@@ -48,6 +80,9 @@ handle_register(Id, Pass, Key, Race, Class, Stats, Evts) :-
               default_player(Id, Pass, Race, Class, IsAdmin, CleanStats, NewPlayer),
               world:put_entity(NewPlayer),
               world:save_db('world_state.json'),
+              ( get_dict(name, NewPlayer, Name) -> true ; get_dict(id, NewPlayer, Name) ),
+              format(string(Msg), "✨ ~w manifests from the mist, entering the realm for the first time.", [Name]),
+              world:push_room_event(square, ambient_msg(Msg)),
               Evts = [player_status(Id, created)]
         ;
           Evts = [error(stat_allocation_invalid(Id))]
