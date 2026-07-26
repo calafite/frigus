@@ -75,6 +75,12 @@ wpn_dmg(pirate, [dmg(slash, 8)]).
 wpn_dmg(crab, [dmg(blunt, 6)]).
 wpn_dmg(cultist, [dmg(magic, 10)]).
 
+% --- Livestock & Passive Innates ---
+wpn_dmg(chicken, [dmg(pierce, 1)]).
+wpn_dmg(sheep, [dmg(blunt, 2)]).
+wpn_dmg(pig, [dmg(blunt, 3)]).
+wpn_dmg(cow, [dmg(blunt, 5)]).
+
 % --- Dedicated Summoned Entity Attacks ---
 wpn_dmg(mercenary_soldier, [dmg(slash, 9)]).
 wpn_dmg(hunting_falcon, [dmg(pierce, 6)]).

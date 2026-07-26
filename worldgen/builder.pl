@@ -425,6 +425,14 @@ seed_citizens :-
         spawn:gen_patrol_guard_npc(Loc, P), world:put_entity(P)
     )),
 
+    % Spawn Livestock (3 per farming zone)
+    LivestockRooms = [farm_field, orchard, windmill],
+    forall(member(LR, LivestockRooms), (
+        spawn:gen_livestock_npc(LR, cow, C1), world:put_entity(C1),
+        spawn:gen_livestock_npc(LR, pig, P1), world:put_entity(P1),
+        spawn:gen_livestock_npc(LR, chicken, Ch1), world:put_entity(Ch1)
+    )),
+
     % Universal Floor Loot for the Shire Square
     Items = [
         item{id: floor_hoe, tag: hoe, qty: 1, room: square},

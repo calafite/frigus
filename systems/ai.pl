@@ -17,6 +17,7 @@ do_ai_tick(Evts) :-
     process_mobs(Mobs, MEvts),
     replenish_settlements,
     replenish_guards,
+    replenish_livestock,
     structures:tick_respawns(REvts),
     handle_world_events(WEvts),
     append(MEvts, REvts, Tmp1),
@@ -29,7 +30,7 @@ handle_world_events(Evts) :-
         ( Roll =< 3 ->
             Towns = [square, crossroads, port_square, outpost_square, sylvandell_square, sunfang_square, frosthold_square],
             random_member(Town, Towns),
-            % FIXED: Removed Singleton DemonTag initialization error
+            random_member(DemonTag, [imp, hellhound, demon_brute]),
             spawn:gen_mob(volcano, 25, normal, Town, Demon),
             world:put_entity(Demon),
             combat:get_display_name(Demon, DName),
@@ -163,6 +164,7 @@ act_mob(Mob, Evts) :-
     get_dict(id, Mob, GuardId),
     MonId \== GuardId,
     \+ combat:is_innocent(Monster),
+    \+ combat:is_livestock(Monster), % Guards ignore harmless farm livestock
     entity:is_alive(Monster),
     \+ entity:has_aff(Monster, stealthed), !, % Cannot target stealthed monsters
     combat:do_kill(GuardId, MonId, RawEvts),
@@ -234,6 +236,28 @@ replenish_guards :-
         get_dict(name, NewP, PName),
         world:push_room_event(SpawnRoad, npc_arrived(PName))
     ; true ).
+
+replenish_livestock :-
+    LivestockRooms = [farm_field, orchard, windmill],
+    forall(member(Room, LivestockRooms), (
+        world:room_entities(Room, Ents),
+        findall(M, (
+            member(M, Ents),
+            is_dict(M, mob),
+            get_dict(tag, M, Tag),
+            member(Tag, [chicken, pig, sheep, cow]),
+            entity:is_alive(M)
+        ), Livestock),
+        length(Livestock, Count),
+        ( Count < 3, random_between(1, 100, Roll), Roll =< 15 ->
+            random_member(LTag, [chicken, pig, sheep, cow]),
+            spawn:gen_livestock_npc(Room, LTag, NewNpc),
+            world:put_entity(NewNpc),
+            get_dict(name, NewNpc, Name),
+            format(string(Msg), "A ~w wanders into the area.", [Name]),
+            world:push_room_event(Room, ambient_msg(Msg))
+        ; true )
+    )).
 
 replenish_settlements :-
     findall(M, (

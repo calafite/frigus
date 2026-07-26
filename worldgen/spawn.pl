@@ -1,6 +1,6 @@
 :- module(spawn, [
               gen_mob/5, gen_grp/4, gen_town_npc/2, gen_royal_guard_npc/2,
-              gen_patrol_guard_npc/2, gen_citizen_npc/2, gen_merchant_npc/2,
+              gen_patrol_guard_npc/2, gen_livestock_npc/3, gen_citizen_npc/2, gen_merchant_npc/2,
               gen_summon/5
                  ]).
 
@@ -99,6 +99,15 @@ gen_patrol_guard_npc(RoomId, Npc) :-
     names:gen_npc_name(Seed, RawName, _),
     atomic_list_concat(['Patrol Guard ', RawName], Name),
     Npc = mob{id: NpcId, tag: guard, name: Name, lvl: 20, hp: 200, max_hp: 200, str: 20, dex: 15, int: 10, room: RoomId, fac: guard, props: [protector], wander: true, equip: dict{wpn: iron_sword, shield: iron_shield, body: chainmail}}.
+
+gen_livestock_npc(RoomId, Tag, Npc) :-
+    world:gen_id(Tag, NpcId),
+    spawn_config:mob_stats(Tag, BHp, BStr, BDex, BInt),
+    ( Tag == chicken -> Name = "Plump Chicken"
+    ; Tag == pig -> Name = "Wild Pig"
+    ; Tag == sheep -> Name = "Woolly Sheep"
+    ; Tag == cow -> Name = "Grazing Cow" ),
+    Npc = mob{id: NpcId, tag: Tag, name: Name, lvl: 1, hp: BHp, max_hp: BHp, str: BStr, dex: BDex, int: BInt, room: RoomId, props: [], wander: true}.
 
 gen_citizen_npc(RoomId, Npc) :-
     world:gen_id(peasant, NpcId),

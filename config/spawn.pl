@@ -35,6 +35,12 @@ mob_xp(dragon, 2000).
 mob_xp(guard, 50).
 mob_xp(royal_guard, 150).
 
+% Livestock XP Yields
+mob_xp(chicken, 5).
+mob_xp(pig, 15).
+mob_xp(sheep, 10).
+mob_xp(cow, 20).
+
 % Dedicated Summons Yield 0 XP
 mob_xp(mercenary_soldier, 0).
 mob_xp(hunting_falcon, 0).
@@ -87,6 +93,12 @@ mob_stats(dragon, 500, 30, 20, 25).
 % Guard Base Stats
 mob_stats(guard, 150, 20, 15, 10).
 mob_stats(royal_guard, 400, 35, 25, 20).
+
+% Livestock Stats
+mob_stats(chicken, 5, 2, 12, 1).
+mob_stats(pig, 15, 6, 6, 2).
+mob_stats(sheep, 12, 4, 8, 2).
+mob_stats(cow, 25, 10, 4, 2).
 
 % Class Summon Base Stats
 mob_stats(hunting_falcon, 20, 8, 20, 5).
@@ -144,6 +156,12 @@ loot_table(treant, gold, 0.5, 10, 40).
 loot_table(dragon, gold, 1.0, 500, 2000).
 loot_table(guard, gold, 1.0, 15, 45).
 loot_table(royal_guard, gold, 1.0, 50, 150).
+
+% Livestock Loot Tables
+loot_table(chicken, meat, 0.5, 1, 1).
+loot_table(pig, meat, 1.0, 1, 2).
+loot_table(sheep, meat, 0.8, 1, 2).
+loot_table(cow, meat, 1.0, 2, 4).
 
 % Structure Boss Unique Loot Drops
 loot_table(elder_dragon, gold, 1.0, 800, 2500).

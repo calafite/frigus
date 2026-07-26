@@ -65,6 +65,7 @@ val(pirate_cutlass, 30).
 val(dwarven_hammer, 65).
 val(elven_longbow, 50).
 val(crab_meat, 5).
+val(meat, 3).
 val(ancient_relic, 200).
 val(scrap_metal, 15).
 val(_, 10).
@@ -74,6 +75,7 @@ consumable(health_potion, heal(50)).
 consumable(mana_potion, restore_mp(50)).
 consumable(apple, heal(10)).
 consumable(bread, heal(15)).
+consumable(meat, heal(20)).
 consumable(crab_meat, heal(25)).
 consumable(dragon_heart, heal(250)).
 consumable(treant_heartwood, heal(150)).
