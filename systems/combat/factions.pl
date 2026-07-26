@@ -53,12 +53,18 @@ is_guard(Ent) :- get_dict(tag, Ent, RawTag), combat_core:to_atom(RawTag, Tag), m
 is_guard(Ent) :- get_dict(fac, Ent, RawFac), combat_core:to_atom(RawFac, Fac), Fac == guard, !.
 is_guard(Ent) :- get_dict(props, Ent, Props), is_list(Props), member(protector, Props), !.
 
-% Safe zone protection logic: Identifies purely malicious/PvP combat
+% Safe zone protection logic: Enforces PvP constraints and Guard protection in safe zones.
+% Returns true if the action is purely malicious/forbidden inside a safe zone.
 is_safe_zone_violation(Actor, Tgt) :-
-    get_proxy_ent(Actor, Proxy),
-    is_dict(Proxy, plyr),
-    get_proxy_ent(Tgt, ProxyTgt),
-    ( is_dict(ProxyTgt, plyr) ; (is_innocent(Tgt), \+ is_guard(Tgt)) ).
+    get_proxy_ent(Actor, ProxyActor),
+    is_dict(ProxyActor, plyr),
+    (
+        ( get_proxy_ent(Tgt, ProxyTgt), is_dict(ProxyTgt, plyr) )
+    ;
+        ( is_guard(Tgt), \+ (get_dict(bounty, ProxyActor, B), B > 0) )
+    ;
+        ( is_innocent(Tgt), \+ is_guard(Tgt) )
+    ).
 
 % Resolved deterministically. Will return 'none' if target query is unfulfillable.
 resolve_target(Actor, none, Target) :-

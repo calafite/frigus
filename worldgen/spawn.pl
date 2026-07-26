@@ -1,5 +1,6 @@
 :- module(spawn, [
-              gen_mob/5, gen_grp/4, gen_town_npc/2, gen_guard_npc/2, gen_citizen_npc/2, gen_merchant_npc/2,
+              gen_mob/5, gen_grp/4, gen_town_npc/2, gen_royal_guard_npc/2,
+              gen_patrol_guard_npc/2, gen_citizen_npc/2, gen_merchant_npc/2,
               gen_summon/5
                  ]).
 
@@ -85,13 +86,19 @@ gen_grp(Theme, Lvl, RId, Mobs) :-
     random_between(0, 2, Count),
     findall(M, (between(1, Count, _), roll_tier(T), gen_mob(Theme, Lvl, T, RId, M)), Mobs).
 
-gen_guard_npc(RoomId, Npc) :-
-    world:gen_id(guard, NpcId),
-    random_between(1, 100, Roll),
-    Seed is Roll * 7919,
+gen_royal_guard_npc(RoomId, Npc) :-
+    world:gen_id(royal_guard, NpcId),
+    random_between(1, 1000, Roll), Seed is Roll * 7919,
     names:gen_npc_name(Seed, RawName, _),
-    atomic_list_concat(['Guard ', RawName], Name),
-    Npc = mob{id: NpcId, tag: guard, name: Name, lvl: 5, hp: 100, max_hp: 100, str: 18, dex: 15, int: 10, room: RoomId, fac: guard, props: [protector, no_wander], equip: dict{wpn: iron_sword, shield: wooden_shield, body: chainmail}}.
+    atomic_list_concat(['Royal Guard ', RawName], Name),
+    Npc = mob{id: NpcId, tag: royal_guard, name: Name, lvl: 35, hp: 400, max_hp: 400, str: 35, dex: 25, int: 20, room: RoomId, fac: guard, home: RoomId, props: [protector, no_wander], equip: dict{wpn: greatsword, shield: none, body: plate_mail}}.
+
+gen_patrol_guard_npc(RoomId, Npc) :-
+    world:gen_id(guard, NpcId),
+    random_between(1, 1000, Roll), Seed is Roll * 3571,
+    names:gen_npc_name(Seed, RawName, _),
+    atomic_list_concat(['Patrol Guard ', RawName], Name),
+    Npc = mob{id: NpcId, tag: guard, name: Name, lvl: 20, hp: 200, max_hp: 200, str: 20, dex: 15, int: 10, room: RoomId, fac: guard, props: [protector], wander: true, equip: dict{wpn: iron_sword, shield: iron_shield, body: chainmail}}.
 
 gen_citizen_npc(RoomId, Npc) :-
     world:gen_id(peasant, NpcId),
@@ -120,10 +127,5 @@ gen_merchant_npc(RoomId, Npc) :-
 
 gen_town_npc(RoomId, Npc) :-
     random_between(1, 100, Roll),
-    ( Roll =< 40 ->
-          gen_guard_npc(RoomId, Npc)
-    ; Roll =< 75 ->
-          gen_citizen_npc(RoomId, Npc)
-    ;
-      gen_merchant_npc(RoomId, Npc)
-    ).
+    ( Roll =< 50 -> gen_citizen_npc(RoomId, Npc)
+    ; gen_merchant_npc(RoomId, Npc) ).

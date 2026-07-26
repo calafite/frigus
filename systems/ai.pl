@@ -16,6 +16,7 @@ do_ai_tick(Evts) :-
     world:all_mobs(Mobs),
     process_mobs(Mobs, MEvts),
     replenish_settlements,
+    replenish_guards,
     structures:tick_respawns(REvts),
     handle_world_events(WEvts),
     append(MEvts, REvts, Tmp1),
@@ -28,7 +29,7 @@ handle_world_events(Evts) :-
         ( Roll =< 3 ->
             Towns = [square, crossroads, port_square, outpost_square, sylvandell_square, sunfang_square, frosthold_square],
             random_member(Town, Towns),
-            random_member(DemonTag, [imp, hellhound, demon_brute]),
+            % FIXED: Removed Singleton DemonTag initialization error
             spawn:gen_mob(volcano, 25, normal, Town, Demon),
             world:put_entity(Demon),
             combat:get_display_name(Demon, DName),
@@ -74,25 +75,20 @@ is_no_wander(Mob) :-
     get_dict(owner, Mob, _), !.
 is_no_wander(Mob) :-
     ( get_dict(wander, Mob, false)
-    ; get_dict(props, Mob, Props), (member(no_wander, Props) ; member(protector, Props) ; member(merchant, Props))
+    ; get_dict(props, Mob, Props), (member(no_wander, Props) ; member(merchant, Props))
     ), !.
 
 valid_npc_move(Mob, NextRoomId) :-
     world:get_room(NextRoomId, NextRoom),
-    ( is_guard(Mob) ->
+    ( get_dict(tag, Mob, royal_guard) ->
           is_settlement_room(NextRoom)
-    ; is_town_npc(Mob) ->
+    ; get_dict(tag, Mob, guard) ->
+          true % Patrolling guards are permitted to wander into the wild
+    ; combat:is_town_npc(Mob) ->
           is_settlement_room(NextRoom)
     ;
       true
     ).
-
-is_guard(Mob) :-
-    get_dict(tag, Mob, RawTag), to_atom(RawTag, Tag),
-    ( Tag == guard ; Tag == protector ), !.
-is_guard(Mob) :-
-    get_dict(props, Mob, Props),
-    member(protector, Props), !.
 
 is_hostile_mob(Mob) :-
     get_dict(tag, Mob, Tag),
@@ -113,7 +109,7 @@ highest_bounty(Ents, TopId) :-
 
 % Guard attacks criminals
 act_mob(Mob, Evts) :-
-    is_guard(Mob),
+    combat:is_guard(Mob),
     get_dict(room, Mob, Room),
     world:room_entities(Room, Ents),
     highest_bounty(Ents, TgtId), !,
@@ -155,9 +151,9 @@ act_mob(Mob, Evts) :-
     world:push_room_events(Room, PubEvts),
     Evts = PubEvts.
 
-% Guard attacks hostile monsters
+% Guard attacks ANY unowned monster (maintains safety in towns & aggressively cleanses roads)
 act_mob(Mob, Evts) :-
-    is_guard(Mob),
+    combat:is_guard(Mob),
     get_dict(room, Mob, Room),
     world:room_entities(Room, Ents),
     member(Monster, Ents),
@@ -166,7 +162,7 @@ act_mob(Mob, Evts) :-
     get_dict(id, Monster, MonId),
     get_dict(id, Mob, GuardId),
     MonId \== GuardId,
-    is_hostile_mob(Monster),
+    \+ combat:is_innocent(Monster),
     entity:is_alive(Monster),
     \+ entity:has_aff(Monster, stealthed), !, % Cannot target stealthed monsters
     combat:do_kill(GuardId, MonId, RawEvts),
@@ -205,6 +201,40 @@ act_mob(Mob, Evts) :-
     world:push_room_events(Room, PubEvts),
     Evts = PubEvts.
 
+replenish_guards :-
+    Hubs = [square, port_square, outpost_square, sylvandell_square, sunfang_square, frosthold_square],
+    forall(member(Hub, Hubs), (
+        findall(M, (
+            world:db_entity(_, M),
+            is_dict(M, mob),
+            get_dict(tag, M, royal_guard),
+            get_dict(home, M, Hub),
+            entity:is_alive(M)
+        ), HubGuards),
+        length(HubGuards, Count),
+        ( Count < 2, random_between(1, 100, Roll), Roll =< 5 ->
+            spawn:gen_royal_guard_npc(Hub, NewG),
+            world:put_entity(NewG),
+            get_dict(name, NewG, Name),
+            world:push_room_event(Hub, npc_arrived(Name))
+        ; true )
+    )),
+    findall(M, (
+        world:db_entity(_, M),
+        is_dict(M, mob),
+        get_dict(tag, M, guard),
+        entity:is_alive(M)
+    ), PatrolGuards),
+    length(PatrolGuards, PCount),
+    ( PCount < 4, random_between(1, 100, PRoll), PRoll =< 5 ->
+        Roads = [crossroads, north_road, south_road, east_road, west_road],
+        random_member(SpawnRoad, Roads),
+        spawn:gen_patrol_guard_npc(SpawnRoad, NewP),
+        world:put_entity(NewP),
+        get_dict(name, NewP, PName),
+        world:push_room_event(SpawnRoad, npc_arrived(PName))
+    ; true ).
+
 replenish_settlements :-
     findall(M, (
                 world:db_entity(_, M),
@@ -215,7 +245,7 @@ replenish_settlements :-
                 is_settlement_room(RNode)
                ), TownMobs),
     length(TownMobs, TotalTownMobs),
-    ( TotalTownMobs < 6 ->
+    ( TotalTownMobs < 12 ->
           random_between(1, 100, Roll),
           ( Roll =< 5 ->
                 spawn:gen_town_npc(square, NewNpc),

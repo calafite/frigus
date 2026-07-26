@@ -3,6 +3,7 @@
 :- use_module('../core/world').
 :- use_module('../config/world').
 :- use_module('dungeon').
+:- use_module('spawn').
 :- use_module(library(random)).
 :- use_module(library(lists)).
 
@@ -44,7 +45,7 @@ init_hub_room(R, NR) :-
     Temp is BTemp + TOff,
     Mag is max(0, BMag + MOff),
     Cor is max(0, BCor + COff),
-    NR = R.put(env, dict{temp: Temp, magic: Mag, corr: Cor}).
+    NR = R.put(env, dict{temp: Temp, magic: Mag, Cor: Cor}).
 
 % ==============================================================================
 % THE WORLD MAP (STATIC ZONES)
@@ -307,14 +308,8 @@ theme_node(keep, _, scrap_metal).
 % NPC & CITIZEN POPULATION
 % ==============================================================================
 seed_citizens :-
+    % Civilians & Merchants manually placed
     Mobs = [
-        % --- THE SHIRE NPCs ---
-        mob{
-            id: guard_nycolas, tag: guard, name: "Guard Nycolas", lvl: 40,
-            hp: 300, max_hp: 300, mp: 30, max_mp: 30, str: 50, dex: 45, con: 50, int: 25, wis: 25, cha: 35, luk: 20,
-            room: square, fac: guard, props: [protector], equip: dict{wpn: iron_sword, shield: iron_shield, body: chainmail},
-            route: [square, barracks, prison], route_idx: 0, wander: false, threats: dict{}, mems: dict{}
-        },
         mob{
             id: peasant_bob, tag: peasant, name: "Bob the Farmer", lvl: 1,
             hp: 30, max_hp: 30, mp: 10, max_mp: 10, str: 12, dex: 10, con: 14, int: 8, wis: 10, cha: 10, luk: 12,
@@ -343,21 +338,11 @@ seed_citizens :-
             inv: [stack{tag: gold, qty: 2000}, stack{tag: chainmail, qty: 3}, stack{tag: plate_mail, qty: 2}, stack{tag: wooden_shield, qty: 3}, stack{tag: iron_shield, qty: 2}, stack{tag: runic_shield, qty: 1}],
             threats: dict{}, mems: dict{}
         },
-
-        % --- CROSSROADS NPCs ---
         mob{
             id: merchant_crossroads, tag: merchant, name: "Wandering Otto", lvl: 10,
             hp: 90, max_hp: 90, mp: 30, max_mp: 30, str: 15, dex: 18, con: 15, int: 12, wis: 14, cha: 25, luk: 20,
             room: crossroads, fac: merchant, props: [merchant, no_wander], equip: dict{wpn: dagger, shield: none, body: tunic},
             inv: [stack{tag: gold, qty: 1500}, stack{tag: whetstone, qty: 10}, stack{tag: flint_and_steel, qty: 10}, stack{tag: empty_waterskin, qty: 10}, stack{tag: shortbow, qty: 3}, stack{tag: bread, qty: 20}],
-            threats: dict{}, mems: dict{}
-        },
-
-        % --- PORTHAVEN NPCs ---
-        mob{
-            id: guard_port, tag: guard, name: "Marine Sentinel", lvl: 25,
-            hp: 200, max_hp: 200, mp: 20, max_mp: 20, str: 35, dex: 30, con: 30, int: 15, wis: 15, cha: 20, luk: 15,
-            room: port_square, fac: guard, props: [protector, no_wander], equip: dict{wpn: sword, shield: wooden_shield, body: chainmail},
             threats: dict{}, mems: dict{}
         },
         mob{
@@ -373,14 +358,6 @@ seed_citizens :-
             inv: [stack{tag: gold, qty: 3500}, stack{tag: pirate_cutlass, qty: 3}, stack{tag: katana, qty: 1}, stack{tag: pica_de_inseto, qty: 2}, stack{tag: witch_brew, qty: 3}],
             threats: dict{}, mems: dict{}
         },
-
-        % --- HIGHFORGE NPCs ---
-        mob{
-            id: guard_high, tag: guard, name: "Dwarven Defender", lvl: 35,
-            hp: 350, max_hp: 350, mp: 10, max_mp: 10, str: 45, dex: 20, con: 50, int: 10, wis: 20, cha: 15, luk: 10,
-            room: outpost_square, fac: guard, props: [protector, no_wander], equip: dict{wpn: battleaxe, shield: iron_shield, body: dragon_scale_mail},
-            threats: dict{}, mems: dict{}
-        },
         mob{
             id: merchant_smith, tag: merchant, name: "Brokk the Forgemaster", lvl: 15,
             hp: 120, max_hp: 120, mp: 50, max_mp: 50, str: 30, dex: 15, con: 30, int: 20, wis: 15, cha: 20, luk: 10,
@@ -392,14 +369,6 @@ seed_citizens :-
             hp: 150, max_hp: 150, mp: 100, max_mp: 100, str: 10, dex: 20, con: 20, int: 30, wis: 30, cha: 40, luk: 30,
             room: outpost_square, fac: merchant, props: [merchant, no_wander], equip: dict{wpn: dagger, shield: none, body: royal_attire},
             inv: [stack{tag: gold, qty: 5000}, stack{tag: blood_ruby, qty: 2}, stack{tag: astral_shard, qty: 3}, stack{tag: diviners_orb, qty: 1}, stack{tag: runic_shield, qty: 1}],
-            threats: dict{}, mems: dict{}
-        },
-
-        % --- SYLVANDELL NPCs ---
-        mob{
-            id: guard_elf, tag: guard, name: "Sylvan Warden", lvl: 30,
-            hp: 250, max_hp: 250, mp: 100, max_mp: 100, str: 30, dex: 50, con: 25, int: 35, wis: 30, cha: 20, luk: 20,
-            room: sylvandell_square, fac: guard, props: [protector, no_wander], equip: dict{wpn: elven_longbow, shield: none, body: tunic},
             threats: dict{}, mems: dict{}
         },
         mob{
@@ -414,14 +383,6 @@ seed_citizens :-
             room: sylvandell_temple, fac: citizen, props: [healer, no_wander], equip: dict{wpn: staff, shield: none, body: void_robe},
             inv: [stack{tag: gold, qty: 2000}], threats: dict{}, mems: dict{}
         },
-
-        % --- SUNFANG OASIS NPCs ---
-        mob{
-            id: guard_sunfang, tag: guard, name: "Desert Sentinel", lvl: 35,
-            hp: 300, max_hp: 300, mp: 50, max_mp: 50, str: 40, dex: 35, con: 40, int: 15, wis: 15, cha: 20, luk: 25,
-            room: sunfang_square, fac: guard, props: [protector, no_wander], equip: dict{wpn: greatsword, shield: none, body: chainmail},
-            threats: dict{}, mems: dict{}
-        },
         mob{
             id: merchant_sunfang, tag: merchant, name: "Kasim the Trader", lvl: 20,
             hp: 120, max_hp: 120, mp: 50, max_mp: 50, str: 15, dex: 25, con: 15, int: 25, wis: 25, cha: 45, luk: 35,
@@ -433,14 +394,6 @@ seed_citizens :-
             hp: 160, max_hp: 160, mp: 30, max_mp: 30, str: 35, dex: 25, con: 30, int: 15, wis: 15, cha: 35, luk: 20,
             room: sunfang_bazaar, fac: merchant, props: [merchant, no_wander], equip: dict{wpn: morningstar, shield: none, body: demon_hide},
             inv: [stack{tag: gold, qty: 4500}, stack{tag: morningstar, qty: 2}, stack{tag: orcish_cleaver, qty: 2}, stack{tag: greatsword, qty: 2}, stack{tag: golden_aegis, qty: 1}],
-            threats: dict{}, mems: dict{}
-        },
-
-        % --- FROSTHOLD NPCs ---
-        mob{
-            id: guard_frost, tag: guard, name: "Frostguard Elite", lvl: 45,
-            hp: 500, max_hp: 500, mp: 50, max_mp: 50, str: 60, dex: 30, con: 60, int: 20, wis: 25, cha: 15, luk: 15,
-            room: frosthold_square, fac: guard, props: [protector, no_wander], equip: dict{wpn: battleaxe, shield: iron_shield, body: plate_mail},
             threats: dict{}, mems: dict{}
         },
         mob{
@@ -458,6 +411,19 @@ seed_citizens :-
         }
     ],
     forall(member(M, Mobs), world:put_entity(M)),
+
+    % Spawn Royal Guards (Exactly 2 per major hub)
+    Hubs = [square, port_square, outpost_square, sylvandell_square, sunfang_square, frosthold_square],
+    forall(member(Hub, Hubs), (
+        spawn:gen_royal_guard_npc(Hub, G1), world:put_entity(G1),
+        spawn:gen_royal_guard_npc(Hub, G2), world:put_entity(G2)
+    )),
+
+    % Spawn Patrol Guards (Exactly 4 to roam the road network)
+    PatrolSpawns = [crossroads, north_road, south_road, east_road],
+    forall(member(Loc, PatrolSpawns), (
+        spawn:gen_patrol_guard_npc(Loc, P), world:put_entity(P)
+    )),
 
     % Universal Floor Loot for the Shire Square
     Items = [

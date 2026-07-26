@@ -31,6 +31,10 @@ mob_xp(treant, 110).
 mob_xp(celestial_guardian, 100).
 mob_xp(dragon, 2000).
 
+% Guard XP Yields
+mob_xp(guard, 50).
+mob_xp(royal_guard, 150).
+
 % Dedicated Summons Yield 0 XP
 mob_xp(mercenary_soldier, 0).
 mob_xp(hunting_falcon, 0).
@@ -79,6 +83,10 @@ mob_stats(iron_golem, 90, 20, 5, 2).
 mob_stats(arcane_anomaly, 25, 4, 15, 20).
 mob_stats(treant, 70, 18, 6, 12).
 mob_stats(dragon, 500, 30, 20, 25).
+
+% Guard Base Stats
+mob_stats(guard, 150, 20, 15, 10).
+mob_stats(royal_guard, 400, 35, 25, 20).
 
 % Class Summon Base Stats
 mob_stats(hunting_falcon, 20, 8, 20, 5).
@@ -134,6 +142,8 @@ loot_table(iron_golem, gold, 1.0, 30, 80).
 loot_table(arcane_anomaly, gold, 0.9, 15, 45).
 loot_table(treant, gold, 0.5, 10, 40).
 loot_table(dragon, gold, 1.0, 500, 2000).
+loot_table(guard, gold, 1.0, 15, 45).
+loot_table(royal_guard, gold, 1.0, 50, 150).
 
 % Structure Boss Unique Loot Drops
 loot_table(elder_dragon, gold, 1.0, 800, 2500).
