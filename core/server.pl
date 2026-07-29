@@ -49,7 +49,7 @@ start_ticker :-
     thread_create(ticker_loop, _, [detached(true)]).
 
 ticker_loop :-
-    sleep(1.0),
+    sleep(5.0),
     catch(ignore(run_world_tick), Err, format('Ticker Error: ~w~n', [Err])),
     ticker_loop.
 
